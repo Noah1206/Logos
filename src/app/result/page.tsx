@@ -1,0 +1,1709 @@
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import React, { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { useSession, signIn } from "next-auth/react";
+import { usePayment } from "@/hooks/usePayment";
+
+const blogLoadingMessages = [
+  "영상을 분석하고 있어요",
+  "음성을 텍스트로 변환 중이에요",
+  "핵심 키워드를 추출하고 있어요",
+  "블로그 구조를 설계하고 있어요",
+  "SEO 최적화 글을 작성 중이에요",
+  "소제목과 단락을 구성하고 있어요",
+  "이모지와 해시태그를 추가하고 있어요",
+  "최종 검수 중이에요",
+];
+
+const videoLoadingMessages = [
+  "블로그 글을 분석하고 있어요",
+  "영상 프롬프트를 생성 중이에요",
+  "AI가 영상을 만들고 있어요",
+  "장면을 구성하고 있어요",
+  "영상을 렌더링하고 있어요",
+  "최종 마무리 중이에요",
+];
+
+const blogLoadingTips = [
+  "영상이 길수록 더 풍부한 글이 만들어져요",
+  "네이버 블로그 SEO에 최적화된 구조로 작성돼요",
+  "자동으로 소제목과 단락이 구분돼요",
+  "복사 후 바로 네이버 블로그에 붙여넣기 하세요",
+];
+
+const videoLoadingTips = [
+  "LOGOS AI가 고품질 영상을 생성 중이에요",
+  "영상 생성에 2~5분 정도 소요될 수 있어요",
+  "9:16 세로 영상으로 릴스/쇼츠에 최적화돼요",
+  "생성된 영상은 바로 다운로드할 수 있어요",
+];
+
+type ReportTab = "detailed" | "summary" | "easy" | "script";
+
+interface BlogSection {
+  emoji: string;
+  title: string;
+  content: string;
+  frame_index?: number | null;
+}
+
+interface ResultData {
+  videoTitle: string;
+  platform: string;
+  blogTitle: string;
+  toc: { id: number; emoji: string; title: string }[];
+  summary: string;
+  sections: BlogSection[];
+  hashtags: string[];
+  frameUrls: string[];
+  rawContent?: string;
+}
+
+interface VideoResultData {
+  videoUrl: string;
+  videoPrompt: string;
+}
+
+// 인라인 편집 가능한 텍스트 컴포넌트
+function EditableText({
+  value,
+  onChange,
+  className = "",
+  tag: Tag = "p",
+}: {
+  value: string;
+  onChange: (newValue: string) => void;
+  className?: string;
+  tag?: "h1" | "h2" | "h3" | "p" | "span";
+}) {
+  const ref = useRef<HTMLElement>(null);
+  const isFocused = useRef(false);
+
+  const toHtml = (text: string) =>
+    text.split("\n").map((s) => s || "<br>").join("<br>");
+
+  const fromHtml = (el: HTMLElement) =>
+    el.innerText.replace(/\u00A0/g, " ");
+
+  // value가 외부에서 변경되면 DOM 동기화 (포커스 중이 아닐 때만)
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || isFocused.current) return;
+    const current = fromHtml(el);
+    if (current !== value) {
+      el.innerHTML = toHtml(value);
+    }
+  }, [value]);
+
+  const handleBlur = useCallback(() => {
+    isFocused.current = false;
+    const el = ref.current;
+    if (!el) return;
+    const text = fromHtml(el);
+    if (text !== value) {
+      onChange(text);
+    }
+  }, [value, onChange]);
+
+  const handleFocus = useCallback(() => {
+    isFocused.current = true;
+  }, []);
+
+  // 초기 렌더 시 innerHTML로 줄바꿈 처리
+  const initialHtml = toHtml(value);
+
+  return (
+    <Tag
+      ref={ref as any}
+      contentEditable
+      suppressContentEditableWarning
+      onBlur={handleBlur}
+      onFocus={handleFocus}
+      dangerouslySetInnerHTML={{ __html: initialHtml }}
+      className={`outline-none cursor-text rounded-md transition-all duration-200 focus:ring-2 focus:ring-purple-200 focus:bg-purple-50/30 hover:bg-gray-50 ${className}`}
+    />
+  );
+}
+
+// 이미지 로딩 플레이스홀더 + fade-in 컴포넌트
+function BlogImage({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div className="my-8 relative bg-gray-100 min-h-[200px]">
+      {!loaded && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+          <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin" />
+          <span className="text-xs text-gray-400">이미지 로딩 중...</span>
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={`w-full h-auto transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+        onLoad={() => setLoaded(true)}
+      />
+    </div>
+  );
+}
+
+// 선택 영역 서식 적용 플로팅 툴바
+function FloatingToolbar({ containerRef }: { containerRef: React.RefObject<HTMLDivElement | null> }) {
+  const [visible, setVisible] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [selFontSize, setSelFontSize] = useState(16);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+
+  const updatePosition = useCallback(() => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || !selection.rangeCount) {
+      setVisible(false);
+      return;
+    }
+    const range = selection.getRangeAt(0);
+    const container = containerRef.current;
+    if (!container || !container.contains(range.commonAncestorContainer)) {
+      setVisible(false);
+      return;
+    }
+    const rect = range.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) {
+      setVisible(false);
+      return;
+    }
+
+    // 선택 영역의 현재 폰트 크기 감지
+    const startNode = range.startContainer;
+    const el = startNode.nodeType === Node.TEXT_NODE ? startNode.parentElement : startNode as Element;
+    if (el) {
+      const computed = window.getComputedStyle(el as HTMLElement);
+      const size = parseInt(computed.fontSize, 10);
+      if (!isNaN(size)) setSelFontSize(size);
+    }
+
+    setPosition({
+      top: Math.max(10, rect.top - 52),
+      left: rect.left + rect.width / 2,
+    });
+    setVisible(true);
+  }, [containerRef]);
+
+  useEffect(() => {
+    document.addEventListener("selectionchange", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      document.removeEventListener("selectionchange", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [updatePosition]);
+
+  const applyStyle = useCallback((prop: string, value: string) => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || !selection.rangeCount) return;
+    const range = selection.getRangeAt(0);
+
+    // 선택 영역이 이미 스타일된 span 안에 있으면 해당 span 업데이트
+    const ancestor = range.commonAncestorContainer;
+    const parentEl = ancestor.nodeType === Node.TEXT_NODE
+      ? ancestor.parentElement
+      : ancestor as HTMLElement;
+
+    if (
+      parentEl &&
+      parentEl.tagName === "SPAN" &&
+      parentEl.style &&
+      selection.toString() === parentEl.textContent
+    ) {
+      (parentEl as HTMLElement).style[prop as any] = value;
+      return;
+    }
+
+    // 새 span으로 감싸기
+    const span = document.createElement("span");
+    (span.style as any)[prop] = value;
+    const contents = range.extractContents();
+    span.appendChild(contents);
+    range.insertNode(span);
+
+    // 선택 유지
+    selection.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.selectNodeContents(span);
+    selection.addRange(newRange);
+  }, []);
+
+  const handleFontSize = useCallback(
+    (delta: number) => {
+      const newSize = Math.max(12, Math.min(32, selFontSize + delta));
+      setSelFontSize(newSize);
+      applyStyle("fontSize", `${newSize}px`);
+    },
+    [selFontSize, applyStyle]
+  );
+
+  const handleFontWeight = useCallback(
+    (weight: number) => {
+      applyStyle("fontWeight", String(weight));
+    },
+    [applyStyle]
+  );
+
+  if (!visible) return null;
+
+  const weightButtons = [
+    { label: "L", value: 300 },
+    { label: "R", value: 400 },
+    { label: "M", value: 500 },
+    { label: "B", value: 700 },
+  ];
+
+  return (
+    <div
+      ref={toolbarRef}
+      className="fixed z-[200] bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 flex items-center gap-3 select-none animate-fade-in"
+      style={{
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        transform: "translateX(-50%)",
+      }}
+      onMouseDown={(e) => e.preventDefault()}
+    >
+      <div className="flex items-center gap-1.5">
+        <span className="text-gray-400 text-xs">크기</span>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            handleFontSize(-1);
+          }}
+          className="w-6 h-6 flex items-center justify-center rounded bg-gray-100 text-gray-500 hover:bg-gray-200 text-sm transition-colors"
+        >
+          −
+        </button>
+        <span className="text-xs text-gray-600 w-6 text-center font-mono">
+          {selFontSize}
+        </span>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            handleFontSize(1);
+          }}
+          className="w-6 h-6 flex items-center justify-center rounded bg-gray-100 text-gray-500 hover:bg-gray-200 text-sm transition-colors"
+        >
+          +
+        </button>
+      </div>
+      <div className="w-px h-5 bg-gray-200" />
+      <div className="flex items-center gap-1">
+        {weightButtons.map((btn) => (
+          <button
+            key={btn.label}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              handleFontWeight(btn.value);
+            }}
+            className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+            style={{ fontWeight: btn.value }}
+          >
+            {btn.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// FastAPI 응답을 프론트엔드 표시 형식으로 변환
+function mapResponseToResultData(data: any): ResultData {
+  const structure = data.blog_structure;
+  const keywords = data.seo_keywords;
+
+  // 동적 섹션: 백엔드에서 콘텐츠 유형에 맞게 자동 생성 + 프레임 매칭
+  const sections: BlogSection[] = (structure.sections ?? []).map(
+    (s: any) => ({
+      emoji: s.emoji ?? "📌",
+      title: s.title ?? "",
+      content: s.content ?? "",
+      frame_index: s.frame_index ?? null,
+    })
+  );
+
+  const toc = sections.map((s, i) => ({
+    id: i + 1,
+    emoji: s.emoji,
+    title: s.title,
+  }));
+
+  const hashtags = (keywords?.hashtags ?? []).map((tag: string) =>
+    tag.startsWith("#") ? tag : `#${tag}`
+  );
+
+  return {
+    videoTitle: data.video_info?.title ?? "영상",
+    platform: data.platform ?? "youtube",
+    blogTitle: structure.title,
+    toc,
+    summary: structure.introduction,
+    sections,
+    hashtags,
+    frameUrls: data.frame_urls ?? [],
+    rawContent: data.blog_content,
+  };
+}
+
+function ResultContent() {
+  const searchParams = useSearchParams();
+  const url = searchParams.get("url") || "";
+  const pageMode = searchParams.get("mode") || "";
+  const isVideoMode = pageMode === "blog-to-video";
+
+  const loadingMessages = isVideoMode ? videoLoadingMessages : blogLoadingMessages;
+  const loadingTips = isVideoMode ? videoLoadingTips : blogLoadingTips;
+
+  const { data: session, update: updateSession } = useSession();
+  const user = session?.user;
+
+  const { purchasePackage, isProcessing } = usePayment({
+    onSuccess: (credits) => {
+      alert(`결제가 완료되었습니다! 현재 크레딧: ${credits}회`);
+      updateSession();
+      setShowPricing(false);
+    },
+    onError: (error) => {
+      if (!error.includes("취소")) {
+        alert(`결제 오류: ${error}`);
+      }
+    },
+  });
+
+  const handlePurchase = (packageId: string) => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+    purchasePackage(packageId);
+  };
+
+  const [progress, setProgress] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [sseMessage, setSseMessage] = useState("");
+  const [messageIndex, setMessageIndex] = useState(0);
+  const [tipIndex, setTipIndex] = useState(0);
+  const [messageFade, setMessageFade] = useState(true);
+  const [tipFade, setTipFade] = useState(true);
+  const [dots, setDots] = useState("");
+  const [activeTab, setActiveTab] = useState<ReportTab>("detailed");
+  const [copied, setCopied] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [resultData, setResultData] = useState<ResultData | null>(null);
+  const [editedData, setEditedData] = useState<ResultData | null>(null);
+  const [videoResult, setVideoResult] = useState<VideoResultData | null>(null);
+  const [promptOpen, setPromptOpen] = useState(false);
+  const [textAlign, setTextAlign] = useState<"left" | "center" | "right">("left");
+  const [fontSize, setFontSize] = useState<number>(16);
+  const [fontWeight, setFontWeight] = useState<"light" | "normal" | "medium" | "bold">("normal");
+  const [showToc, setShowToc] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [showSubtitle, setShowSubtitle] = useState(true);
+  const [showPricing, setShowPricing] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginLoading, setLoginLoading] = useState<string | null>(null);
+
+  const handleSocialLogin = (provider: string) => {
+    setLoginLoading(provider);
+    signIn(provider, { callbackUrl: window.location.href });
+  };
+
+  const requireAuth = (action: () => void) => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    action();
+  };
+
+  const blogContentRef = useRef<HTMLDivElement>(null);
+
+  // 블로그 본문에 이미지 붙여넣기 지원
+  useEffect(() => {
+    const container = blogContentRef.current;
+    if (!container) return;
+
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith("image/")) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (!file) continue;
+
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result as string;
+            const img = document.createElement("img");
+            img.src = dataUrl;
+            img.style.maxWidth = "100%";
+            img.style.height = "auto";
+            img.style.borderRadius = "8px";
+            img.style.margin = "16px 0";
+            img.style.display = "block";
+
+            const selection = window.getSelection();
+            if (selection && selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0);
+              if (container.contains(range.commonAncestorContainer)) {
+                range.deleteContents();
+                range.insertNode(img);
+                range.setStartAfter(img);
+                range.setEndAfter(img);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                return;
+              }
+            }
+            container.appendChild(img);
+          };
+          reader.readAsDataURL(file);
+          break;
+        }
+      }
+    };
+
+    container.addEventListener("paste", handlePaste);
+    return () => container.removeEventListener("paste", handlePaste);
+  }, [isComplete]);
+
+  // 로딩 메시지 순환
+  useEffect(() => {
+    if (isComplete || isError) return;
+    const interval = setInterval(() => {
+      setMessageFade(false);
+      setTimeout(() => {
+        setMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+        setMessageFade(true);
+      }, 300);
+    }, 2800);
+    return () => clearInterval(interval);
+  }, [isComplete, isError, loadingMessages.length]);
+
+  // 팁 메시지 순환
+  useEffect(() => {
+    if (isComplete || isError) return;
+    const interval = setInterval(() => {
+      setTipFade(false);
+      setTimeout(() => {
+        setTipIndex((prev) => (prev + 1) % loadingTips.length);
+        setTipFade(true);
+      }, 300);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [isComplete, isError, loadingTips.length]);
+
+  // 점 애니메이션
+  useEffect(() => {
+    if (isComplete || isError) return;
+    const interval = setInterval(() => {
+      setDots((prev) => (prev.length >= 3 ? "" : prev + "."));
+    }, 500);
+    return () => clearInterval(interval);
+  }, [isComplete, isError]);
+
+  // blog-to-video API 호출
+  useEffect(() => {
+    if (!isVideoMode) return;
+
+    const blogContent = sessionStorage.getItem("blog-to-video-content");
+    const style = sessionStorage.getItem("blog-to-video-style") || undefined;
+
+    if (!blogContent) {
+      setErrorMessage("변환할 내용이 없습니다.");
+      setIsError(true);
+      return;
+    }
+
+    // 느린 프로그레스 (영상 생성은 2~5분)
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 80) {
+          clearInterval(progressInterval);
+          return 80;
+        }
+        return prev + Math.random() * 3;
+      });
+    }, 2000);
+
+    const callAPI = async () => {
+      try {
+        const res = await fetch("/api/generate-video", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ blog_content: blogContent, style }),
+        });
+
+        const data = await res.json();
+        clearInterval(progressInterval);
+
+        if (!res.ok || !data.success) {
+          setErrorMessage(data.error ?? "영상 생성 중 오류가 발생했습니다.");
+          setIsError(true);
+          return;
+        }
+
+        setVideoResult({
+          videoUrl: data.video_url,
+          videoPrompt: data.video_prompt ?? "",
+        });
+        setProgress(100);
+        setTimeout(() => setIsComplete(true), 400);
+      } catch {
+        clearInterval(progressInterval);
+        setErrorMessage("서버에 연결할 수 없습니다. FastAPI 서버가 실행 중인지 확인해주세요.");
+        setIsError(true);
+      }
+    };
+
+    callAPI();
+    return () => clearInterval(progressInterval);
+  }, [isVideoMode]);
+
+  // URL→블로그 SSE 스트리밍 API 호출 (캐시된 결과가 있으면 바로 표시)
+  useEffect(() => {
+    if (!url || isVideoMode) return;
+
+    // sessionStorage에 캐시된 결과 확인
+    const cacheKey = `convert_result_${url}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const mapped = JSON.parse(cached) as ResultData;
+        setResultData(mapped);
+        setEditedData(JSON.parse(JSON.stringify(mapped)));
+        setProgress(100);
+        setIsComplete(true);
+        return;
+      } catch {
+        sessionStorage.removeItem(cacheKey);
+      }
+    }
+
+    let cancelled = false;
+
+    const callSSE = async () => {
+      try {
+        const res = await fetch("/api/convert/stream", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+
+        if (!res.ok || !res.body) {
+          const data = await res.json().catch(() => ({}));
+          setErrorMessage(data.error ?? "변환 중 오류가 발생했습니다.");
+          setIsError(true);
+          return;
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done || cancelled) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const jsonStr = line.slice(6).trim();
+            if (!jsonStr) continue;
+
+            try {
+              const event = JSON.parse(jsonStr);
+
+              if (event.error) {
+                setErrorMessage(event.message ?? "변환 실패");
+                setIsError(true);
+                return;
+              }
+
+              if (event.message) {
+                setSseMessage(event.message);
+              }
+
+              if (event.progress !== undefined && event.progress >= 0) {
+                setProgress(event.progress);
+              }
+
+              if (event.result) {
+                const mapped = mapResponseToResultData(event.result);
+                setResultData(mapped);
+                setEditedData(JSON.parse(JSON.stringify(mapped)));
+                // 결과를 sessionStorage에 캐시
+                sessionStorage.setItem(cacheKey, JSON.stringify(mapped));
+                setProgress(100);
+                setTimeout(() => setIsComplete(true), 400);
+                return;
+              }
+            } catch {
+              // JSON 파싱 실패 무시 (heartbeat 등)
+            }
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          setErrorMessage("서버에 연결할 수 없습니다. FastAPI 서버가 실행 중인지 확인해주세요.");
+          setIsError(true);
+        }
+      }
+    };
+
+    callSSE();
+    return () => { cancelled = true; };
+  }, [url, isVideoMode]);
+
+  const handleGoBack = () => {
+    requireAuth(() => {
+      window.location.href = "/";
+    });
+  };
+
+  const handleCopyContent = async () => {
+    const data = editedData ?? resultData;
+    if (!data) return;
+
+    // 프레임 매칭 로직 (렌더링과 동일)
+    const hasFrameMatching = data.sections.some(
+      (s) => s.frame_index != null && s.frame_index >= 0
+    );
+    const usedIndices = new Set(
+      data.sections
+        .map((s) => s.frame_index)
+        .filter((fi): fi is number => fi != null && fi >= 0)
+    );
+    const introIndex = data.frameUrls.findIndex((_, i) => !usedIndices.has(i));
+    const introUrl = introIndex >= 0 ? data.frameUrls[introIndex] : data.frameUrls[0];
+
+    // HTML 빌드 (이미지 포함)
+    const htmlParts: string[] = [];
+    const textParts: string[] = [];
+
+    // 제목
+    htmlParts.push(`<h1>${data.blogTitle}</h1>`);
+    textParts.push(data.blogTitle, "");
+
+    // 도입부
+    htmlParts.push(`<p>${data.summary.replace(/\n/g, "<br>")}</p>`);
+    textParts.push(data.summary, "");
+
+    // 도입부 이미지
+    if (introUrl) {
+      htmlParts.push(`<p><img src="${introUrl}" style="max-width:100%;height:auto;" /></p>`);
+    }
+
+    // 본문 섹션
+    data.sections.forEach((s, idx) => {
+      if (showSubtitle) {
+        const title = showEmoji ? `${s.emoji} ${s.title}` : s.title;
+        htmlParts.push(`<h2>${title}</h2>`);
+        textParts.push(title, "");
+      }
+
+      htmlParts.push(`<p>${s.content.replace(/\n/g, "<br>")}</p>`);
+      textParts.push(s.content, "");
+
+      // 섹션 이미지
+      let frameUrl: string | undefined;
+      if (hasFrameMatching) {
+        if (s.frame_index != null && s.frame_index >= 0 && s.frame_index < data.frameUrls.length) {
+          frameUrl = data.frameUrls[s.frame_index];
+        }
+      } else {
+        frameUrl = data.frameUrls?.[idx + 1];
+      }
+      if (frameUrl) {
+        htmlParts.push(`<p><img src="${frameUrl}" style="max-width:100%;height:auto;" /></p>`);
+      }
+    });
+
+    // 해시태그
+    htmlParts.push(`<p>${data.hashtags.join(" ")}</p>`);
+    textParts.push(data.hashtags.join(" "));
+
+    const htmlContent = htmlParts.join("");
+    const textContent = textParts.join("\n");
+
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/html": new Blob([htmlContent], { type: "text/html" }),
+          "text/plain": new Blob([textContent], { type: "text/plain" }),
+        }),
+      ]);
+    } catch {
+      // 폴백: text만 복사
+      await navigator.clipboard.writeText(textContent);
+    }
+
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // 편집 헬퍼 함수
+  const updateEdited = useCallback((updater: (d: ResultData) => void) => {
+    setEditedData((prev) => {
+      if (!prev) return prev;
+      const next = JSON.parse(JSON.stringify(prev)) as ResultData;
+      updater(next);
+      // TOC 동기화
+      next.toc = next.sections.map((s, i) => ({
+        id: i + 1,
+        emoji: s.emoji,
+        title: s.title,
+      }));
+      return next;
+    });
+  }, []);
+
+  // 표시용 데이터 (편집본 우선)
+  const displayData = editedData ?? resultData;
+
+  const tabs: { key: ReportTab; label: string }[] = [
+    { key: "detailed", label: "블로그 글" },
+    { key: "summary", label: "핵심 요약" },
+    { key: "easy", label: "쉬운 버전" },
+    { key: "script", label: "스크립트" },
+  ];
+
+  const tagChips: string[] = [];
+
+  if (!url && !isVideoMode) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500 mb-4">변환할 URL이 없습니다.</p>
+          <button onClick={handleGoBack} className="text-gray-900 font-medium hover:underline">
+            돌아가기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-6">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">변환 실패</h2>
+          <p className="text-sm text-gray-500 mb-6">{errorMessage}</p>
+          <button
+            onClick={handleGoBack}
+            className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            다시 시도하기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-white">
+      {!isComplete ? (
+        /* Loading State */
+        <div className="flex flex-col items-center justify-center min-h-screen px-6">
+          <div className="flex items-center gap-3 mb-10 animate-pulse" style={{ animationDuration: "2.5s" }}>
+            <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-10 w-10" />
+            <span className="text-[28px] font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
+          </div>
+          <p
+            className={`text-gray-900 font-semibold text-lg mb-2 transition-all duration-300 ${
+              messageFade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+            }`}
+          >
+            {sseMessage || loadingMessages[messageIndex]}{dots}
+          </p>
+          <p className="text-[#4F46E5] text-sm font-medium mb-6">
+            {Math.min(Math.round(progress), 100)}%
+          </p>
+          <div className="w-72 h-2 bg-gray-200 rounded-full overflow-hidden relative">
+            <div
+              className="h-full bg-gradient-to-r from-[#4F46E5] to-[#818CF8] rounded-full transition-all duration-500 ease-out relative"
+              style={{ width: `${Math.min(progress, 100)}%` }}
+            >
+              <div className="absolute inset-0 bg-white/30 animate-shimmer rounded-full" />
+            </div>
+          </div>
+          <div className="flex gap-1.5 mt-6 mb-8">
+            {[0, 20, 40, 60, 80].map((threshold, i) => (
+              <div
+                key={i}
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${
+                  progress > threshold
+                    ? "bg-[#4F46E5] scale-110"
+                    : "bg-gray-300"
+                }`}
+              />
+            ))}
+          </div>
+          <div
+            className={`flex items-center gap-2 px-4 py-2.5 bg-[#EEF2FF] rounded-full transition-all duration-300 ${
+              tipFade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
+            }`}
+          >
+            <span className="text-[#4F46E5] text-xs font-semibold">TIP</span>
+            <p className="text-gray-500 text-sm">{loadingTips[tipIndex]}</p>
+          </div>
+        </div>
+      ) : isVideoMode && videoResult ? (
+        /* Video Result State */
+        <div className="flex min-h-screen">
+          {/* ===== 왼쪽 사이드바 (공유 템플릿) ===== */}
+          <aside
+            className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 flex flex-col z-50 transition-all duration-300 overflow-hidden ${
+              sidebarOpen ? "w-60" : "w-0"
+            }`}
+          >
+            <div className="flex-shrink-0 flex items-center justify-between px-4 pt-5 pb-3">
+              <div className="flex items-center gap-1.5">
+                <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-6 w-6" />
+                <span className="text-[15px] font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
+              </div>
+              <button onClick={() => setSidebarOpen(false)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-shrink-0 px-3 mb-4">
+              <button onClick={handleGoBack} className="w-full flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-500 hover:bg-gray-50 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                새 변환하기
+              </button>
+            </div>
+            <nav className="flex-shrink-0 px-3">
+              <div className="space-y-0.5">
+                <button onClick={() => requireAuth(() => {})} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                  <svg className="w-[18px] h-[18px] text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  변환 기록
+                </button>
+              </div>
+            </nav>
+            <div className="flex-1" />
+            <div className="flex-shrink-0 border-t border-gray-100 px-3 py-4">
+              <div className="flex items-center gap-3 px-2">
+                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium text-gray-900 truncate">게스트</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {!sidebarOpen && (
+            <button onClick={() => setSidebarOpen(true)} className="fixed top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm transition-colors">
+              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
+
+          {/* ===== 오른쪽 메인 콘텐츠 (비디오) ===== */}
+          <div className={`animate-fade-in flex-1 transition-all duration-300 ${sidebarOpen ? "ml-60" : "ml-0"}`}>
+            {/* 소스 바 */}
+            <div className="bg-gray-50 border-b border-gray-200">
+              <div className="max-w-4xl mx-auto px-8 py-3 flex items-center gap-2">
+                <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 bg-[#4F46E5]">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </div>
+                <span className="text-sm text-gray-600 truncate">
+                  {(() => {
+                    const content = sessionStorage.getItem("blog-to-video-content") ?? "";
+                    return content.length > 50 ? content.slice(0, 50) + "..." : content;
+                  })()}
+                </span>
+              </div>
+            </div>
+
+            {/* 메인 콘텐츠 영역 */}
+            <div className="max-w-4xl mx-auto px-8 pt-10 pb-32">
+              <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-8">
+                생성된 숏폼 영상
+              </h1>
+
+              {/* 비디오 플레이어 */}
+              <div className="flex justify-center mb-10">
+                <div className="max-w-sm w-full">
+                  <video
+                    controls
+                    className="w-full rounded-xl shadow-lg bg-black"
+                    style={{ aspectRatio: "9/16" }}
+                    src={videoResult.videoUrl}
+                  />
+                </div>
+              </div>
+
+              {/* AI 프롬프트 섹션 (접이식) */}
+              {videoResult.videoPrompt && (
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => setPromptOpen(!promptOpen)}
+                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <span className="text-sm font-medium text-gray-700">AI 영상 프롬프트</span>
+                    <svg
+                      className={`w-4 h-4 text-gray-400 transition-transform ${promptOpen ? "rotate-180" : ""}`}
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {promptOpen && (
+                    <div className="px-5 pb-4 border-t border-gray-100">
+                      <p className="text-sm text-gray-600 leading-relaxed mt-3 whitespace-pre-line">
+                        {videoResult.videoPrompt}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* 하단 액션 바 */}
+            <div className={`fixed bottom-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transition-all duration-300 ${sidebarOpen ? "left-60" : "left-0"}`}>
+              <div className="max-w-4xl mx-auto px-8 py-4">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={handleGoBack}
+                    className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    새 변환
+                  </button>
+                  <a
+                    href={videoResult.videoUrl}
+                    download
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium transition-all"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    영상 다운로드
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Blog Result State - Sidebar + Content */
+        <div className="flex min-h-screen">
+          {/* ===== 왼쪽 사이드바 ===== */}
+          <aside
+            className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 flex flex-col z-50 transition-all duration-300 overflow-hidden ${
+              sidebarOpen ? "w-60" : "w-0"
+            }`}
+          >
+            {/* 로고 + 토글 */}
+            <div className="flex-shrink-0 flex items-center justify-between px-4 pt-5 pb-3">
+              <div className="flex items-center gap-1.5">
+                <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-6 w-6" />
+                <span className="text-[15px] font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
+              </div>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 새 변환 버튼 */}
+            <div className="flex-shrink-0 px-3 mb-4">
+              <button
+                onClick={handleGoBack}
+                className="w-full flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-500 hover:bg-gray-50 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                새 변환하기
+              </button>
+            </div>
+
+            {/* 네비게이션 */}
+            <nav className="flex-shrink-0 px-3">
+              <div className="space-y-0.5">
+                <button onClick={() => requireAuth(() => {})} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                  <svg className="w-[18px] h-[18px] text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  변환 기록
+                </button>
+              </div>
+            </nav>
+
+            {/* 최근 변환 - 스크롤 가능 */}
+            <div className="flex-1 min-h-0 overflow-y-auto px-3 mt-4">
+              <div className="flex items-center justify-between px-3 mb-2">
+                <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">최근 변환</span>
+              </div>
+              <div className="space-y-0.5">
+                {displayData && (
+                  <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left">
+                    <span className="text-gray-300 text-xs flex-shrink-0">📄</span>
+                    <span className="truncate">{displayData.blogTitle}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* 하단 영역 */}
+            <div className="flex-shrink-0 border-t border-gray-100 px-3 py-3 space-y-1">
+              <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                도움말
+              </button>
+            </div>
+
+            {/* 유저 프로필 */}
+            <div className="flex-shrink-0 border-t border-gray-100 px-3 py-4">
+              <div className="flex items-center gap-3 px-2">
+                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium text-gray-900 truncate">게스트</span>
+                    <span className="text-[10px] font-medium text-[#4F46E5] bg-[#EEF2FF] px-1.5 py-0.5 rounded">무료</span>
+                  </div>
+                  <p className="text-xs text-gray-400 truncate">크레딧 0회 남음</p>
+                </div>
+                <button className="p-1 hover:bg-gray-100 rounded transition-colors">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              </div>
+              {/* 업그레이드 버튼 */}
+              <button
+                onClick={() => setShowPricing(true)}
+                className="w-full mt-3 py-2.5 bg-[#FEF9C3] hover:bg-[#FEF08A] text-gray-900 text-sm font-medium rounded-lg transition-colors"
+              >
+                업그레이드
+              </button>
+            </div>
+          </aside>
+
+          {/* 사이드바 닫혔을 때 열기 버튼 */}
+          {!sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="fixed top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm transition-colors"
+            >
+              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
+
+          {/* ===== 오른쪽 메인 콘텐츠 ===== */}
+          <div
+            className={`animate-fade-in flex-1 transition-all duration-300 ${
+              sidebarOpen ? "ml-60" : "ml-0"
+            }`}
+          >
+            {/* 메인 콘텐츠 영역 */}
+            <div className="max-w-4xl mx-auto px-8 pt-10 pb-32">
+              {/* 큰 제목 (편집 가능) */}
+              <EditableText
+                tag="h1"
+                value={displayData?.blogTitle ?? ""}
+                onChange={(v) => updateEdited((d) => { d.blogTitle = v; })}
+                className="text-3xl font-bold text-gray-900 leading-tight mb-8 px-1 -mx-1"
+              />
+
+              {/* 태그 칩 */}
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
+                <span className="text-gray-400 text-sm">적용 ✦</span>
+                {tagChips.map((chip) => (
+                  <span
+                    key={chip}
+                    className="px-3 py-1.5 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 cursor-pointer transition-colors"
+                  >
+                    {chip}
+                  </span>
+                ))}
+                <button
+                  onClick={() => setShowEmoji((v) => !v)}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    showEmoji
+                      ? "bg-gray-900 text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  이모지 포함
+                </button>
+                <button
+                  onClick={() => setShowSubtitle((v) => !v)}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    showSubtitle
+                      ? "bg-gray-900 text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  소제목 분리
+                </button>
+                <button
+                  onClick={() => setShowToc((v) => !v)}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    showToc
+                      ? "bg-gray-900 text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  목차
+                </button>
+              </div>
+
+              {/* 편집 도구 바 */}
+              <div className="flex items-center gap-4 mb-4 flex-wrap">
+                {/* 정렬 */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 text-sm mr-1">정렬</span>
+                  {([
+                    { value: "left" as const, icon: (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M3 12h12M3 18h16" />
+                      </svg>
+                    )},
+                    { value: "center" as const, icon: (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M6 12h12M4 18h16" />
+                      </svg>
+                    )},
+                    { value: "right" as const, icon: (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M9 12h12M5 18h16" />
+                      </svg>
+                    )},
+                  ]).map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setTextAlign(opt.value)}
+                      className={`p-2 rounded-lg transition-colors ${
+                        textAlign === opt.value
+                          ? "bg-gray-900 text-white"
+                          : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                      }`}
+                    >
+                      {opt.icon}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="w-px h-6 bg-gray-200" />
+
+                {/* 폰트 크기 */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 text-sm mr-1">크기</span>
+                  <button
+                    onClick={() => setFontSize((s) => Math.max(12, s - 1))}
+                    className="p-2 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                    </svg>
+                  </button>
+                  <span className="text-sm text-gray-600 w-8 text-center font-mono">{fontSize}</span>
+                  <button
+                    onClick={() => setFontSize((s) => Math.min(24, s + 1))}
+                    className="p-2 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="w-px h-6 bg-gray-200" />
+
+                {/* 폰트 굵기 */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-gray-400 text-sm mr-1">굵기</span>
+                  {([
+                    { value: "light" as const, label: "Light" },
+                    { value: "normal" as const, label: "Regular" },
+                    { value: "medium" as const, label: "Medium" },
+                    { value: "bold" as const, label: "Bold" },
+                  ]).map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setFontWeight(opt.value)}
+                      className={`px-2.5 py-1.5 rounded-lg transition-colors text-xs ${
+                        fontWeight === opt.value
+                          ? "bg-gray-900 text-white"
+                          : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                      }`}
+                      style={{ fontWeight: opt.value === "light" ? 300 : opt.value === "normal" ? 400 : opt.value === "medium" ? 500 : 700 }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 편집 안내 힌트 */}
+              <div className="flex items-center gap-1.5 mb-10 text-gray-400 text-xs">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                텍스트를 클릭하면 직접 수정할 수 있어요
+              </div>
+
+              {/* 플로팅 툴바 (텍스트 선택 시 표시) */}
+              <FloatingToolbar containerRef={blogContentRef} />
+
+              {/* 블로그 본문 영역 (정렬 + 크기 + 굵기 적용) */}
+              <div ref={blogContentRef} style={{ textAlign, fontSize: `${fontSize}px`, fontWeight: fontWeight === "light" ? 300 : fontWeight === "normal" ? 400 : fontWeight === "medium" ? 500 : 700 }}>
+
+              {/* 요약(도입부) 텍스트 */}
+              <div className="mb-6">
+                <EditableText
+                  value={displayData?.summary ?? ""}
+                  onChange={(v) => updateEdited((d) => { d.summary = v; })}
+                  className="text-gray-700 leading-[2] whitespace-pre-line px-1 -mx-1"
+                />
+              </div>
+
+              {/* 도입부 이미지 */}
+              {displayData?.frameUrls && displayData.frameUrls.length > 0 && (() => {
+                const usedIndices = new Set(
+                  displayData.sections
+                    .map((s) => s.frame_index)
+                    .filter((fi): fi is number => fi != null && fi >= 0)
+                );
+                const introIndex = displayData.frameUrls.findIndex(
+                  (_, i) => !usedIndices.has(i)
+                );
+                const introUrl = introIndex >= 0
+                  ? displayData.frameUrls[introIndex]
+                  : displayData.frameUrls[0];
+                return introUrl ? <BlogImage src={introUrl} alt="영상 프레임" /> : null;
+              })()}
+
+              {/* 목차 (토글) */}
+              {showToc && displayData?.toc && (
+                <div className="my-10 rounded-2xl bg-gray-50 border border-gray-200 px-6 py-5">
+                  <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-200">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                    <span className="text-sm font-bold text-gray-700">목차</span>
+                  </div>
+                  <div className="space-y-1">
+                    {displayData.toc.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-2.5 py-1.5 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors group"
+                      >
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center text-xs font-semibold text-gray-400 group-hover:border-gray-900 group-hover:text-gray-900 transition-colors">
+                          {item.id}
+                        </span>
+                        <span>{showEmoji ? `${item.emoji} ` : ""}{item.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 본문 섹션 — 네이버 블로그 스타일 */}
+              {displayData?.sections.map((section, idx) => {
+                const hasFrameMatching = displayData.sections.some(
+                  (s) => s.frame_index != null && s.frame_index >= 0
+                );
+                let frameUrl: string | undefined;
+                if (hasFrameMatching) {
+                  if (
+                    section.frame_index != null &&
+                    section.frame_index >= 0 &&
+                    section.frame_index < displayData.frameUrls.length
+                  ) {
+                    frameUrl = displayData.frameUrls[section.frame_index];
+                  }
+                } else {
+                  frameUrl = displayData.frameUrls?.[idx + 1];
+                }
+
+                return (
+                  <div key={idx} className="mb-4">
+                    {/* 섹션 제목 */}
+                    {showSubtitle && (
+                      <div className="flex items-center gap-2 mt-10 mb-4">
+                        <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
+                        <EditableText
+                          tag="h2"
+                          value={showEmoji ? `${section.emoji} ${section.title}` : section.title}
+                          onChange={(v) => updateEdited((d) => {
+                            const match = v.match(/^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F?)\s*(.*)$/u);
+                            if (match) {
+                              d.sections[idx].emoji = match[1];
+                              d.sections[idx].title = match[2];
+                            } else {
+                              d.sections[idx].title = v;
+                            }
+                          })}
+                          className="font-bold text-gray-900 px-1 -mx-1"
+                        />
+                      </div>
+                    )}
+
+                    {/* 섹션 본문 */}
+                    <EditableText
+                      value={section.content}
+                      onChange={(v) => updateEdited((d) => { d.sections[idx].content = v; })}
+                      className="text-gray-600 leading-[2] whitespace-pre-line px-1 -mx-1"
+                    />
+
+                    {/* 섹션 이미지 */}
+                    {frameUrl && <BlogImage src={frameUrl} alt={`프레임 - ${section.title}`} />}
+                  </div>
+                );
+              })}
+
+              {/* 해시태그 (편집 가능) */}
+              {displayData?.hashtags && displayData.hashtags.length > 0 && (
+                <div className="mt-10 pt-6 border-t border-gray-100">
+                  <EditableText
+                    value={displayData.hashtags.join(" ")}
+                    onChange={(v) => updateEdited((d) => {
+                      d.hashtags = v.split(/\s+/).filter(Boolean).map(
+                        (t) => t.startsWith("#") ? t : `#${t}`
+                      );
+                    })}
+                    className="text-[#4F46E5] px-1 -mx-1"
+                  />
+                </div>
+              )}
+
+              </div>{/* /블로그 본문 정렬 wrapper */}
+            </div>
+
+            {/* 하단 액션 바 */}
+            <div
+              className={`fixed bottom-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transition-all duration-300 ${
+                sidebarOpen ? "left-60" : "left-0"
+              }`}
+            >
+              <div className="max-w-4xl mx-auto px-8 py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleGoBack}
+                      className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      새 변환
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(window.location.href);
+                        alert("링크가 복사되었습니다!");
+                      }}
+                      className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                      링크 복사
+                    </button>
+                  </div>
+                  <button
+                    onClick={handleCopyContent}
+                    className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all text-sm font-medium ${
+                      copied
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-900 hover:bg-gray-800 text-white"
+                    }`}
+                  >
+                    {copied ? (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        복사 완료!
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        내용 복사
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* 요금제 모달 */}
+      {showPricing && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          {/* 배경 오버레이 */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowPricing(false)}
+          />
+          {/* 모달 본체 */}
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            {/* 닫기 버튼 */}
+            <button
+              onClick={() => setShowPricing(false)}
+              className="absolute top-4 right-4 p-1.5 hover:bg-gray-100 rounded-lg transition-colors z-10"
+            >
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* 헤더 */}
+            <div className="px-8 pt-8 pb-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-1">요금제 선택</h2>
+              <p className="text-sm text-gray-500">
+                건당 1,000원도 안 되는 비용으로 블로그 포스팅을 자동 완성하세요.
+              </p>
+            </div>
+
+            {/* 요금제 카드 */}
+            <div className="px-8 pb-8">
+              <div className="grid md:grid-cols-3 gap-0 border border-gray-200 rounded-xl overflow-hidden">
+                {/* 무료 테스터 */}
+                <div className="p-5 border-b md:border-b-0 md:border-r border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">무료 테스터</h3>
+                  <p className="text-xs text-gray-400 mb-3">성능을 직접 확인해보세요</p>
+                  <div className="mb-0.5">
+                    <span className="text-3xl font-bold text-gray-900">₩0</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-4">신용카드 불필요</p>
+                  <button
+                    onClick={() => setShowPricing(false)}
+                    className="w-full py-2.5 bg-gray-900 text-white font-medium rounded-lg text-sm mb-5"
+                  >
+                    현재 플랜
+                  </button>
+                  <ul className="space-y-2.5">
+                    <li className="flex items-start gap-2">
+                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
+                      <span className="text-xs text-gray-600">최초 1회 무료 변환</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
+                      <span className="text-xs text-gray-600">유튜브 쇼츠 지원</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
+                      <span className="text-xs text-gray-600">네이버 블로그 SEO 글 생성</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* 스타터 팩 */}
+                <div className="p-5 border-b md:border-b-0 md:border-r border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">스타터 팩</h3>
+                  <p className="text-xs text-gray-400 mb-3">가볍게 시작하는 블로그 마케팅</p>
+                  <div className="mb-0.5">
+                    <span className="text-3xl font-bold text-gray-900">₩9,900</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-4">10건 · 건당 ₩990</p>
+                  <button
+                    onClick={() => handlePurchase("starter")}
+                    disabled={isProcessing}
+                    className="w-full py-2.5 bg-[#4F46E5] text-white font-medium rounded-lg hover:bg-[#4338CA] active:scale-[0.98] transition-all text-sm mb-5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isProcessing ? "처리 중..." : "구매하기"}
+                  </button>
+                  <ul className="space-y-2.5">
+                    <li className="flex items-start gap-2">
+                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
+                      <span className="text-xs text-gray-600">10건 변환 크레딧</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
+                      <span className="text-xs text-gray-600">유튜브 + 인스타 릴스 지원</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
+                      <span className="text-xs text-gray-600">SEO 키워드 최적화</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
+                      <span className="text-xs text-gray-600">만료 기간 없음</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* 프로 팩 */}
+                <div className="p-5 relative">
+                  <span className="absolute top-4 right-4 px-2 py-0.5 bg-[#EEF2FF] text-[#4F46E5] text-[10px] font-medium rounded-full">추천</span>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">프로 팩</h3>
+                  <p className="text-xs text-gray-400 mb-3">가장 인기 있는 요금제</p>
+                  <div className="mb-0.5">
+                    <span className="text-3xl font-bold text-gray-900">₩29,000</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-4">50건 · 건당 ₩580</p>
+                  <button
+                    onClick={() => handlePurchase("pro")}
+                    disabled={isProcessing}
+                    className="w-full py-2.5 bg-[#4F46E5] text-white font-medium rounded-lg hover:bg-[#4338CA] active:scale-[0.98] transition-all text-sm mb-5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isProcessing ? "처리 중..." : "구매하기"}
+                  </button>
+                  <ul className="space-y-2.5">
+                    <li className="flex items-start gap-2">
+                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
+                      <span className="text-xs text-gray-600">50건 변환 크레딧</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
+                      <span className="text-xs text-gray-600">유튜브 + 인스타 릴스 지원</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
+                      <span className="text-xs text-gray-600">고급 SEO + 톤/스타일 커스터마이징</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
+                      <span className="text-xs text-gray-600">만료 기간 없음 + 우선 지원</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 로그인 모달 */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowLoginModal(false)}
+          />
+          <div className="relative z-10 bg-white rounded-2xl p-8 w-full max-w-sm mx-4 shadow-xl">
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-7 w-7" />
+              <span className="text-[22px] font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
+            </div>
+
+            <h2 className="text-xl font-bold text-gray-900 text-center mb-2">로그인</h2>
+            <p className="text-sm text-gray-500 text-center mb-8">
+              간편하게 로그인하고 서비스를 이용하세요
+            </p>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => handleSocialLogin("kakao")}
+                disabled={loginLoading !== null}
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-[#FEE500] text-[#000000] font-medium rounded-lg hover:bg-[#FDD800] transition-colors disabled:opacity-60"
+              >
+                {loginLoading === "kakao" ? (
+                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 3C6.477 3 2 6.463 2 10.714c0 2.758 1.819 5.178 4.545 6.545-.2.745-.727 2.702-.832 3.12-.13.52.19.512.4.373.164-.109 2.612-1.771 3.672-2.489.71.099 1.447.151 2.215.151 5.523 0 10-3.463 10-7.714S17.523 3 12 3z"/>
+                  </svg>
+                )}
+                {loginLoading === "kakao" ? "연결 중..." : "카카오로 시작하기"}
+              </button>
+
+              <button
+                onClick={() => handleSocialLogin("naver")}
+                disabled={loginLoading !== null}
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-[#03C75A] text-white font-medium rounded-lg hover:bg-[#02b350] transition-colors disabled:opacity-60"
+              >
+                {loginLoading === "naver" ? (
+                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z"/>
+                  </svg>
+                )}
+                {loginLoading === "naver" ? "연결 중..." : "네이버로 시작하기"}
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-400 text-center mt-6">
+              로그인 시 <a href="#" className="underline">이용약관</a> 및 <a href="#" className="underline">개인정보처리방침</a>에 동의하게 됩니다.
+            </p>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}
+
+export default function ResultPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="w-48 h-1 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-full bg-[#4F46E5] rounded-full w-1/3 animate-pulse" />
+          </div>
+        </div>
+      }
+    >
+      <ResultContent />
+    </Suspense>
+  );
+}
