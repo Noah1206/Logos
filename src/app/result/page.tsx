@@ -377,7 +377,7 @@ function ResultContent() {
 
   const handlePurchase = (packageId: string) => {
     if (!user) {
-      alert("로그인이 필요합니다.");
+      setShowLoginModal(true);
       return;
     }
     purchasePackage(packageId);
