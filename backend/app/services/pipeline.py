@@ -3,6 +3,7 @@
 URL → 영상 다운로드 → (오디오 STT + 프레임 Vision 병렬) → 블로그 글 생성
 """
 import asyncio
+import re
 import uuid
 from typing import Optional, Callable, Awaitable
 from ..models.schemas import ConvertResponse
@@ -39,12 +40,13 @@ async def run_conversion_pipeline(
     emit = progress_callback or _noop_progress
 
     try:
-        # Step 1: 영상 다운로드
-        await emit(5, "영상 링크를 분석하고 있어요")
+        # Step 1: 콘텐츠 다운로드
+        await emit(5, "링크를 분석하고 있어요")
         platform, video_id = detect_platform(url)
+        is_feed = bool(re.search(r'instagram\.com/p/', url))
         print(f"[Pipeline] 플랫폼 감지: {platform.value}, ID: {video_id}")
 
-        await emit(10, "영상을 다운로드하고 있어요")
+        await emit(10, "게시물을 가져오고 있어요" if is_feed else "영상을 다운로드하고 있어요")
         print("[Pipeline] 콘텐츠 다운로드 중...")
         content_path, video_info = await download_video(url)
         video_path = content_path  # cleanup용
@@ -53,7 +55,7 @@ async def run_conversion_pipeline(
             print(f"[Pipeline] 제목: {video_info.title}")
         if video_info.description:
             print(f"[Pipeline] 설명: {video_info.description[:100]}...")
-        await emit(30, "다운로드 완료! 콘텐츠를 분석 중이에요")
+        await emit(30, "이미지를 분석 중이에요" if is_feed else "다운로드 완료! 콘텐츠를 분석 중이에요")
 
         if video_info.content_type == "image":
             # === 이미지 피드 (STT 스킵) ===
