@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:8000";
 
@@ -6,6 +8,34 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
+    // 인증 확인
+    const session = await auth();
+    if (!session?.user?.id) {
+      return new Response(
+        JSON.stringify({ success: false, error: "로그인이 필요합니다." }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // 크레딧 확인
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { credits: true },
+    });
+
+    if (!user || user.credits <= 0) {
+      return new Response(
+        JSON.stringify({ success: false, error: "크레딧이 부족합니다. 충전 후 이용해주세요." }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // 크레딧 차감
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { credits: { decrement: 1 } },
+    });
+
     const body = await req.json();
 
     const response = await fetch(`${FASTAPI_URL}/api/convert/stream`, {

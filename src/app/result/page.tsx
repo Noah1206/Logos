@@ -647,6 +647,7 @@ function ResultContent() {
                 // 결과를 sessionStorage에 캐시
                 sessionStorage.setItem(cacheKey, JSON.stringify(mapped));
                 setProgress(100);
+                updateSession();
                 setTimeout(() => setIsComplete(true), 400);
                 return;
               }
@@ -913,7 +914,8 @@ function ResultContent() {
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium text-gray-900 truncate">게스트</span>
+                  <span className="text-sm font-medium text-gray-900 truncate">{user?.name || "게스트"}</span>
+                  <p className="text-xs text-gray-400 truncate">{user ? `${user.credits}회 남음` : "로그인 필요"}</p>
                 </div>
               </div>
             </div>
@@ -1103,10 +1105,10 @@ function ResultContent() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-medium text-gray-900 truncate">게스트</span>
-                    <span className="text-[10px] font-medium text-[#4F46E5] bg-[#EEF2FF] px-1.5 py-0.5 rounded">무료</span>
+                    <span className="text-sm font-medium text-gray-900 truncate">{user?.name || "게스트"}</span>
+                    <span className="text-[10px] font-medium text-[#4F46E5] bg-[#EEF2FF] px-1.5 py-0.5 rounded">{user && user.credits > 1 ? "프로" : "무료"}</span>
                   </div>
-                  <p className="text-xs text-gray-400 truncate">크레딧 0회 남음</p>
+                  <p className="text-xs text-gray-400 truncate">크레딧 {user?.credits ?? 0}회 남음</p>
                 </div>
                 <button className="p-1 hover:bg-gray-100 rounded transition-colors">
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
