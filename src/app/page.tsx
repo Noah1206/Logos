@@ -53,6 +53,11 @@ export default function Home() {
   const handleConvert = () => {
     if (isConverting) return;
 
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
     if (mode === "blog-to-video") {
       if (!blogContent.trim()) return;
       setIsConverting(true);
