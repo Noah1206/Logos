@@ -755,6 +755,35 @@ function ResultContent() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadImages = async () => {
+    const data = editedData ?? resultData;
+    if (!data || !data.frameUrls || data.frameUrls.length === 0) return;
+
+    setDownloading(true);
+    try {
+      for (let i = 0; i < data.frameUrls.length; i++) {
+        const url = data.frameUrls[i];
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const ext = blob.type.includes("png") ? "png" : "jpg";
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `image_${i + 1}.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+      }
+    } catch (err) {
+      console.error("이미지 다운로드 실패:", err);
+      alert("이미지 다운로드에 실패했습니다.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   // 편집 헬퍼 함수
   const updateEdited = useCallback((updater: (d: ResultData) => void) => {
     setEditedData((prev) => {
@@ -1452,30 +1481,44 @@ function ResultContent() {
                       링크 복사
                     </button>
                   </div>
-                  <button
-                    onClick={handleCopyContent}
-                    className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all text-sm font-medium ${
-                      copied
-                        ? "bg-green-500 text-white"
-                        : "bg-gray-900 hover:bg-gray-800 text-white"
-                    }`}
-                  >
-                    {copied ? (
-                      <>
+                  <div className="flex items-center gap-2">
+                    {displayData?.frameUrls && displayData.frameUrls.length > 0 && (
+                      <button
+                        onClick={handleDownloadImages}
+                        disabled={downloading}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-lg transition-all text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                      >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        복사 완료!
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        내용 복사
-                      </>
+                        {downloading ? "다운로드 중..." : "사진 다운로드"}
+                      </button>
                     )}
-                  </button>
+                    <button
+                      onClick={handleCopyContent}
+                      className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all text-sm font-medium ${
+                        copied
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-900 hover:bg-gray-800 text-white"
+                      }`}
+                    >
+                      {copied ? (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          복사 완료!
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          내용 복사
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
