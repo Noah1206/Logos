@@ -32,7 +32,8 @@ async def convert_video(request: ConvertRequest):
     """
     result = await run_conversion_pipeline(
         url=request.url,
-        location=request.location
+        location=request.location,
+        tone=request.tone
     )
 
     if not result.success:
@@ -59,6 +60,7 @@ async def convert_video_stream(request: ConvertRequest):
             run_conversion_pipeline(
                 url=request.url,
                 location=request.location,
+                tone=request.tone,
                 progress_callback=progress_callback,
             )
         )

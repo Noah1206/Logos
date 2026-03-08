@@ -11,6 +11,7 @@ class Platform(str, Enum):
 class ConvertRequest(BaseModel):
     url: str
     location: Optional[str] = None  # 예: "홍대", "강남"
+    tone: Optional[str] = None  # "일상" | "자영업자"
 
 
 class VideoInfo(BaseModel):

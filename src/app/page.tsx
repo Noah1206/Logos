@@ -14,6 +14,7 @@ export default function Home() {
   const [mode, setMode] = useState<ConvertMode>("video-to-blog");
   const [blogContent, setBlogContent] = useState("");
   const [videoStyle, setVideoStyle] = useState("");
+  const [blogTone, setBlogTone] = useState<"일상" | "자영업자">("일상");
 
   const { data: session, status, update: updateSession } = useSession();
   const isAuthLoading = status === "loading";
@@ -70,7 +71,7 @@ export default function Home() {
       if (!url.trim()) return;
       setIsConverting(true);
       setTimeout(() => {
-        window.location.href = `/result?url=${encodeURIComponent(url)}`;
+        window.location.href = `/result?url=${encodeURIComponent(url)}&tone=${encodeURIComponent(blogTone)}`;
       }, 600);
     }
   };
@@ -170,6 +171,31 @@ export default function Home() {
                 </button>
               ))}
             </div>
+
+            {/* 톤 선택 (video-to-blog, feed-to-blog 공통) */}
+            {(mode === "video-to-blog" || mode === "feed-to-blog") && (
+              <div className="flex justify-center gap-2 mb-4">
+                {([
+                  { key: "일상" as const, label: "일상", desc: "감성 브이로그 스타일" },
+                  { key: "자영업자" as const, label: "자영업자", desc: "매장 홍보 스타일" },
+                ] as const).map((tone) => (
+                  <button
+                    key={tone.key}
+                    onClick={() => setBlogTone(tone.key)}
+                    className={`px-4 py-2 rounded-full transition-all text-sm font-medium border ${
+                      blogTone === tone.key
+                        ? "bg-[#4F46E5] text-white border-[#4F46E5]"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    {tone.label}
+                    <span className={`ml-1.5 text-[10px] ${blogTone === tone.key ? "text-indigo-200" : "text-gray-400"}`}>
+                      {tone.desc}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* video-to-blog: 플랫폼 선택 + URL 입력 */}
             {mode === "video-to-blog" && (

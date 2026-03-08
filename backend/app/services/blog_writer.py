@@ -202,13 +202,39 @@ def _build_frame_matching_section(frame_descriptions: Optional[List[dict]] = Non
 - 매칭할 프레임이 없으면 frame_index를 -1로 설정"""
 
 
+TONE_PROMPTS = {
+    "일상": """【글 톤: 일상/라이프스타일】
+- 개인 일기처럼 자연스럽고 감성적인 톤
+- "오늘 뭐 했냐면~", "갑자기 생각나서~" 같은 일상 도입
+- 나의 감정, 느낌, 소소한 발견에 초점
+- 광고 느낌 최소화, 친구에게 이야기하듯
+- CTA도 부드럽게: "여러분도 한번 가보세요~" 정도""",
+
+    "자영업자": """【글 톤: 자영업자/매장 홍보】
+- 매장의 강점을 자연스럽게 어필하는 마케팅 톤
+- 가격, 위치, 영업시간, 메뉴 등 실용 정보 강조
+- "이 가격에 이 퀄리티?" 같은 가성비 어필
+- 방문을 유도하는 강한 CTA: "예약은 프로필 링크에서!"
+- 위치/교통 접근성 자연스럽게 포함
+- 이벤트/할인 정보 있으면 적극 활용""",
+}
+
+
+def _build_tone_section(tone: Optional[str] = None) -> str:
+    """톤별 추가 프롬프트 텍스트 생성"""
+    if not tone or tone not in TONE_PROMPTS:
+        return ""
+    return TONE_PROMPTS[tone]
+
+
 async def write_blog(
     transcript: Optional[str] = None,
     screen_text: Optional[str] = None,
     description: Optional[str] = None,
     video_title: Optional[str] = None,
     location: Optional[str] = None,
-    frame_descriptions: Optional[List[dict]] = None
+    frame_descriptions: Optional[List[dict]] = None,
+    tone: Optional[str] = None
 ) -> tuple[BlogStructure, SEOKeywords, str]:
     """
     모든 소스를 종합하여 네이버 블로그 글 생성 (단일 GPT 호출)
@@ -224,10 +250,16 @@ async def write_blog(
 
     frame_matching = _build_frame_matching_section(frame_descriptions)
 
+    # 톤별 추가 프롬프트 삽입
+    tone_section = _build_tone_section(tone)
+    if tone_section:
+        sources = tone_section + "\n\n" + sources
+
     prompt = BLOG_WRITER_PROMPT.format(
         sources=sources,
         frame_matching_section=frame_matching
     )
+    print(f"[BlogWriter] 톤: {tone or '기본'}")
 
     response = client.chat.completions.create(
         model=settings.GPT_MODEL,

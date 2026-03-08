@@ -27,6 +27,7 @@ async def _noop_progress(progress: int, message: str) -> None:
 async def run_conversion_pipeline(
     url: str,
     location: Optional[str] = None,
+    tone: Optional[str] = None,
     progress_callback: Optional[ProgressCallback] = None,
 ) -> ConvertResponse:
     """
@@ -137,7 +138,8 @@ async def run_conversion_pipeline(
             description=video_info.description if has_description else None,
             video_title=video_info.title,
             location=location,
-            frame_descriptions=frame_desc_list if frame_desc_list else None
+            frame_descriptions=frame_desc_list if frame_desc_list else None,
+            tone=tone
         )
         await emit(95, "블로그 글 작성 완료! 마무리 중이에요")
         print(f"[Pipeline] 블로그 생성 완료: {blog_structure.title}")

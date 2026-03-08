@@ -353,6 +353,7 @@ function mapResponseToResultData(data: any): ResultData {
 function ResultContent() {
   const searchParams = useSearchParams();
   const url = searchParams.get("url") || "";
+  const tone = searchParams.get("tone") || "";
   const pageMode = searchParams.get("mode") || "";
   const isVideoMode = pageMode === "blog-to-video";
 
@@ -596,7 +597,7 @@ function ResultContent() {
         const res = await fetch("/api/convert/stream", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url }),
+          body: JSON.stringify({ url, ...(tone && { tone }) }),
         });
 
         if (!res.ok || !res.body) {
