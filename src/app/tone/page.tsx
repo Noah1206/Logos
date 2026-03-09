@@ -2,38 +2,14 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, Suspense } from "react";
+import { useTranslation } from "@/i18n";
+import LanguageToggle from "@/components/LanguageToggle";
 
 const MAX_IMAGES = 10;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-const tones = [
-  {
-    key: "일상" as const,
-    label: "일상 블로그",
-    emoji: "✨",
-    desc: "감성 브이로그 스타일",
-    features: [
-      "자연스러운 구어체",
-      "감성적인 이모지 활용",
-      "일상 공유 톤앤매너",
-      "친근한 말투",
-    ],
-  },
-  {
-    key: "자영업자" as const,
-    label: "자영업자 블로그",
-    emoji: "🏪",
-    desc: "매장 홍보 스타일",
-    features: [
-      "매장/서비스 어필 중심",
-      "위치·가격 정보 강조",
-      "방문 유도 CTA 포함",
-      "신뢰감 있는 톤",
-    ],
-  },
-];
-
 function ToneContent() {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const router = useRouter();
   const url = searchParams.get("url") || "";
@@ -44,6 +20,33 @@ function ToneContent() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
+
+  const tones = [
+    {
+      key: "일상" as const,
+      label: t("tone.daily.label"),
+      emoji: "✨",
+      desc: t("tone.daily.desc"),
+      features: [
+        t("tone.daily.features.0"),
+        t("tone.daily.features.1"),
+        t("tone.daily.features.2"),
+        t("tone.daily.features.3"),
+      ],
+    },
+    {
+      key: "자영업자" as const,
+      label: t("tone.business.label"),
+      emoji: "🏪",
+      desc: t("tone.business.desc"),
+      features: [
+        t("tone.business.features.0"),
+        t("tone.business.features.1"),
+        t("tone.business.features.2"),
+        t("tone.business.features.3"),
+      ],
+    },
+  ];
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files).filter(
@@ -112,7 +115,6 @@ function ToneContent() {
 
   const handleStart = () => {
     if (!selected || !url) return;
-    // 체크된 이미지만 sessionStorage에 저장
     const selectedImages = images.filter((_, i) => checkedImages.has(i));
     if (selectedImages.length > 0) {
       sessionStorage.setItem("user_images", JSON.stringify(selectedImages));
@@ -137,6 +139,7 @@ function ToneContent() {
               <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-7 w-7 translate-y-[3px]" />
               <span className="text-[22px] font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
             </a>
+            <LanguageToggle />
           </div>
         </div>
       </header>
@@ -145,10 +148,10 @@ function ToneContent() {
       <section className="pt-16 pb-20 px-4">
         <div className="max-w-2xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">
-            블로그 톤 선택
+            {t("tone.title")}
           </h1>
           <p className="text-gray-500 text-sm md:text-base mb-12">
-            어떤 스타일의 블로그 글을 원하시나요?
+            {t("tone.subtitle")}
           </p>
 
           {/* Tone Cards */}
@@ -163,7 +166,6 @@ function ToneContent() {
                     : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
                 }`}
               >
-                {/* Selected indicator */}
                 {selected === tone.key && (
                   <div className="absolute top-4 right-4 w-6 h-6 bg-[#4F46E5] rounded-full flex items-center justify-center">
                     <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -194,10 +196,10 @@ function ToneContent() {
           {/* Image Upload Section */}
           <div className="mb-10">
             <h2 className="text-lg font-bold text-gray-900 mb-2">
-              사진 추가 <span className="text-sm font-normal text-gray-400">(선택)</span>
+              {t("tone.imageUpload.title")} <span className="text-sm font-normal text-gray-400">{t("tone.imageUpload.optional")}</span>
             </h2>
             <p className="text-sm text-gray-500 mb-4">
-              블로그에 넣고 싶은 사진이 있으면 추가해주세요. 복사+붙여넣기도 가능해요.
+              {t("tone.imageUpload.desc")}
             </p>
 
             {/* Drop zone */}
@@ -234,10 +236,10 @@ function ToneContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
                   </svg>
                   <p className="text-sm text-gray-400">
-                    클릭하거나 사진을 드래그하세요
+                    {t("tone.imageUpload.dropzone")}
                   </p>
                   <p className="text-xs text-gray-300">
-                    Ctrl+V로 붙여넣기도 가능 · 최대 {MAX_IMAGES}장
+                    {t("tone.imageUpload.dropzoneHint", { max: MAX_IMAGES })}
                   </p>
                 </div>
               ) : (
@@ -254,11 +256,10 @@ function ToneContent() {
                       >
                         <img
                           src={src}
-                          alt={`업로드 ${i + 1}`}
+                          alt={`Upload ${i + 1}`}
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      {/* 체크박스 */}
                       <div
                         onClick={(e) => { e.stopPropagation(); toggleCheck(i); }}
                         className={`absolute bottom-1.5 left-1.5 w-5 h-5 rounded flex items-center justify-center cursor-pointer transition-all ${
@@ -273,7 +274,6 @@ function ToneContent() {
                           </svg>
                         )}
                       </div>
-                      {/* 삭제 버튼 */}
                       <button
                         onClick={(e) => { e.stopPropagation(); removeImage(i); }}
                         className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
@@ -292,7 +292,7 @@ function ToneContent() {
             </div>
             {images.length > 0 && (
               <p className="text-xs text-gray-400 mt-2 text-right">
-                {checkedImages.size}장 선택 / {images.length}장 업로드
+                {t("tone.imageUpload.selected", { selected: checkedImages.size, total: images.length })}
               </p>
             )}
           </div>
@@ -306,8 +306,8 @@ function ToneContent() {
               <div className="flex items-center gap-3">
                 <span className="text-xl">🎬</span>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">영상에서 사진 추출</p>
-                  <p className="text-xs text-gray-400">릴스/쇼츠에서 자동으로 캡처한 사진을 블로그에 포함</p>
+                  <p className="text-sm font-semibold text-gray-900">{t("tone.frameExtract.title")}</p>
+                  <p className="text-xs text-gray-400">{t("tone.frameExtract.desc")}</p>
                 </div>
               </div>
               <div
@@ -334,7 +334,7 @@ function ToneContent() {
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
             }`}
           >
-            변환 시작
+            {t("tone.startConvert")}
           </button>
         </div>
       </section>

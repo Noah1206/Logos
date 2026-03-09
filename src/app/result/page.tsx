@@ -4,40 +4,7 @@ import { useSearchParams } from "next/navigation";
 import React, { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { usePayment } from "@/hooks/usePayment";
-
-const blogLoadingMessages = [
-  "영상을 분석하고 있어요",
-  "음성을 텍스트로 변환 중이에요",
-  "핵심 키워드를 추출하고 있어요",
-  "블로그 구조를 설계하고 있어요",
-  "SEO 최적화 글을 작성 중이에요",
-  "소제목과 단락을 구성하고 있어요",
-  "이모지와 해시태그를 추가하고 있어요",
-  "최종 검수 중이에요",
-];
-
-const videoLoadingMessages = [
-  "블로그 글을 분석하고 있어요",
-  "영상 프롬프트를 생성 중이에요",
-  "AI가 영상을 만들고 있어요",
-  "장면을 구성하고 있어요",
-  "영상을 렌더링하고 있어요",
-  "최종 마무리 중이에요",
-];
-
-const blogLoadingTips = [
-  "영상이 길수록 더 풍부한 글이 만들어져요",
-  "네이버 블로그 SEO에 최적화된 구조로 작성돼요",
-  "자동으로 소제목과 단락이 구분돼요",
-  "복사 후 바로 네이버 블로그에 붙여넣기 하세요",
-];
-
-const videoLoadingTips = [
-  "LOGOS AI가 고품질 영상을 생성 중이에요",
-  "영상 생성에 2~5분 정도 소요될 수 있어요",
-  "9:16 세로 영상으로 릴스/쇼츠에 최적화돼요",
-  "생성된 영상은 바로 다운로드할 수 있어요",
-];
+import { useTranslation, useTranslationArray } from "@/i18n";
 
 type ReportTab = "detailed" | "summary" | "easy" | "script";
 
@@ -132,6 +99,7 @@ function BlogImage({ src, alt, onReplace, onDelete }: {
   onReplace?: (newSrc: string) => void;
   onDelete?: () => void;
 }) {
+  const { t } = useTranslation();
   const [loaded, setLoaded] = useState(false);
   const [hovering, setHovering] = useState(false);
   const [scale, setScale] = useState(100); // 퍼센트
@@ -179,7 +147,7 @@ function BlogImage({ src, alt, onReplace, onDelete }: {
         {!loaded && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin" />
-            <span className="text-xs text-gray-400">이미지 로딩 중...</span>
+            <span className="text-xs text-gray-400">{t("result.imageLoading")}</span>
           </div>
         )}
         <img
@@ -199,7 +167,7 @@ function BlogImage({ src, alt, onReplace, onDelete }: {
             <button
               onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}
               className="w-8 h-8 bg-white/90 hover:bg-white rounded-lg shadow flex items-center justify-center transition-colors"
-              title="사진 변경"
+              title={t("result.changePhoto")}
             >
               <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
@@ -211,7 +179,7 @@ function BlogImage({ src, alt, onReplace, onDelete }: {
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
               className="w-8 h-8 bg-white/90 hover:bg-red-50 rounded-lg shadow flex items-center justify-center transition-colors"
-              title="사진 삭제"
+              title={t("result.deletePhoto")}
             >
               <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -244,6 +212,7 @@ function BlogImage({ src, alt, onReplace, onDelete }: {
 
 // 선택 영역 서식 적용 플로팅 툴바
 function FloatingToolbar({ containerRef }: { containerRef: React.RefObject<HTMLDivElement | null> }) {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [selFontSize, setSelFontSize] = useState(16);
@@ -364,7 +333,7 @@ function FloatingToolbar({ containerRef }: { containerRef: React.RefObject<HTMLD
       onMouseDown={(e) => e.preventDefault()}
     >
       <div className="flex items-center gap-1.5">
-        <span className="text-gray-400 text-xs">크기</span>
+        <span className="text-gray-400 text-xs">{t("result.size")}</span>
         <button
           onMouseDown={(e) => {
             e.preventDefault();
@@ -446,6 +415,12 @@ function mapResponseToResultData(data: any): ResultData {
 }
 
 function ResultContent() {
+  const { t } = useTranslation();
+  const blogLoadingMessages = useTranslationArray("result.blogLoading");
+  const videoLoadingMessages = useTranslationArray("result.videoLoading");
+  const blogLoadingTips = useTranslationArray("result.blogTips");
+  const videoLoadingTips = useTranslationArray("result.videoTips");
+
   const searchParams = useSearchParams();
   const url = searchParams.get("url") || "";
   const tone = searchParams.get("tone") || "";
@@ -460,13 +435,13 @@ function ResultContent() {
 
   const { purchasePackage, isProcessing } = usePayment({
     onSuccess: (credits) => {
-      alert(`결제가 완료되었습니다! 현재 크레딧: ${credits}회`);
+      alert(t("payment.completed", { credits }));
       updateSession();
       setShowPricing(false);
     },
     onError: (error) => {
-      if (!error.includes("취소")) {
-        alert(`결제 오류: ${error}`);
+      if (!error.includes(t("payment.cancelled"))) {
+        alert(t("payment.error", { error }));
       }
     },
   });
@@ -660,7 +635,7 @@ function ResultContent() {
     const style = sessionStorage.getItem("blog-to-video-style") || undefined;
 
     if (!blogContent) {
-      setErrorMessage("변환할 내용이 없습니다.");
+      setErrorMessage(t("result.noContent"));
       setIsError(true);
       return;
     }
@@ -688,7 +663,7 @@ function ResultContent() {
         clearInterval(progressInterval);
 
         if (!res.ok || !data.success) {
-          setErrorMessage(data.error ?? "영상 생성 중 오류가 발생했습니다.");
+          setErrorMessage(data.error ?? t("result.videoError"));
           setIsError(true);
           return;
         }
@@ -701,7 +676,7 @@ function ResultContent() {
         setTimeout(() => setIsComplete(true), 400);
       } catch {
         clearInterval(progressInterval);
-        setErrorMessage("서버에 연결할 수 없습니다. FastAPI 서버가 실행 중인지 확인해주세요.");
+        setErrorMessage(t("result.serverError"));
         setIsError(true);
       }
     };
@@ -742,7 +717,7 @@ function ResultContent() {
 
         if (!res.ok || !res.body) {
           const data = await res.json().catch(() => ({}));
-          setErrorMessage(data.error ?? "변환 중 오류가 발생했습니다.");
+          setErrorMessage(data.error ?? t("result.convertError"));
           setIsError(true);
           return;
         }
@@ -768,7 +743,7 @@ function ResultContent() {
               const event = JSON.parse(jsonStr);
 
               if (event.error) {
-                setErrorMessage(event.message ?? "변환 실패");
+                setErrorMessage(event.message ?? t("result.conversionFailedShort"));
                 setIsError(true);
                 return;
               }
@@ -805,7 +780,7 @@ function ResultContent() {
         }
       } catch {
         if (!cancelled) {
-          setErrorMessage("서버에 연결할 수 없습니다. FastAPI 서버가 실행 중인지 확인해주세요.");
+          setErrorMessage(t("result.serverError"));
           setIsError(true);
         }
       }
@@ -924,8 +899,8 @@ function ResultContent() {
         URL.revokeObjectURL(a.href);
       }
     } catch (err) {
-      console.error("이미지 다운로드 실패:", err);
-      alert("이미지 다운로드에 실패했습니다.");
+      console.error("Image download failed:", err);
+      alert(t("result.imageDownloadFailed"));
     } finally {
       setDownloading(false);
     }
@@ -951,10 +926,10 @@ function ResultContent() {
   const displayData = editedData ?? resultData;
 
   const tabs: { key: ReportTab; label: string }[] = [
-    { key: "detailed", label: "블로그 글" },
-    { key: "summary", label: "핵심 요약" },
-    { key: "easy", label: "쉬운 버전" },
-    { key: "script", label: "스크립트" },
+    { key: "detailed", label: t("result.tabs.blogPost") },
+    { key: "summary", label: t("result.tabs.summary") },
+    { key: "easy", label: t("result.tabs.easy") },
+    { key: "script", label: t("result.tabs.script") },
   ];
 
   const tagChips: string[] = [];
@@ -963,9 +938,9 @@ function ResultContent() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-500 mb-4">변환할 URL이 없습니다.</p>
+          <p className="text-gray-500 mb-4">{t("result.noUrl")}</p>
           <button onClick={handleGoBack} className="text-gray-900 font-medium hover:underline">
-            돌아가기
+            {t("common.goBack")}
           </button>
         </div>
       </div>
@@ -982,13 +957,13 @@ function ResultContent() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">변환 실패</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">{t("result.conversionFailed")}</h2>
           <p className="text-sm text-gray-500 mb-6">{errorMessage}</p>
           <button
             onClick={handleGoBack}
             className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
           >
-            다시 시도하기
+            {t("result.tryAgain")}
           </button>
         </div>
       </div>
@@ -1068,7 +1043,7 @@ function ResultContent() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                새 변환하기
+                {t("result.newConvertFull")}
               </button>
             </div>
             <nav className="flex-shrink-0 px-3">
@@ -1077,7 +1052,7 @@ function ResultContent() {
                   <svg className="w-[18px] h-[18px] text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  변환 기록
+                  {t("result.conversionHistory")}
                 </button>
               </div>
             </nav>
@@ -1090,8 +1065,8 @@ function ResultContent() {
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium text-gray-900 truncate">{user?.name || "게스트"}</span>
-                  <p className="text-xs text-gray-400 truncate">{user ? `${user.credits}회 남음` : "로그인 필요"}</p>
+                  <span className="text-sm font-medium text-gray-900 truncate">{user?.name || t("common.guest")}</span>
+                  <p className="text-xs text-gray-400 truncate">{user ? t("common.creditsLeft", { count: user.credits }) : t("common.loginRequired")}</p>
                 </div>
               </div>
             </div>
@@ -1127,7 +1102,7 @@ function ResultContent() {
             {/* 메인 콘텐츠 영역 */}
             <div className="max-w-4xl mx-auto px-8 pt-10 pb-32">
               <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-8">
-                생성된 숏폼 영상
+                {t("result.generatedVideo")}
               </h1>
 
               {/* 비디오 플레이어 */}
@@ -1149,7 +1124,7 @@ function ResultContent() {
                     onClick={() => setPromptOpen(!promptOpen)}
                     className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
                   >
-                    <span className="text-sm font-medium text-gray-700">AI 영상 프롬프트</span>
+                    <span className="text-sm font-medium text-gray-700">{t("result.aiVideoPrompt")}</span>
                     <svg
                       className={`w-4 h-4 text-gray-400 transition-transform ${promptOpen ? "rotate-180" : ""}`}
                       fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -1179,7 +1154,7 @@ function ResultContent() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    새 변환
+                    {t("result.newConvert")}
                   </button>
                   <a
                     href={videoResult.videoUrl}
@@ -1189,7 +1164,7 @@ function ResultContent() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                    영상 다운로드
+                    {t("result.downloadVideo")}
                   </a>
                 </div>
               </div>
@@ -1230,7 +1205,7 @@ function ResultContent() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                새 변환하기
+                {t("result.newConvertFull")}
               </button>
             </div>
 
@@ -1241,7 +1216,7 @@ function ResultContent() {
                   <svg className="w-[18px] h-[18px] text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  변환 기록
+                  {t("result.conversionHistory")}
                 </button>
               </div>
             </nav>
@@ -1249,7 +1224,7 @@ function ResultContent() {
             {/* 최근 변환 - 스크롤 가능 */}
             <div className="flex-1 min-h-0 overflow-y-auto px-3 mt-4">
               <div className="flex items-center justify-between px-3 mb-2">
-                <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">최근 변환</span>
+                <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{t("result.recentConversions")}</span>
               </div>
               <div className="space-y-0.5">
                 {displayData && (
@@ -1267,7 +1242,7 @@ function ResultContent() {
                 <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                도움말
+                {t("common.help")}
               </button>
             </div>
 
@@ -1281,10 +1256,10 @@ function ResultContent() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-medium text-gray-900 truncate">{user?.name || "게스트"}</span>
-                    <span className="text-[10px] font-medium text-[#4F46E5] bg-[#EEF2FF] px-1.5 py-0.5 rounded">{user && user.credits > 1 ? "프로" : "무료"}</span>
+                    <span className="text-sm font-medium text-gray-900 truncate">{user?.name || t("common.guest")}</span>
+                    <span className="text-[10px] font-medium text-[#4F46E5] bg-[#EEF2FF] px-1.5 py-0.5 rounded">{user && user.credits > 1 ? t("common.pro") : t("common.free")}</span>
                   </div>
-                  <p className="text-xs text-gray-400 truncate">크레딧 {user?.credits ?? 0}회 남음</p>
+                  <p className="text-xs text-gray-400 truncate">{t("result.creditRemaining", { count: user?.credits ?? 0 })}</p>
                 </div>
                 <button className="p-1 hover:bg-gray-100 rounded transition-colors">
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1298,7 +1273,7 @@ function ResultContent() {
                 onClick={() => setShowPricing(true)}
                 className="w-full mt-3 py-2.5 bg-[#FEF9C3] hover:bg-[#FEF08A] text-gray-900 text-sm font-medium rounded-lg transition-colors"
               >
-                업그레이드
+                {t("common.upgrade")}
               </button>
             </div>
           </aside>
@@ -1333,7 +1308,7 @@ function ResultContent() {
 
               {/* 태그 칩 */}
               <div className="flex items-center gap-2 mb-4 flex-wrap">
-                <span className="text-gray-400 text-sm">적용 ✦</span>
+                <span className="text-gray-400 text-sm">{t("result.applied")}</span>
                 {tagChips.map((chip) => (
                   <span
                     key={chip}
@@ -1350,7 +1325,7 @@ function ResultContent() {
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 >
-                  이모지 포함
+                  {t("result.includeEmoji")}
                 </button>
                 <button
                   onClick={() => setShowSubtitle((v) => !v)}
@@ -1360,7 +1335,7 @@ function ResultContent() {
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 >
-                  소제목 분리
+                  {t("result.separateSubtitle")}
                 </button>
                 <button
                   onClick={() => setShowToc((v) => !v)}
@@ -1370,7 +1345,7 @@ function ResultContent() {
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 >
-                  목차
+                  {t("result.toc")}
                 </button>
               </div>
 
@@ -1378,7 +1353,7 @@ function ResultContent() {
               <div className="flex items-center gap-4 mb-4 flex-wrap">
                 {/* 정렬 */}
                 <div className="flex items-center gap-1.5">
-                  <span className="text-gray-400 text-sm mr-1">정렬</span>
+                  <span className="text-gray-400 text-sm mr-1">{t("result.align")}</span>
                   {([
                     { value: "left" as const, icon: (
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1414,7 +1389,7 @@ function ResultContent() {
 
                 {/* 폰트 크기 */}
                 <div className="flex items-center gap-1.5">
-                  <span className="text-gray-400 text-sm mr-1">크기</span>
+                  <span className="text-gray-400 text-sm mr-1">{t("result.size")}</span>
                   <button
                     onClick={() => setFontSize((s) => Math.max(12, s - 1))}
                     className="p-2 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
@@ -1438,7 +1413,7 @@ function ResultContent() {
 
                 {/* 폰트 굵기 */}
                 <div className="flex items-center gap-1.5">
-                  <span className="text-gray-400 text-sm mr-1">굵기</span>
+                  <span className="text-gray-400 text-sm mr-1">{t("result.weight")}</span>
                   {([
                     { value: "light" as const, label: "Light" },
                     { value: "normal" as const, label: "Regular" },
@@ -1466,7 +1441,7 @@ function ResultContent() {
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
-                텍스트를 클릭하면 직접 수정할 수 있어요
+                {t("result.editHint")}
               </div>
 
               {/* 플로팅 툴바 (텍스트 선택 시 표시) */}
@@ -1513,7 +1488,7 @@ function ResultContent() {
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                     </svg>
-                    <span className="text-sm font-bold text-gray-700">목차</span>
+                    <span className="text-sm font-bold text-gray-700">{t("result.toc")}</span>
                   </div>
                   <div className="space-y-1">
                     {displayData.toc.map((item) => (
@@ -1649,19 +1624,19 @@ function ResultContent() {
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
-                      새 변환
+                      {t("result.newConvert")}
                     </button>
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(window.location.href);
-                        alert("링크가 복사되었습니다!");
+                        alert(t("result.linkCopied"));
                       }}
                       className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                       </svg>
-                      링크 복사
+                      {t("result.copyLink")}
                     </button>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1674,7 +1649,7 @@ function ResultContent() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        {downloading ? "다운로드 중..." : "사진 다운로드"}
+                        {downloading ? t("result.downloading") : t("result.downloadImages")}
                       </button>
                     )}
                     <button
@@ -1690,14 +1665,14 @@ function ResultContent() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
-                          복사 완료!
+                          {t("result.copied")}
                         </>
                       ) : (
                         <>
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
-                          내용 복사
+                          {t("result.copyContent")}
                         </>
                       )}
                     </button>
@@ -1730,9 +1705,9 @@ function ResultContent() {
 
             {/* 헤더 */}
             <div className="px-8 pt-8 pb-4">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">요금제 선택</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">{t("pricing.selectPlan")}</h2>
               <p className="text-sm text-gray-500">
-                건당 1,000원도 안 되는 비용으로 블로그 포스팅을 자동 완성하세요.
+                {t("pricing.modalSubtitle")}
               </p>
             </div>
 
@@ -1741,102 +1716,76 @@ function ResultContent() {
               <div className="grid md:grid-cols-3 gap-0 border border-gray-200 rounded-xl overflow-hidden">
                 {/* 무료 테스터 */}
                 <div className="p-5 border-b md:border-b-0 md:border-r border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">무료 테스터</h3>
-                  <p className="text-xs text-gray-400 mb-3">성능을 직접 확인해보세요</p>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">{t("pricing.free.name")}</h3>
+                  <p className="text-xs text-gray-400 mb-3">{t("pricing.free.desc")}</p>
                   <div className="mb-0.5">
-                    <span className="text-3xl font-bold text-gray-900">₩0</span>
+                    <span className="text-3xl font-bold text-gray-900">{t("pricing.free.price")}</span>
                   </div>
-                  <p className="text-xs text-gray-400 mb-4">신용카드 불필요</p>
+                  <p className="text-xs text-gray-400 mb-4">{t("pricing.free.period")}</p>
                   <button
                     onClick={() => setShowPricing(false)}
                     className="w-full py-2.5 bg-gray-900 text-white font-medium rounded-lg text-sm mb-5"
                   >
-                    현재 플랜
+                    {t("common.currentPlan")}
                   </button>
                   <ul className="space-y-2.5">
-                    <li className="flex items-start gap-2">
-                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
-                      <span className="text-xs text-gray-600">최초 1회 무료 변환</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
-                      <span className="text-xs text-gray-600">유튜브 쇼츠 지원</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
-                      <span className="text-xs text-gray-600">네이버 블로그 SEO 글 생성</span>
-                    </li>
+                    {[0, 1, 2].map((i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-gray-400 mt-0.5 text-xs">✓</span>
+                        <span className="text-xs text-gray-600">{t(`pricing.modalFreeFeatures.${i}`)}</span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
 
                 {/* 스타터 팩 */}
                 <div className="p-5 border-b md:border-b-0 md:border-r border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">스타터 팩</h3>
-                  <p className="text-xs text-gray-400 mb-3">가볍게 시작하는 블로그 마케팅</p>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">{t("pricing.starter.name")}</h3>
+                  <p className="text-xs text-gray-400 mb-3">{t("pricing.starter.desc")}</p>
                   <div className="mb-0.5">
-                    <span className="text-3xl font-bold text-gray-900">₩9,900</span>
+                    <span className="text-3xl font-bold text-gray-900">{t("pricing.starter.price")}</span>
                   </div>
-                  <p className="text-xs text-gray-400 mb-4">10건 · 건당 ₩990</p>
+                  <p className="text-xs text-gray-400 mb-4">{t("pricing.starter.period")}</p>
                   <button
                     onClick={() => handlePurchase("starter")}
                     disabled={isProcessing}
                     className="w-full py-2.5 bg-[#4F46E5] text-white font-medium rounded-lg hover:bg-[#4338CA] active:scale-[0.98] transition-all text-sm mb-5 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isProcessing ? "처리 중..." : "구매하기"}
+                    {isProcessing ? t("common.processing") : t("common.purchase")}
                   </button>
                   <ul className="space-y-2.5">
-                    <li className="flex items-start gap-2">
-                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
-                      <span className="text-xs text-gray-600">10건 변환 크레딧</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
-                      <span className="text-xs text-gray-600">유튜브 + 인스타 릴스 지원</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
-                      <span className="text-xs text-gray-600">SEO 키워드 최적화</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
-                      <span className="text-xs text-gray-600">만료 기간 없음</span>
-                    </li>
+                    {[0, 1, 2, 3].map((i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-gray-400 mt-0.5 text-xs">✓</span>
+                        <span className="text-xs text-gray-600">{t(`pricing.modalStarterFeatures.${i}`)}</span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
 
                 {/* 프로 팩 */}
                 <div className="p-5 relative">
-                  <span className="absolute top-4 right-4 px-2 py-0.5 bg-[#EEF2FF] text-[#4F46E5] text-[10px] font-medium rounded-full">추천</span>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">프로 팩</h3>
-                  <p className="text-xs text-gray-400 mb-3">가장 인기 있는 요금제</p>
+                  <span className="absolute top-4 right-4 px-2 py-0.5 bg-[#EEF2FF] text-[#4F46E5] text-[10px] font-medium rounded-full">{t("common.recommended")}</span>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">{t("pricing.pro.name")}</h3>
+                  <p className="text-xs text-gray-400 mb-3">{t("pricing.modalProDesc")}</p>
                   <div className="mb-0.5">
-                    <span className="text-3xl font-bold text-gray-900">₩29,000</span>
+                    <span className="text-3xl font-bold text-gray-900">{t("pricing.pro.price")}</span>
                   </div>
-                  <p className="text-xs text-gray-400 mb-4">50건 · 건당 ₩580</p>
+                  <p className="text-xs text-gray-400 mb-4">{t("pricing.pro.period")}</p>
                   <button
                     onClick={() => handlePurchase("pro")}
                     disabled={isProcessing}
                     className="w-full py-2.5 bg-[#4F46E5] text-white font-medium rounded-lg hover:bg-[#4338CA] active:scale-[0.98] transition-all text-sm mb-5 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isProcessing ? "처리 중..." : "구매하기"}
+                    {isProcessing ? t("common.processing") : t("common.purchase")}
                   </button>
                   <ul className="space-y-2.5">
-                    <li className="flex items-start gap-2">
-                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
-                      <span className="text-xs text-gray-600">50건 변환 크레딧</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
-                      <span className="text-xs text-gray-600">유튜브 + 인스타 릴스 지원</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
-                      <span className="text-xs text-gray-600">고급 SEO + 톤/스타일 커스터마이징</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-gray-400 mt-0.5 text-xs">✓</span>
-                      <span className="text-xs text-gray-600">만료 기간 없음 + 우선 지원</span>
-                    </li>
+                    {[0, 1, 2, 3].map((i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-gray-400 mt-0.5 text-xs">✓</span>
+                        <span className="text-xs text-gray-600">{t(`pricing.modalProFeatures.${i}`)}</span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>
@@ -1867,9 +1816,9 @@ function ResultContent() {
               <span className="text-[22px] font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
             </div>
 
-            <h2 className="text-xl font-bold text-gray-900 text-center mb-2">로그인</h2>
+            <h2 className="text-xl font-bold text-gray-900 text-center mb-2">{t("login.title")}</h2>
             <p className="text-sm text-gray-500 text-center mb-8">
-              간편하게 로그인하고 서비스를 이용하세요
+              {t("login.subtitle")}
             </p>
 
             <div className="space-y-3">
@@ -1888,7 +1837,7 @@ function ResultContent() {
                     <path d="M12 3C6.477 3 2 6.463 2 10.714c0 2.758 1.819 5.178 4.545 6.545-.2.745-.727 2.702-.832 3.12-.13.52.19.512.4.373.164-.109 2.612-1.771 3.672-2.489.71.099 1.447.151 2.215.151 5.523 0 10-3.463 10-7.714S17.523 3 12 3z"/>
                   </svg>
                 )}
-                {loginLoading === "kakao" ? "연결 중..." : "카카오로 시작하기"}
+                {loginLoading === "kakao" ? t("common.connecting") : t("login.kakao")}
               </button>
 
               <button

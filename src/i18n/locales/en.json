@@ -1,0 +1,302 @@
+{
+  "meta": {
+    "title": "LOGOS.ai",
+    "description": "Turn any video into a blog post — auto-convert Shorts/Reels into SEO-optimized Naver blog articles"
+  },
+  "common": {
+    "login": "Log in",
+    "logout": "Log out",
+    "purchase": "Purchase",
+    "processing": "Processing...",
+    "connecting": "Connecting...",
+    "startFree": "Start for Free",
+    "startNow": "Get Started",
+    "goBack": "Go back",
+    "close": "Close",
+    "creditsLeft": "{{count}} credits left",
+    "guest": "Guest",
+    "loginRequired": "Login required",
+    "free": "Free",
+    "pro": "Pro",
+    "recommended": "Best",
+    "currentPlan": "Current Plan",
+    "upgrade": "Upgrade",
+    "help": "Help",
+    "youtube": "YouTube",
+    "instagram": "Instagram",
+    "testing": "Beta"
+  },
+  "promo": {
+    "banner": "\uD83C\uDF89 Launch Special: 48-hour free event! Unlimited free use with login — Time left: ",
+    "freeUsing": "\u2728 Free Access",
+    "timeFormat": "{{hours}}h {{minutes}}m {{seconds}}s"
+  },
+  "nav": {
+    "pricing": "Pricing"
+  },
+  "hero": {
+    "videoToBlog": {
+      "title1": "One Video,",
+      "title2": "One Blog Post",
+      "desc": "Just paste a Shorts/Reels link and AI auto-converts it into an SEO-optimized Naver blog post.\n1/10 the cost of a blog agency, done in under 1 minute. The blog automation tool for business owners."
+    },
+    "feedToBlog": {
+      "title1": "Instagram Feed",
+      "title2": "to Blog Post",
+      "desc": "Just paste an Instagram photo post link and AI auto-converts it into an SEO-optimized Naver blog post.\nSupports single photos to carousels — even image-only posts with no text."
+    },
+    "blogToVideo": {
+      "title1": "Blog Post",
+      "title2": "to Short-form Video",
+      "desc": "Paste your blog content and AI auto-converts it into a 15-second Reels/Shorts video.\nLOGOS AI analyzes your blog content and creates engaging vertical videos."
+    }
+  },
+  "tabs": {
+    "videoToBlog": "Video → Blog",
+    "feedToBlog": "Feed → Blog",
+    "blogToVideo": "Blog → Short"
+  },
+  "convert": {
+    "freeTrial": "1 Free",
+    "freeTrialDesc": "trial available · no login required",
+    "feedDesc": "Supports single photos to carousels · image-only posts OK",
+    "blogPlaceholder": "Paste your blog content here...",
+    "generateVideo": "Generate Video →",
+    "converting": "Converting...",
+    "blogToVideoDesc": "LOGOS AI auto-generates a 15-second vertical video",
+    "styleEmotional": "Mood",
+    "styleEnergetic": "Energy",
+    "styleInformative": "Info"
+  },
+  "steps": {
+    "step1": "STEP 1.",
+    "step1Desc": "Find an interesting Reel",
+    "step2": "STEP 2.",
+    "step2Desc": "Copy the video link",
+    "step3": "STEP 3.",
+    "step3Desc": "Paste the link"
+  },
+  "problem": {
+    "sectionLabel": "Problem",
+    "title": "Business Owner Struggles",
+    "subtitle": "You create great video content, but finding time for blog marketing feels impossible.",
+    "cat1": "Posts videos but can't keep up with blogging",
+    "cat2": "Needs blog marketing but doesn't know where to start",
+    "items1": [
+      {
+        "emoji": "\uD83D\uDE24",
+        "quote": "\"I have no time to write blog posts\"",
+        "desc": "Running a store all day leaves zero time for managing a blog.",
+        "points": ["Running the store takes all day", "Writing is too hard", "Agencies cost too much"]
+      },
+      {
+        "emoji": "\uD83D\uDE30",
+        "quote": "\"Agency fees are too expensive\"",
+        "desc": "Blog management costs $300-500/month... too much for small business owners.",
+        "points": ["Monthly fixed costs are a burden", "Hard to tell if it's effective", "Need a cheaper solution"]
+      },
+      {
+        "emoji": "\uD83D\uDE23",
+        "quote": "\"I shoot videos but can't turn them into posts\"",
+        "desc": "I upload Shorts and Reels, but turning the same content into blog posts is a whole different task.",
+        "points": ["Filming videos is easy enough", "Text version feels different", "Rewriting every time is tedious"]
+      },
+      {
+        "emoji": "\uD83D\uDE2B",
+        "quote": "\"Posting consistently is exhausting\"",
+        "desc": "Blogging requires consistency, but even posting once a week is a struggle.",
+        "points": ["Finding topics is difficult", "One post takes over an hour", "Wish it could be automated"]
+      }
+    ],
+    "items2": [
+      {
+        "emoji": "\uD83D\uDE25",
+        "quote": "\"My blog doesn't show up in search\"",
+        "desc": "I have a blog, but it never ranks high enough to drive traffic.",
+        "points": ["Don't understand SEO", "No visitors despite posting", "Don't know how to rank higher"]
+      },
+      {
+        "emoji": "\uD83D\uDE29",
+        "quote": "\"My writing quality is poor\"",
+        "desc": "Writing myself feels awkward, and agency posts don't capture my brand voice.",
+        "points": ["Not confident in writing", "Can't find the right tone", "Need professional-quality content"]
+      },
+      {
+        "emoji": "\uD83D\uDE13",
+        "quote": "\"Competitors are all doing it...\"",
+        "desc": "Nearby businesses grow with blog marketing while I'm falling behind.",
+        "points": ["Competitors rank higher", "I know I need to do it too...", "Don't know where to start"]
+      },
+      {
+        "emoji": "\uD83D\uDE2E\u200D\uD83D\uDCA8",
+        "quote": "\"I can't repurpose my video content\"",
+        "desc": "Great content lives on Shorts/Reels, but I don't know how to recycle it for blogs.",
+        "points": ["Videos and blogs are separate efforts", "Same content, double the work", "Need an efficient method"]
+      }
+    ]
+  },
+  "howItWorks": {
+    "whyLogos": "Why LOGOS.ai?",
+    "title": "One video\ndrives your revenue",
+    "items": [
+      { "num": "01", "title": "Speech to text, accurately", "desc": "AI speech recognition converts every word in your video to text without missing anything." },
+      { "num": "02", "title": "Blog structure search engines love", "desc": "Auto-generates subheadings, emojis, and paragraph layouts optimized for top search rankings." },
+      { "num": "03", "title": "Perfect tone for your industry", "desc": "Applies natural blog writing styles tailored to your business — gyms, restaurants, academies, and more." },
+      { "num": "04", "title": "1/10 the cost of an agency", "desc": "Skip the $300+/month agency fees. Starting at just $0.50 per post — focus on your business." },
+      { "num": "05", "title": "One link, one minute, done", "desc": "No complex setup — just paste a video URL and your blog post is ready." }
+    ]
+  },
+  "pricing": {
+    "title": "Pricing",
+    "subtitle": "Finish a blog post that would take an hour — for less than $1 per post.",
+    "subtitleBold": "Busy business owners choose to pay.",
+    "modalSubtitle": "Auto-complete blog posts for less than $1 each.",
+    "selectPlan": "Choose a Plan",
+    "free": {
+      "name": "Free Trial",
+      "desc": "See the quality for yourself",
+      "price": "$0",
+      "period": "No credit card required",
+      "features": ["1 free conversion on signup", "YouTube Shorts support", "Naver blog SEO generation", "Copy result to clipboard"]
+    },
+    "starter": {
+      "name": "Starter Pack",
+      "desc": "Start light with blog marketing",
+      "price": "$7.99",
+      "period": "10 posts · ~$0.80 each",
+      "features": ["10 conversion credits", "YouTube + Instagram Reels", "SEO keyword optimization", "Conversion history", "No expiration"]
+    },
+    "pro": {
+      "name": "Pro Pack",
+      "desc": "Most popular among business owners",
+      "price": "$21.99",
+      "period": "50 posts · ~$0.44 each",
+      "features": ["50 conversion credits", "YouTube + Instagram Reels", "Advanced SEO + tone customization", "Conversion history", "No expiration + priority support"]
+    },
+    "valueProposition": "Blog agency: $300+/month vs LOGOS.ai: ~$0.44-0.80/post — the smartest choice for business owners who need to focus on what they do best.",
+    "modalFreeFeatures": ["1 free conversion", "YouTube Shorts support", "Naver blog SEO generation"],
+    "modalStarterFeatures": ["10 conversion credits", "YouTube + Instagram Reels", "SEO keyword optimization", "No expiration"],
+    "modalProDesc": "Most popular plan",
+    "modalProFeatures": ["50 conversion credits", "YouTube + Instagram Reels", "Advanced SEO + tone customization", "No expiration + priority support"]
+  },
+  "login": {
+    "title": "Log In",
+    "subtitle": "Sign in to start using the service",
+    "kakao": "Continue with Kakao",
+    "naver": "Continue with Naver",
+    "terms": "By logging in, you agree to our ",
+    "termsOfService": "Terms of Service",
+    "and": " and ",
+    "privacyPolicy": "Privacy Policy",
+    "termsEnd": "."
+  },
+  "tone": {
+    "title": "Choose Blog Tone",
+    "subtitle": "What style of blog post would you like?",
+    "daily": {
+      "label": "Casual Blog",
+      "desc": "Personal vlog style",
+      "features": ["Natural conversational tone", "Expressive emoji usage", "Daily life sharing vibe", "Friendly voice"]
+    },
+    "business": {
+      "label": "Business Blog",
+      "desc": "Store promotion style",
+      "features": ["Highlights store/service appeal", "Emphasizes location & pricing", "Includes visit-driving CTAs", "Professional & trustworthy tone"]
+    },
+    "imageUpload": {
+      "title": "Add Photos",
+      "optional": "(optional)",
+      "desc": "Add photos you'd like to include in your blog post. Copy & paste also works.",
+      "dropzone": "Click or drag photos here",
+      "dropzoneHint": "Ctrl+V to paste · up to {{max}} photos",
+      "selected": "{{selected}} selected / {{total}} uploaded"
+    },
+    "frameExtract": {
+      "title": "Extract frames from video",
+      "desc": "Auto-captured frames from Reels/Shorts included in blog post"
+    },
+    "startConvert": "Start Conversion"
+  },
+  "result": {
+    "blogLoading": [
+      "Analyzing the video",
+      "Converting speech to text",
+      "Extracting key keywords",
+      "Designing blog structure",
+      "Writing SEO-optimized content",
+      "Organizing subheadings and paragraphs",
+      "Adding emojis and hashtags",
+      "Final review in progress"
+    ],
+    "videoLoading": [
+      "Analyzing the blog post",
+      "Generating video prompt",
+      "AI is creating the video",
+      "Composing scenes",
+      "Rendering the video",
+      "Final touches in progress"
+    ],
+    "blogTips": [
+      "Longer videos produce richer blog posts",
+      "Optimized for Naver blog SEO structure",
+      "Subheadings and paragraphs are auto-organized",
+      "Copy and paste directly into your Naver blog"
+    ],
+    "videoTips": [
+      "LOGOS AI is generating a high-quality video",
+      "Video generation may take 2-5 minutes",
+      "9:16 vertical video optimized for Reels/Shorts",
+      "Generated videos can be downloaded immediately"
+    ],
+    "noUrl": "No URL to convert.",
+    "conversionFailed": "Conversion Failed",
+    "tryAgain": "Try Again",
+    "newConvert": "New",
+    "newConvertFull": "New Conversion",
+    "conversionHistory": "History",
+    "recentConversions": "Recent",
+    "generatedVideo": "Generated Short-form Video",
+    "aiVideoPrompt": "AI Video Prompt",
+    "downloadVideo": "Download Video",
+    "copyLink": "Copy Link",
+    "linkCopied": "Link copied!",
+    "downloadImages": "Download Photos",
+    "downloading": "Downloading...",
+    "copyContent": "Copy Content",
+    "copied": "Copied!",
+    "imageLoading": "Loading image...",
+    "changePhoto": "Change photo",
+    "deletePhoto": "Delete photo",
+    "applied": "Applied \u2726",
+    "includeEmoji": "Emojis",
+    "separateSubtitle": "Subtitles",
+    "toc": "TOC",
+    "align": "Align",
+    "size": "Size",
+    "weight": "Weight",
+    "editHint": "Click any text to edit directly",
+    "tabs": {
+      "blogPost": "Blog Post",
+      "summary": "Summary",
+      "easy": "Simple",
+      "script": "Script"
+    },
+    "noContent": "No content to convert.",
+    "serverError": "Cannot connect to server. Please check if the FastAPI server is running.",
+    "videoError": "An error occurred while generating the video.",
+    "convertError": "An error occurred during conversion.",
+    "conversionFailedShort": "Conversion Failed",
+    "imageDownloadFailed": "Failed to download images.",
+    "creditRemaining": "{{count}} credits left"
+  },
+  "payment": {
+    "completed": "Payment complete! Current credits: {{credits}}",
+    "error": "Payment error: {{error}}",
+    "cancelled": "cancel",
+    "moduleLoading": "Loading payment module. Please try again shortly.",
+    "orderFailed": "Failed to create order.",
+    "paymentCancelled": "Payment was cancelled.",
+    "verifyFailed": "Payment verification failed.",
+    "genericError": "An error occurred during payment processing."
+  }
+}

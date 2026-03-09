@@ -13,7 +13,7 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "LOGOS.ai",
-  description: "영상 하나로 블로그 글 완성 - 쇼츠/릴스를 네이버 블로그 SEO 글로 자동 변환",
+  description: "Turn any video into a blog post — auto-convert Shorts/Reels into SEO-optimized blog articles",
 };
 
 export default function RootLayout({
@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={poppins.variable}>
+    <html lang="en" className={poppins.variable}>
       <body>
         <Script
           src="https://cdn.iamport.kr/v1/iamport.js"

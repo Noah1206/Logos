@@ -35,7 +35,7 @@ export function usePayment({ onSuccess, onError }: UsePaymentOptions = {}) {
     try {
       // 1. IMP SDK 로드 확인
       if (!window.IMP) {
-        throw new Error("결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+        throw new Error("PAYMENT_MODULE_LOADING");
       }
 
       // 2. 서버에 주문 생성
@@ -48,7 +48,7 @@ export function usePayment({ onSuccess, onError }: UsePaymentOptions = {}) {
       const orderData: CreateOrderResponse = await orderRes.json();
 
       if (!orderData.success || !orderData.paymentId) {
-        throw new Error(orderData.error ?? "주문 생성에 실패했습니다.");
+        throw new Error(orderData.error ?? "PAYMENT_ORDER_FAILED");
       }
 
       // 3. IMP 초기화 및 결제 요청
@@ -69,7 +69,7 @@ export function usePayment({ onSuccess, onError }: UsePaymentOptions = {}) {
         async (response) => {
           try {
             if (!response.success) {
-              throw new Error(response.error_msg ?? "결제가 취소되었습니다.");
+              throw new Error(response.error_msg ?? "PAYMENT_CANCELLED");
             }
 
             // 4. 서버에서 결제 검증
@@ -85,12 +85,12 @@ export function usePayment({ onSuccess, onError }: UsePaymentOptions = {}) {
             const confirmData: ConfirmPaymentResponse = await confirmRes.json();
 
             if (!confirmData.success) {
-              throw new Error(confirmData.error ?? "결제 검증에 실패했습니다.");
+              throw new Error(confirmData.error ?? "PAYMENT_VERIFY_FAILED");
             }
 
             onSuccess?.(confirmData.credits ?? 0);
           } catch (err) {
-            const message = err instanceof Error ? err.message : "결제 처리 중 오류가 발생했습니다.";
+            const message = err instanceof Error ? err.message : "PAYMENT_GENERIC_ERROR";
             onError?.(message);
           } finally {
             setIsProcessing(false);
@@ -101,7 +101,7 @@ export function usePayment({ onSuccess, onError }: UsePaymentOptions = {}) {
       // V1은 콜백 기반이므로 여기서 return (finally는 콜백 안에서 처리)
       return;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "결제 처리 중 오류가 발생했습니다.";
+      const message = err instanceof Error ? err.message : "PAYMENT_GENERIC_ERROR";
       onError?.(message);
       setIsProcessing(false);
     }

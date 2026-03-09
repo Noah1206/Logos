@@ -4,10 +4,13 @@ import { useState, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { usePayment } from "@/hooks/usePayment";
 import { PROMOTION } from "@/lib/promotion";
+import { useTranslation } from "@/i18n";
+import LanguageToggle from "@/components/LanguageToggle";
 
 type ConvertMode = "video-to-blog" | "feed-to-blog" | "blog-to-video";
 
 export default function Home() {
+  const { t } = useTranslation();
   const [url, setUrl] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [platform, setPlatform] = useState<"youtube" | "instagram">("instagram");
@@ -22,12 +25,12 @@ export default function Home() {
 
   const { purchasePackage, isProcessing } = usePayment({
     onSuccess: (credits) => {
-      alert(`결제가 완료되었습니다! 현재 크레딧: ${credits}회`);
+      alert(t("payment.completed", { credits }));
       updateSession();
     },
     onError: (error) => {
-      if (!error.includes("취소")) {
-        alert(`결제 오류: ${error}`);
+      if (!error.includes(t("payment.cancelled"))) {
+        alert(t("payment.error", { error }));
       }
     },
   });
@@ -58,7 +61,7 @@ export default function Home() {
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      setPromoTimeLeft(`${hours}시간 ${minutes}분 ${seconds}초`);
+      setPromoTimeLeft(`${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`);
     }
     updatePromo();
     const interval = setInterval(updatePromo, 1000);
@@ -105,7 +108,7 @@ export default function Home() {
       {/* Promotion Banner */}
       {isPromoActive && (
         <div className="bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] text-white text-center py-2.5 px-4 text-sm font-medium">
-          🎉 오픈 기념 48시간 무료 이벤트! 로그인만 하면 무제한 무료 이용 — 남은 시간: <span className="font-bold">{promoTimeLeft}</span>
+          {t("promo.banner")}<span className="font-bold">{promoTimeLeft}</span>
         </div>
       )}
       {/* Header */}
@@ -121,21 +124,22 @@ export default function Home() {
             {/* Navigation + Actions */}
             <div className="flex items-center gap-6">
               <nav className="hidden md:flex items-center">
-                <a href="#pricing" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">요금제</a>
+                <a href="#pricing" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">{t("nav.pricing")}</a>
               </nav>
+              <LanguageToggle />
               {user && (
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-600 hidden sm:block">
-                    {user.name || user.email?.split("@")[0]}님
+                    {user.name || user.email?.split("@")[0]}
                   </span>
                   <span className={`px-2 py-1 text-xs rounded font-medium ${isPromoActive ? "bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] text-white" : "bg-[#EEF2FF] text-[#4F46E5]"}`}>
-                    {isPromoActive ? "✨ 무료 이용중" : `${user.credits}회 남음`}
+                    {isPromoActive ? t("promo.freeUsing") : t("common.creditsLeft", { count: user.credits })}
                   </span>
                   <button
                     onClick={handleLogout}
                     className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
                   >
-                    로그아웃
+                    {t("common.logout")}
                   </button>
                 </div>
               )}
@@ -149,15 +153,15 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center">
           {/* 모드별 Hero 타이틀 */}
           <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-8">
-            {mode === "video-to-blog" && (<>영상 하나로<br /><span className="relative inline-block"><span className="relative z-10">블로그 글 완성</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
-            {mode === "feed-to-blog" && (<>인스타 피드를<br /><span className="relative inline-block"><span className="relative z-10">블로그 글로</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
-            {mode === "blog-to-video" && (<>블로그 글을<br /><span className="relative inline-block"><span className="relative z-10">숏폼 영상으로</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
+            {mode === "video-to-blog" && (<>{t("hero.videoToBlog.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("hero.videoToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
+            {mode === "feed-to-blog" && (<>{t("hero.feedToBlog.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("hero.feedToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
+            {mode === "blog-to-video" && (<>{t("hero.blogToVideo.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("hero.blogToVideo.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
           </h1>
 
-          <p className="text-sm md:text-base text-gray-500 max-w-2xl mx-auto mb-12 leading-relaxed">
-            {mode === "video-to-blog" && (<>쇼츠/릴스 링크만 넣으면 AI가 네이버 블로그 SEO 최적화 글로 자동 변환합니다.<br />블로그 대행사 비용의 1/10, 변환 시간은 1분 이내. 자영업자를 위한 블로그 자동화 도구입니다.</>)}
-            {mode === "feed-to-blog" && (<>인스타그램 사진 게시물 링크만 넣으면 AI가 네이버 블로그 SEO 글로 자동 변환합니다.<br />사진 1장부터 캐러셀까지 모두 지원, 텍스트 없는 이미지도 OK.</>)}
-            {mode === "blog-to-video" && (<>블로그 글을 넣으면 AI가 15초 릴스/쇼츠 영상으로 자동 변환합니다.<br />LOGOS AI가 블로그 내용을 분석해 매력적인 세로형 영상을 생성합니다.</>)}
+          <p className="text-sm md:text-base text-gray-500 max-w-2xl mx-auto mb-12 leading-relaxed whitespace-pre-line">
+            {mode === "video-to-blog" && t("hero.videoToBlog.desc")}
+            {mode === "feed-to-blog" && t("hero.feedToBlog.desc")}
+            {mode === "blog-to-video" && t("hero.blogToVideo.desc")}
           </p>
 
           {/* CTA Button */}
@@ -169,7 +173,7 @@ export default function Home() {
             }}
             className="px-10 py-4 text-base font-medium text-white bg-[#4F46E5] rounded-full hover:bg-[#4338CA] hover:scale-[0.98] active:scale-95 transition-all mb-16"
           >
-            무료로 시작하기
+            {t("common.startFree")}
           </button>
 
           {/* Convert Section */}
@@ -177,9 +181,9 @@ export default function Home() {
             {/* 모드 선택 탭 */}
             <div className="flex justify-center gap-2 mb-6">
               {([
-                { key: "video-to-blog" as ConvertMode, label: "영상 → 블로그", disabled: false },
-                { key: "feed-to-blog" as ConvertMode, label: "피드 → 블로그", disabled: false },
-                { key: "blog-to-video" as ConvertMode, label: "블로그 → 숏폼", disabled: true },
+                { key: "video-to-blog" as ConvertMode, label: t("tabs.videoToBlog"), disabled: false },
+                { key: "feed-to-blog" as ConvertMode, label: t("tabs.feedToBlog"), disabled: false },
+                { key: "blog-to-video" as ConvertMode, label: t("tabs.blogToVideo"), disabled: true },
               ]).map((tab) => (
                 <button
                   key={tab.key}
@@ -195,7 +199,7 @@ export default function Home() {
                 >
                   {tab.label}
                   {tab.disabled && (
-                    <span className="ml-1.5 text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full">테스트중</span>
+                    <span className="ml-1.5 text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full">{t("common.testing")}</span>
                   )}
                 </button>
               ))}
@@ -216,7 +220,7 @@ export default function Home() {
                     <svg className={`w-3.5 h-3.5 ${platform === "youtube" ? "text-red-300" : "text-red-500"}`} viewBox="0 0 24 24" fill="currentColor">
                       <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                     </svg>
-                    유튜브
+                    {t("common.youtube")}
                   </button>
                   <button
                     onClick={() => setPlatform("instagram")}
@@ -229,7 +233,7 @@ export default function Home() {
                     <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                     </svg>
-                    인스타그램
+                    {t("common.instagram")}
                   </button>
                 </div>
                 <div
@@ -264,7 +268,7 @@ export default function Home() {
                   </button>
                 </div>
                 <p className="text-center text-sm text-gray-500 mt-4">
-                  <span className="text-[#4F46E5] font-medium">무료 1회</span> 체험 가능 · 로그인 없이 바로 사용
+                  <span className="text-[#4F46E5] font-medium">{t("convert.freeTrial")}</span> {t("convert.freeTrialDesc")}
                 </p>
               </>
             )}
@@ -304,7 +308,7 @@ export default function Home() {
                   </button>
                 </div>
                 <p className="text-center text-sm text-gray-500 mt-4">
-                  사진 1장~캐러셀 모두 지원 · 텍스트 없는 이미지도 OK
+                  {t("convert.feedDesc")}
                 </p>
               </>
             )}
@@ -323,7 +327,7 @@ export default function Home() {
                     value={blogContent}
                     onChange={(e) => setBlogContent(e.target.value)}
                     disabled={isConverting}
-                    placeholder="블로그 글 내용을 붙여넣으세요..."
+                    placeholder={t("convert.blogPlaceholder")}
                     className={`w-full px-5 py-4 border rounded-xl focus:outline-none text-base resize-none transition-all duration-300 ${
                       isConverting ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border-gray-200 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] text-gray-900 placeholder-gray-400"
                     }`}
@@ -331,9 +335,9 @@ export default function Home() {
                   {/* 스타일 선택 칩 */}
                   <div className="flex justify-center gap-2 mt-4 mb-4">
                     {([
-                      { key: "감성", label: "감성" },
-                      { key: "활기", label: "활기" },
-                      { key: "정보", label: "정보" },
+                      { key: "감성", label: t("convert.styleEmotional") },
+                      { key: "활기", label: t("convert.styleEnergetic") },
+                      { key: "정보", label: t("convert.styleInformative") },
                     ]).map((s) => (
                       <button
                         key={s.key}
@@ -363,15 +367,15 @@ export default function Home() {
                     {isConverting ? (
                       <span className="flex items-center justify-center gap-2">
                         <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                        변환 중...
+                        {t("convert.converting")}
                       </span>
                     ) : (
-                      "영상 생성하기 →"
+                      t("convert.generateVideo")
                     )}
                   </button>
                 </div>
                 <p className="text-center text-sm text-gray-500 mt-4">
-                  LOGOS AI가 15초 세로 영상을 자동 생성
+                  {t("convert.blogToVideoDesc")}
                 </p>
               </>
             )}
@@ -383,7 +387,7 @@ export default function Home() {
               <div className="flex justify-center items-center gap-14 mb-10">
                 <div className="flex flex-col items-center animate-fade-in-up" style={{ animationDelay: '0ms' }}>
                   <p className="text-lg text-gray-600 mb-4 whitespace-nowrap">
-                    <span className="font-semibold text-gray-900">STEP 1.</span> 관심있는 릴스 찾기
+                    <span className="font-semibold text-gray-900">{t("steps.step1")}</span> {t("steps.step1Desc")}
                   </p>
                   <img
                     src="/images/reels-1.png"
@@ -394,7 +398,7 @@ export default function Home() {
                 <div className="text-gray-300 text-5xl animate-pulse">→</div>
                 <div className="flex flex-col items-center animate-fade-in-up" style={{ animationDelay: '150ms' }}>
                   <p className="text-lg text-gray-600 mb-4 whitespace-nowrap">
-                    <span className="font-semibold text-gray-900">STEP 2.</span> 영상 링크 복사하기
+                    <span className="font-semibold text-gray-900">{t("steps.step2")}</span> {t("steps.step2Desc")}
                   </p>
                   <img
                     src="/images/reels-2.png"
@@ -406,7 +410,7 @@ export default function Home() {
               <div className="flex flex-col items-center mb-16 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
                 <div className="text-gray-300 text-5xl animate-pulse mb-6">↓</div>
                 <p className="text-lg text-gray-600 mb-4 whitespace-nowrap">
-                  <span className="font-semibold text-[#4F46E5]">STEP 3.</span> 링크 붙여넣기
+                  <span className="font-semibold text-[#4F46E5]">{t("steps.step3")}</span> {t("steps.step3Desc")}
                 </p>
                 <img
                   src="/images/step3-screenshot.png"
@@ -424,46 +428,33 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
-            <span className="text-sm font-semibold text-[#E5704F] tracking-wider uppercase">Problem</span>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mt-3 mb-4">사장님들의 고민</h2>
+            <span className="text-sm font-semibold text-[#E5704F] tracking-wider uppercase">{t("problem.sectionLabel")}</span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mt-3 mb-4">{t("problem.title")}</h2>
             <p className="text-sm md:text-base text-gray-500 max-w-xl mx-auto">
-              영상 콘텐츠는 열심히 만드는데, 블로그 마케팅까지 신경 쓸 여유가 없는 사장님들의 고민이 있었어요.
+              {t("problem.subtitle")}
             </p>
           </div>
 
           {/* Category 1 */}
           <div className="flex justify-center mb-6">
             <span className="px-4 py-1.5 bg-[#f0fdf4] text-[#16a34a] text-sm font-medium rounded-full border border-[#bbf7d0]">
-              영상은 올리는데 블로그는 못 하는 사장님
+              {t("problem.cat1")}
             </span>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-6 mb-12 scrollbar-hide">
-            {[
-              {
-                emoji: "😤",
-                quote: "\"블로그 글 쓸 시간이 없어요\"",
-                desc: "하루 종일 매장 운영하느라 바쁜데, 블로그까지 관리할 여력이 없어요.",
-                points: ["매장 운영만으로도 하루가 부족해요", "글 쓰는 게 너무 어려워요", "대행사 맡기자니 비용이 부담돼요"],
-              },
-              {
-                emoji: "😰",
-                quote: "\"대행사 비용이 너무 비싸요\"",
-                desc: "블로그 대행 월 30~50만 원... 소규모 자영업자한테는 큰 부담이에요.",
-                points: ["월 고정 비용이 부담돼요", "효과가 있는지 모르겠어요", "더 저렴한 방법이 없을까요"],
-              },
-              {
-                emoji: "😣",
-                quote: "\"영상은 찍는데 글로 못 바꿔요\"",
-                desc: "쇼츠나 릴스로 영상은 올리는데, 같은 내용을 블로그로 옮기는 건 또 다른 일이에요.",
-                points: ["영상 촬영은 익숙해요", "글로 옮기면 느낌이 달라요", "매번 새로 쓰기 귀찮아요"],
-              },
-              {
-                emoji: "😫",
-                quote: "\"꾸준히 올리기 힘들어요\"",
-                desc: "블로그는 꾸준함이 생명인데, 일주일에 한 번 올리기도 버거워요.",
-                points: ["매번 글감 찾기가 어려워요", "한 편 쓰는데 1시간 넘게 걸려요", "자동화할 수 있으면 좋겠어요"],
-              },
-            ].map((item, i) => (
+            {([0, 1, 2, 3] as const).map((idx) => {
+              const item = {
+                emoji: t(`problem.items1.${idx}.emoji`),
+                quote: t(`problem.items1.${idx}.quote`),
+                desc: t(`problem.items1.${idx}.desc`),
+                points: [
+                  t(`problem.items1.${idx}.points.0`),
+                  t(`problem.items1.${idx}.points.1`),
+                  t(`problem.items1.${idx}.points.2`),
+                ],
+              };
+              return item;
+            }).map((item, i) => (
               <div key={i} className="min-w-[260px] max-w-[280px] flex-shrink-0 p-5 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
                 <span className="text-3xl block mb-3">{item.emoji}</span>
                 <h3 className="font-bold text-gray-900 text-[15px] mb-2 leading-snug">{item.quote}</h3>
@@ -483,36 +474,23 @@ export default function Home() {
           {/* Category 2 */}
           <div className="flex justify-center mb-6">
             <span className="px-4 py-1.5 bg-[#f0fdf4] text-[#16a34a] text-sm font-medium rounded-full border border-[#bbf7d0]">
-              블로그 마케팅이 필요한 사장님
+              {t("problem.cat2")}
             </span>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide">
-            {[
-              {
-                emoji: "😥",
-                quote: "\"네이버 검색에 안 나와요\"",
-                desc: "블로그를 운영하고 있지만 상위 노출이 안 돼서 효과가 없어요.",
-                points: ["SEO가 뭔지 모르겠어요", "글을 써도 방문자가 없어요", "상위 노출 방법을 모르겠어요"],
-              },
-              {
-                emoji: "😩",
-                quote: "\"글 퀄리티가 낮아요\"",
-                desc: "직접 쓰면 어색하고, 대행사 글은 우리 가게 느낌이 안 나요.",
-                points: ["문장력이 부족해요", "업종에 맞는 톤을 모르겠어요", "전문적인 글이 필요해요"],
-              },
-              {
-                emoji: "😓",
-                quote: "\"경쟁 업체는 다 하는데...\"",
-                desc: "주변 가게들은 블로그 마케팅으로 손님이 느는데, 나만 뒤처지는 것 같아요.",
-                points: ["경쟁 업체 블로그가 상위에 있어요", "우리도 해야 하는 건 아는데...", "어디서부터 시작해야 할지 막막해요"],
-              },
-              {
-                emoji: "😮‍💨",
-                quote: "\"영상 콘텐츠 활용을 못 해요\"",
-                desc: "쇼츠나 릴스에 좋은 콘텐츠가 많은데, 블로그용으로 재활용하는 법을 몰라요.",
-                points: ["영상 따로, 블로그 따로 만들어야 해요", "같은 콘텐츠를 두 번 작업해요", "효율적인 방법이 필요해요"],
-              },
-            ].map((item, i) => (
+            {([0, 1, 2, 3] as const).map((idx) => {
+              const item = {
+                emoji: t(`problem.items2.${idx}.emoji`),
+                quote: t(`problem.items2.${idx}.quote`),
+                desc: t(`problem.items2.${idx}.desc`),
+                points: [
+                  t(`problem.items2.${idx}.points.0`),
+                  t(`problem.items2.${idx}.points.1`),
+                  t(`problem.items2.${idx}.points.2`),
+                ],
+              };
+              return item;
+            }).map((item, i) => (
               <div key={i} className="min-w-[260px] max-w-[280px] flex-shrink-0 p-5 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
                 <span className="text-3xl block mb-3">{item.emoji}</span>
                 <h3 className="font-bold text-gray-900 text-[15px] mb-2 leading-snug">{item.quote}</h3>
@@ -650,40 +628,17 @@ export default function Home() {
 
           {/* Right - Value Props */}
           <div className="flex-1">
-            <p className="text-sm font-semibold text-[#4F46E5] mb-4">왜 LOGOS.ai인가요?</p>
-            <h2 className="text-3xl md:text-[38px] font-extrabold text-gray-900 leading-[1.25] mb-14">
-              영상 한 편이<br />
-              매출로 이어지는 구조
+            <p className="text-sm font-semibold text-[#4F46E5] mb-4">{t("howItWorks.whyLogos")}</p>
+            <h2 className="text-3xl md:text-[38px] font-extrabold text-gray-900 leading-[1.25] mb-14 whitespace-pre-line">
+              {t("howItWorks.title")}
             </h2>
 
             <div className="space-y-8">
-              {[
-                {
-                  num: "01",
-                  title: "말을 글로, 정확하게",
-                  desc: "AI 음성 인식이 영상 속 모든 내용을 빠짐없이 텍스트로 변환합니다.",
-                },
-                {
-                  num: "02",
-                  title: "네이버가 좋아하는 글 구조",
-                  desc: "소제목, 이모지, 단락 배치까지 — 상위 노출에 최적화된 포맷을 자동 생성합니다.",
-                },
-                {
-                  num: "03",
-                  title: "내 업종에 딱 맞는 톤",
-                  desc: "학원, 헬스장, 맛집 등 업종별로 자연스러운 블로그 문체를 적용합니다.",
-                },
-                {
-                  num: "04",
-                  title: "대행사 비용의 1/10",
-                  desc: "월 수십만 원 대행비 대신, 건당 580원부터. 현업에 집중하세요.",
-                },
-                {
-                  num: "05",
-                  title: "링크 하나, 1분이면 끝",
-                  desc: "복잡한 설정 없이 영상 URL만 붙여넣으면 바로 블로그 글이 완성됩니다.",
-                },
-              ].map((item) => (
+              {([0, 1, 2, 3, 4] as const).map((idx) => ({
+                num: t(`howItWorks.items.${idx}.num`),
+                title: t(`howItWorks.items.${idx}.title`),
+                desc: t(`howItWorks.items.${idx}.desc`),
+              })).map((item) => (
                 <div key={item.num} className="flex gap-5 group">
                   <span className="text-2xl font-extrabold text-gray-200 group-hover:text-[#4F46E5] transition-colors mt-0.5 font-[var(--font-poppins)]">
                     {item.num}
@@ -702,121 +657,83 @@ export default function Home() {
       {/* Pricing Section */}
       <section id="pricing" className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-xl font-bold text-gray-900 mb-3">요금제</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-3">{t("pricing.title")}</h2>
           <p className="text-sm text-gray-500 mb-10">
-            건당 1,000원도 안 되는 돈으로 1시간 걸릴 블로그 포스팅을 끝낸다?<br />
-            <span className="text-gray-900 font-medium">현업이 바쁜 사장님들은 무조건 결제합니다.</span>
+            {t("pricing.subtitle")}<br />
+            <span className="text-gray-900 font-medium">{t("pricing.subtitleBold")}</span>
           </p>
 
           {/* Pricing Cards */}
           <div className="grid md:grid-cols-3 gap-0 border border-gray-200 rounded-2xl overflow-hidden">
-            {/* 무료 테스터 */}
+            {/* Free */}
             <div className="p-6 border-r border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">무료 테스터</h3>
-              <p className="text-sm text-gray-400 mb-4">성능을 직접 확인해보세요</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t("pricing.free.name")}</h3>
+              <p className="text-sm text-gray-400 mb-4">{t("pricing.free.desc")}</p>
               <div className="mb-1">
-                <span className="text-4xl font-bold text-gray-900">₩0</span>
+                <span className="text-4xl font-bold text-gray-900">{t("pricing.free.price")}</span>
               </div>
-              <p className="text-sm text-gray-400 mb-6">신용카드 불필요</p>
+              <p className="text-sm text-gray-400 mb-6">{t("pricing.free.period")}</p>
               <button className="w-full py-3 bg-gray-900 text-white font-medium rounded-lg mb-8 text-sm">
-                지금 시작하기
+                {t("common.startNow")}
               </button>
               <ul className="space-y-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">✓</span>
-                  <span className="text-sm text-gray-700">최초 가입 시 1회 무료 변환</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">✓</span>
-                  <span className="text-sm text-gray-700">유튜브 쇼츠 지원</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">✓</span>
-                  <span className="text-sm text-gray-700">네이버 블로그 SEO 글 생성</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">✓</span>
-                  <span className="text-sm text-gray-700">결과물 복사 기능</span>
-                </li>
+                {([0, 1, 2, 3] as const).map((idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-gray-400 mt-0.5">✓</span>
+                    <span className="text-sm text-gray-700">{t(`pricing.free.features.${idx}`)}</span>
+                  </li>
+                ))}
               </ul>
             </div>
 
-            {/* 스타터 팩 */}
+            {/* Starter */}
             <div className="p-6 border-r border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">스타터 팩</h3>
-              <p className="text-sm text-gray-400 mb-4">가볍게 시작하는 블로그 마케팅</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t("pricing.starter.name")}</h3>
+              <p className="text-sm text-gray-400 mb-4">{t("pricing.starter.desc")}</p>
               <div className="mb-1">
-                <span className="text-4xl font-bold text-gray-900">₩9,900</span>
+                <span className="text-4xl font-bold text-gray-900">{t("pricing.starter.price")}</span>
               </div>
-              <p className="text-sm text-gray-400 mb-6">10건 · 건당 ₩990</p>
+              <p className="text-sm text-gray-400 mb-6">{t("pricing.starter.period")}</p>
               <button
                 onClick={() => handlePurchase("starter")}
                 disabled={isProcessing}
                 className="w-full py-3 bg-[#4F46E5] text-white font-medium rounded-lg hover:bg-[#4338CA] active:scale-[0.98] transition-all mb-8 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isProcessing ? "처리 중..." : "구매하기"}
+                {isProcessing ? t("common.processing") : t("common.purchase")}
               </button>
               <ul className="space-y-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">✓</span>
-                  <span className="text-sm text-gray-700">10건 변환 크레딧</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">✓</span>
-                  <span className="text-sm text-gray-700">유튜브 + 인스타 릴스 지원</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">✓</span>
-                  <span className="text-sm text-gray-700">SEO 키워드 최적화</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">✓</span>
-                  <span className="text-sm text-gray-700">변환 히스토리 저장</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">✓</span>
-                  <span className="text-sm text-gray-700">만료 기간 없음</span>
-                </li>
+                {([0, 1, 2, 3, 4] as const).map((idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-gray-400 mt-0.5">✓</span>
+                    <span className="text-sm text-gray-700">{t(`pricing.starter.features.${idx}`)}</span>
+                  </li>
+                ))}
               </ul>
             </div>
 
-            {/* 프로 팩 */}
+            {/* Pro */}
             <div className="p-6 relative">
-              <span className="absolute top-5 right-5 px-2.5 py-0.5 bg-[#EEF2FF] text-[#4F46E5] text-xs font-medium rounded-full">추천</span>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">프로 팩</h3>
-              <p className="text-sm text-gray-400 mb-4">자영업자분들께 가장 인기 있는</p>
+              <span className="absolute top-5 right-5 px-2.5 py-0.5 bg-[#EEF2FF] text-[#4F46E5] text-xs font-medium rounded-full">{t("common.recommended")}</span>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t("pricing.pro.name")}</h3>
+              <p className="text-sm text-gray-400 mb-4">{t("pricing.pro.desc")}</p>
               <div className="mb-1">
-                <span className="text-4xl font-bold text-gray-900">₩29,000</span>
+                <span className="text-4xl font-bold text-gray-900">{t("pricing.pro.price")}</span>
               </div>
-              <p className="text-sm text-gray-400 mb-6">50건 · 건당 ₩580</p>
+              <p className="text-sm text-gray-400 mb-6">{t("pricing.pro.period")}</p>
               <button
                 onClick={() => handlePurchase("pro")}
                 disabled={isProcessing}
                 className="w-full py-3 bg-[#4F46E5] text-white font-medium rounded-lg hover:bg-[#4338CA] active:scale-[0.98] transition-all mb-8 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isProcessing ? "처리 중..." : "구매하기"}
+                {isProcessing ? t("common.processing") : t("common.purchase")}
               </button>
               <ul className="space-y-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">✓</span>
-                  <span className="text-sm text-gray-700">50건 변환 크레딧</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">✓</span>
-                  <span className="text-sm text-gray-700">유튜브 + 인스타 릴스 지원</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">✓</span>
-                  <span className="text-sm text-gray-700">고급 SEO + 톤/스타일 커스터마이징</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">✓</span>
-                  <span className="text-sm text-gray-700">변환 히스토리 저장</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-0.5">✓</span>
-                  <span className="text-sm text-gray-700">만료 기간 없음 + 우선 지원</span>
-                </li>
+                {([0, 1, 2, 3, 4] as const).map((idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-gray-400 mt-0.5">✓</span>
+                    <span className="text-sm text-gray-700">{t(`pricing.pro.features.${idx}`)}</span>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -824,8 +741,7 @@ export default function Home() {
           {/* 가치 제안 문구 */}
           <div className="mt-8 p-5 bg-[#f9fafb] rounded-xl border border-gray-100">
             <p className="text-sm text-gray-600 leading-relaxed text-center">
-              블로그 대행사 월 수십만 원 vs LOGOS.ai 건당 <span className="font-semibold text-gray-900">₩580~990</span> —
-              자신의 분야 현업에 집중해야 하는 사장님들께 <span className="font-semibold text-[#4F46E5]">가장 합리적인 선택</span>입니다.
+              {t("pricing.valueProposition")}
             </p>
           </div>
         </div>
@@ -859,9 +775,9 @@ export default function Home() {
             </div>
 
             {/* Title */}
-            <h2 className="text-xl font-bold text-gray-900 text-center mb-2">로그인</h2>
+            <h2 className="text-xl font-bold text-gray-900 text-center mb-2">{t("login.title")}</h2>
             <p className="text-sm text-gray-500 text-center mb-8">
-              간편하게 로그인하고 서비스를 이용하세요
+              {t("login.subtitle")}
             </p>
 
             {/* Social Login Buttons */}
@@ -882,7 +798,7 @@ export default function Home() {
                     <path d="M12 3C6.477 3 2 6.463 2 10.714c0 2.758 1.819 5.178 4.545 6.545-.2.745-.727 2.702-.832 3.12-.13.52.19.512.4.373.164-.109 2.612-1.771 3.672-2.489.71.099 1.447.151 2.215.151 5.523 0 10-3.463 10-7.714S17.523 3 12 3z"/>
                   </svg>
                 )}
-                {loginLoading === "kakao" ? "연결 중..." : "카카오로 시작하기"}
+                {loginLoading === "kakao" ? t("common.connecting") : t("login.kakao")}
               </button>
 
               {/* Naver Login */}
@@ -901,13 +817,13 @@ export default function Home() {
                     <path d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z"/>
                   </svg>
                 )}
-                {loginLoading === "naver" ? "연결 중..." : "네이버로 시작하기"}
+                {loginLoading === "naver" ? t("common.connecting") : t("login.naver")}
               </button>
             </div>
 
             {/* Terms */}
             <p className="text-xs text-gray-400 text-center mt-6">
-              로그인 시 <a href="#" className="underline">이용약관</a> 및 <a href="#" className="underline">개인정보처리방침</a>에 동의하게 됩니다.
+              {t("login.terms")}<a href="#" className="underline">{t("login.termsOfService")}</a>{t("login.and")}<a href="#" className="underline">{t("login.privacyPolicy")}</a>{t("login.termsEnd")}
             </p>
           </div>
         </div>
