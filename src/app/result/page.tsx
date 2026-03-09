@@ -126,10 +126,15 @@ function EditableText({
   );
 }
 
-// 이미지 로딩 + 교체 가능 컴포넌트
-function BlogImage({ src, alt, onReplace }: { src: string; alt: string; onReplace?: (newSrc: string) => void }) {
+// 이미지 로딩 + 교체/삭제/크기 조절 컴포넌트
+function BlogImage({ src, alt, onReplace, onDelete }: {
+  src: string; alt: string;
+  onReplace?: (newSrc: string) => void;
+  onDelete?: () => void;
+}) {
   const [loaded, setLoaded] = useState(false);
   const [hovering, setHovering] = useState(false);
+  const [scale, setScale] = useState(100); // 퍼센트
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (file: File) => {
@@ -138,16 +143,16 @@ function BlogImage({ src, alt, onReplace }: { src: string; alt: string; onReplac
     reader.onload = () => {
       onReplace(reader.result as string);
       setLoaded(false);
+      setScale(100);
     };
     reader.readAsDataURL(file);
   };
 
   return (
     <div
-      className="my-8 relative bg-gray-100 min-h-[200px] group cursor-pointer"
+      className="my-8 relative group"
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
-      onClick={() => onReplace && fileRef.current?.click()}
       onDragOver={(e) => { e.preventDefault(); setHovering(true); }}
       onDragLeave={() => setHovering(false)}
       onDrop={(e) => {
@@ -168,25 +173,69 @@ function BlogImage({ src, alt, onReplace }: { src: string; alt: string; onReplac
           e.target.value = "";
         }}
       />
-      {!loaded && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-          <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin" />
-          <span className="text-xs text-gray-400">이미지 로딩 중...</span>
+
+      {/* 이미지 */}
+      <div className="bg-gray-100 min-h-[120px] relative overflow-hidden" style={{ maxWidth: `${scale}%` }}>
+        {!loaded && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+            <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin" />
+            <span className="text-xs text-gray-400">이미지 로딩 중...</span>
+          </div>
+        )}
+        <img
+          src={src}
+          alt={alt}
+          className={`w-full h-auto transition-opacity duration-500 cursor-pointer ${loaded ? "opacity-100" : "opacity-0"}`}
+          onLoad={() => setLoaded(true)}
+          onClick={() => onReplace && fileRef.current?.click()}
+        />
+      </div>
+
+      {/* 툴바 (hover 시) */}
+      {hovering && loaded && (
+        <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
+          {/* 교체 */}
+          {onReplace && (
+            <button
+              onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}
+              className="w-8 h-8 bg-white/90 hover:bg-white rounded-lg shadow flex items-center justify-center transition-colors"
+              title="사진 변경"
+            >
+              <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+              </svg>
+            </button>
+          )}
+          {/* 삭제 */}
+          {onDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              className="w-8 h-8 bg-white/90 hover:bg-red-50 rounded-lg shadow flex items-center justify-center transition-colors"
+              title="사진 삭제"
+            >
+              <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+              </svg>
+            </button>
+          )}
         </div>
       )}
-      <img
-        src={src}
-        alt={alt}
-        className={`w-full h-auto transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-        onLoad={() => setLoaded(true)}
-      />
-      {/* 교체 오버레이 */}
-      {onReplace && hovering && loaded && (
-        <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2 transition-opacity">
-          <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
-          </svg>
-          <span className="text-white text-sm font-medium">클릭하여 사진 변경</span>
+
+      {/* 크기 조절 슬라이더 (hover 시) */}
+      {hovering && loaded && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/90 rounded-full shadow px-3 py-1.5 z-10">
+          <span className="text-[10px] text-gray-400 w-5 text-right">S</span>
+          <input
+            type="range"
+            min={30}
+            max={100}
+            value={scale}
+            onChange={(e) => { e.stopPropagation(); setScale(Number(e.target.value)); }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-24 h-1 accent-[#4F46E5] cursor-pointer"
+          />
+          <span className="text-[10px] text-gray-400 w-5">L</span>
+          <span className="text-[10px] text-gray-500 font-medium w-8">{scale}%</span>
         </div>
       )}
     </div>
@@ -1452,6 +1501,7 @@ function ResultContent() {
                     src={introUrl}
                     alt="영상 프레임"
                     onReplace={(newSrc) => updateEdited((d) => { d.frameUrls[actualIndex] = newSrc; })}
+                    onDelete={() => updateEdited((d) => { d.frameUrls.splice(actualIndex, 1); })}
                   />
                 ) : null;
               })()}
@@ -1530,20 +1580,37 @@ function ResultContent() {
                     />
 
                     {/* 섹션 이미지 */}
-                    {frameUrl && (
-                      <BlogImage
-                        src={frameUrl}
-                        alt={`프레임 - ${section.title}`}
-                        onReplace={(newSrc) => {
-                          const frameIdx = hasFrameMatching
-                            ? (section.frame_index != null && section.frame_index >= 0 ? section.frame_index : -1)
-                            : idx + 1;
-                          if (frameIdx >= 0) {
-                            updateEdited((d) => { d.frameUrls[frameIdx] = newSrc; });
-                          }
-                        }}
-                      />
-                    )}
+                    {frameUrl && (() => {
+                      const frameIdx = hasFrameMatching
+                        ? (section.frame_index != null && section.frame_index >= 0 ? section.frame_index : -1)
+                        : idx + 1;
+                      return (
+                        <BlogImage
+                          src={frameUrl}
+                          alt={`프레임 - ${section.title}`}
+                          onReplace={(newSrc) => {
+                            if (frameIdx >= 0) {
+                              updateEdited((d) => { d.frameUrls[frameIdx] = newSrc; });
+                            }
+                          }}
+                          onDelete={() => {
+                            if (frameIdx >= 0) {
+                              updateEdited((d) => {
+                                d.frameUrls.splice(frameIdx, 1);
+                                // frame_index 보정
+                                for (const s of d.sections) {
+                                  if (s.frame_index != null && s.frame_index > frameIdx) {
+                                    s.frame_index--;
+                                  } else if (s.frame_index === frameIdx) {
+                                    s.frame_index = -1;
+                                  }
+                                }
+                              });
+                            }
+                          }}
+                        />
+                      );
+                    })()}
                   </div>
                 );
               })}
