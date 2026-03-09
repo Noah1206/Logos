@@ -495,18 +495,25 @@ function ResultContent() {
     return () => container.removeEventListener("paste", handlePaste);
   }, [isComplete]);
 
-  // displayProgress를 progress(목표값)를 향해 점진적으로 증가
+  // displayProgress: 백엔드 값 반영 + 사이사이 천천히 자동 증가 (최대 90%)
   useEffect(() => {
     if (isComplete || isError) return;
     const timer = setInterval(() => {
       setDisplayProgress((prev) => {
-        if (prev >= progress) return prev;
-        // 목표까지 남은 거리의 일부씩 이동 + 최소 0.3
-        const gap = progress - prev;
-        const step = Math.max(gap * 0.08, 0.3);
-        return Math.min(prev + step, progress);
+        // 백엔드 목표값보다 뒤처져 있으면 빠르게 따라잡기
+        if (prev < progress) {
+          const gap = progress - prev;
+          return Math.min(prev + Math.max(gap * 0.15, 0.5), progress);
+        }
+        // 백엔드 값에 도달했어도 90% 미만이면 천천히 올리기
+        if (prev < 90) {
+          // 높을수록 느려지게 (10%대: +0.3/tick, 70%대: +0.1/tick)
+          const speed = Math.max(0.08, 0.35 - prev * 0.003);
+          return prev + speed;
+        }
+        return prev;
       });
-    }, 200);
+    }, 300);
     return () => clearInterval(timer);
   }, [progress, isComplete, isError]);
 
