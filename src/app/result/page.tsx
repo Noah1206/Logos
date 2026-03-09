@@ -1855,12 +1855,12 @@ function ResultContent() {
                     <path d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z"/>
                   </svg>
                 )}
-                {loginLoading === "naver" ? "연결 중..." : "네이버로 시작하기"}
+                {loginLoading === "naver" ? t("common.connecting") : t("login.naver")}
               </button>
             </div>
 
             <p className="text-xs text-gray-400 text-center mt-6">
-              로그인 시 <a href="#" className="underline">이용약관</a> 및 <a href="#" className="underline">개인정보처리방침</a>에 동의하게 됩니다.
+              {t("login.terms")}<a href="#" className="underline">{t("login.termsOfService")}</a>{t("login.and")}<a href="#" className="underline">{t("login.privacyPolicy")}</a>{t("login.termsEnd")}
             </p>
           </div>
         </div>
