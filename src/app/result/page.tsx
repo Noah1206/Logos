@@ -412,6 +412,7 @@ function ResultContent() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginLoading, setLoginLoading] = useState<string | null>(null);
   const [userImages, setUserImages] = useState<string[]>([]);
+  const [excludeFrames, setExcludeFrames] = useState(false);
 
   const handleSocialLogin = (provider: string) => {
     setLoginLoading(provider);
@@ -428,13 +429,17 @@ function ResultContent() {
 
   const blogContentRef = useRef<HTMLDivElement>(null);
 
-  // sessionStorage에서 사용자 업로드 이미지 로드
+  // sessionStorage에서 사용자 설정 로드
   useEffect(() => {
     try {
       const stored = sessionStorage.getItem("user_images");
       if (stored) {
         setUserImages(JSON.parse(stored));
         sessionStorage.removeItem("user_images");
+      }
+      if (sessionStorage.getItem("exclude_frames") === "true") {
+        setExcludeFrames(true);
+        sessionStorage.removeItem("exclude_frames");
       }
     } catch {}
   }, []);
@@ -676,8 +681,10 @@ function ResultContent() {
 
               if (event.result) {
                 const mapped = mapResponseToResultData(event.result);
-                // 사용자 업로드 이미지를 frameUrls 뒤에 추가
-                if (userImages.length > 0) {
+                // excludeFrames: 영상 프레임 제거, 사용자 이미지만 사용
+                if (excludeFrames) {
+                  mapped.frameUrls = [...userImages];
+                } else if (userImages.length > 0) {
                   mapped.frameUrls = [...mapped.frameUrls, ...userImages];
                 }
                 setResultData(mapped);

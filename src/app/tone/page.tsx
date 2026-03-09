@@ -40,6 +40,7 @@ function ToneContent() {
   const [selected, setSelected] = useState<"일상" | "자영업자" | null>(null);
   const [images, setImages] = useState<string[]>([]);
   const [checkedImages, setCheckedImages] = useState<Set<number>>(new Set());
+  const [includeFrames, setIncludeFrames] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
@@ -117,6 +118,11 @@ function ToneContent() {
       sessionStorage.setItem("user_images", JSON.stringify(selectedImages));
     } else {
       sessionStorage.removeItem("user_images");
+    }
+    if (!includeFrames) {
+      sessionStorage.setItem("exclude_frames", "true");
+    } else {
+      sessionStorage.removeItem("exclude_frames");
     }
     router.push(`/result?url=${encodeURIComponent(url)}&tone=${encodeURIComponent(selected)}`);
   };
@@ -287,6 +293,33 @@ function ToneContent() {
                 {checkedImages.size}장 선택 / {images.length}장 업로드
               </p>
             )}
+          </div>
+
+          {/* 영상 프레임 포함 토글 */}
+          <div className="mb-10">
+            <button
+              onClick={() => setIncludeFrames((v) => !v)}
+              className="w-full flex items-center justify-between px-5 py-4 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🎬</span>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">영상에서 사진 추출</p>
+                  <p className="text-xs text-gray-400">릴스/쇼츠에서 자동으로 캡처한 사진을 블로그에 포함</p>
+                </div>
+              </div>
+              <div
+                className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+                  includeFrames ? "bg-[#4F46E5]" : "bg-gray-200"
+                }`}
+              >
+                <div
+                  className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                    includeFrames ? "translate-x-[22px]" : "translate-x-0.5"
+                  }`}
+                />
+              </div>
+            </button>
           </div>
 
           {/* CTA Button */}
