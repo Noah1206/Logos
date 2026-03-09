@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { usePayment } from "@/hooks/usePayment";
+import { PROMOTION } from "@/lib/promotion";
 
 type ConvertMode = "video-to-blog" | "feed-to-blog" | "blog-to-video";
 
@@ -41,6 +42,29 @@ export default function Home() {
 
   const [loginLoading, setLoginLoading] = useState<string | null>(null);
 
+  // 프로모션 남은 시간 계산
+  const [promoTimeLeft, setPromoTimeLeft] = useState("");
+  const [isPromoActive, setIsPromoActive] = useState(false);
+
+  useEffect(() => {
+    function updatePromo() {
+      const now = new Date();
+      if (!PROMOTION.enabled || now < PROMOTION.startDate || now > PROMOTION.endDate) {
+        setIsPromoActive(false);
+        return;
+      }
+      setIsPromoActive(true);
+      const diff = PROMOTION.endDate.getTime() - now.getTime();
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setPromoTimeLeft(`${hours}시간 ${minutes}분 ${seconds}초`);
+    }
+    updatePromo();
+    const interval = setInterval(updatePromo, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleSocialLogin = (provider: "kakao" | "naver") => {
     setLoginLoading(provider);
     signIn(provider, { callbackUrl: "/" });
@@ -78,6 +102,12 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white">
+      {/* Promotion Banner */}
+      {isPromoActive && (
+        <div className="bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] text-white text-center py-2.5 px-4 text-sm font-medium">
+          🎉 오픈 기념 48시간 무료 이벤트! 로그인만 하면 무제한 무료 이용 — 남은 시간: <span className="font-bold">{promoTimeLeft}</span>
+        </div>
+      )}
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -98,8 +128,8 @@ export default function Home() {
                   <span className="text-sm text-gray-600 hidden sm:block">
                     {user.name || user.email?.split("@")[0]}님
                   </span>
-                  <span className="px-2 py-1 bg-[#EEF2FF] text-[#4F46E5] text-xs rounded font-medium">
-                    {user.credits}회 남음
+                  <span className={`px-2 py-1 text-xs rounded font-medium ${isPromoActive ? "bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] text-white" : "bg-[#EEF2FF] text-[#4F46E5]"}`}>
+                    {isPromoActive ? "✨ 무료 이용중" : `${user.credits}회 남음`}
                   </span>
                   <button
                     onClick={handleLogout}

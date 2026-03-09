@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isPromotionActive } from "@/lib/promotion";
 
 const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:8000";
 
@@ -17,24 +18,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 크레딧 확인
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { credits: true },
-    });
+    // 프로모션 기간에는 크레딧 체크/차감 건너뛰기
+    const promoActive = isPromotionActive();
 
-    if (!user || user.credits <= 0) {
-      return new Response(
-        JSON.stringify({ success: false, error: "크레딧이 부족합니다. 충전 후 이용해주세요." }),
-        { status: 403, headers: { "Content-Type": "application/json" } }
-      );
+    if (!promoActive) {
+      // 크레딧 확인
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { credits: true },
+      });
+
+      if (!user || user.credits <= 0) {
+        return new Response(
+          JSON.stringify({ success: false, error: "크레딧이 부족합니다. 충전 후 이용해주세요." }),
+          { status: 403, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      // 크레딧 차감
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { credits: { decrement: 1 } },
+      });
     }
-
-    // 크레딧 차감
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { credits: { decrement: 1 } },
-    });
 
     const body = await req.json();
 
