@@ -126,11 +126,48 @@ function EditableText({
   );
 }
 
-// 이미지 로딩 플레이스홀더 + fade-in 컴포넌트
-function BlogImage({ src, alt }: { src: string; alt: string }) {
+// 이미지 로딩 + 교체 가능 컴포넌트
+function BlogImage({ src, alt, onReplace }: { src: string; alt: string; onReplace?: (newSrc: string) => void }) {
   const [loaded, setLoaded] = useState(false);
+  const [hovering, setHovering] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = (file: File) => {
+    if (!file.type.startsWith("image/") || !onReplace) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      onReplace(reader.result as string);
+      setLoaded(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
-    <div className="my-8 relative bg-gray-100 min-h-[200px]">
+    <div
+      className="my-8 relative bg-gray-100 min-h-[200px] group cursor-pointer"
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+      onClick={() => onReplace && fileRef.current?.click()}
+      onDragOver={(e) => { e.preventDefault(); setHovering(true); }}
+      onDragLeave={() => setHovering(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setHovering(false);
+        const file = e.dataTransfer.files?.[0];
+        if (file) handleFile(file);
+      }}
+    >
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = "";
+        }}
+      />
       {!loaded && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
           <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin" />
@@ -143,6 +180,15 @@ function BlogImage({ src, alt }: { src: string; alt: string }) {
         className={`w-full h-auto transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
         onLoad={() => setLoaded(true)}
       />
+      {/* 교체 오버레이 */}
+      {onReplace && hovering && loaded && (
+        <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2 transition-opacity">
+          <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+          </svg>
+          <span className="text-white text-sm font-medium">클릭하여 사진 변경</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -1399,10 +1445,15 @@ function ResultContent() {
                 const introIndex = displayData.frameUrls.findIndex(
                   (_, i) => !usedIndices.has(i)
                 );
-                const introUrl = introIndex >= 0
-                  ? displayData.frameUrls[introIndex]
-                  : displayData.frameUrls[0];
-                return introUrl ? <BlogImage src={introUrl} alt="영상 프레임" /> : null;
+                const actualIndex = introIndex >= 0 ? introIndex : 0;
+                const introUrl = displayData.frameUrls[actualIndex];
+                return introUrl ? (
+                  <BlogImage
+                    src={introUrl}
+                    alt="영상 프레임"
+                    onReplace={(newSrc) => updateEdited((d) => { d.frameUrls[actualIndex] = newSrc; })}
+                  />
+                ) : null;
               })()}
 
               {/* 목차 (토글) */}
@@ -1479,7 +1530,20 @@ function ResultContent() {
                     />
 
                     {/* 섹션 이미지 */}
-                    {frameUrl && <BlogImage src={frameUrl} alt={`프레임 - ${section.title}`} />}
+                    {frameUrl && (
+                      <BlogImage
+                        src={frameUrl}
+                        alt={`프레임 - ${section.title}`}
+                        onReplace={(newSrc) => {
+                          const frameIdx = hasFrameMatching
+                            ? (section.frame_index != null && section.frame_index >= 0 ? section.frame_index : -1)
+                            : idx + 1;
+                          if (frameIdx >= 0) {
+                            updateEdited((d) => { d.frameUrls[frameIdx] = newSrc; });
+                          }
+                        }}
+                      />
+                    )}
                   </div>
                 );
               })}
