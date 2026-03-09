@@ -384,7 +384,8 @@ function ResultContent() {
     purchasePackage(packageId);
   };
 
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(0); // 백엔드 목표값
+  const [displayProgress, setDisplayProgress] = useState(0); // 화면 표시값 (점진 증가)
   const [isComplete, setIsComplete] = useState(false);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -476,6 +477,26 @@ function ResultContent() {
     container.addEventListener("paste", handlePaste);
     return () => container.removeEventListener("paste", handlePaste);
   }, [isComplete]);
+
+  // displayProgress를 progress(목표값)를 향해 점진적으로 증가
+  useEffect(() => {
+    if (isComplete || isError) return;
+    const timer = setInterval(() => {
+      setDisplayProgress((prev) => {
+        if (prev >= progress) return prev;
+        // 목표까지 남은 거리의 일부씩 이동 + 최소 0.3
+        const gap = progress - prev;
+        const step = Math.max(gap * 0.08, 0.3);
+        return Math.min(prev + step, progress);
+      });
+    }, 200);
+    return () => clearInterval(timer);
+  }, [progress, isComplete, isError]);
+
+  // progress가 100이면 displayProgress도 즉시 100으로
+  useEffect(() => {
+    if (progress >= 100) setDisplayProgress(100);
+  }, [progress]);
 
   // 로딩 메시지 순환
   useEffect(() => {
@@ -866,12 +887,12 @@ function ResultContent() {
             {sseMessage || loadingMessages[messageIndex]}{dots}
           </p>
           <p className="text-[#4F46E5] text-sm font-medium mb-6">
-            {Math.min(Math.round(progress), 100)}%
+            {Math.min(Math.round(displayProgress), 100)}%
           </p>
           <div className="w-72 h-2 bg-gray-200 rounded-full overflow-hidden relative">
             <div
               className="h-full bg-gradient-to-r from-[#4F46E5] to-[#818CF8] rounded-full transition-all duration-500 ease-out relative"
-              style={{ width: `${Math.min(progress, 100)}%` }}
+              style={{ width: `${Math.min(displayProgress, 100)}%` }}
             >
               <div className="absolute inset-0 bg-white/30 animate-shimmer rounded-full" />
             </div>
@@ -881,7 +902,7 @@ function ResultContent() {
               <div
                 key={i}
                 className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${
-                  progress > threshold
+                  displayProgress > threshold
                     ? "bg-[#4F46E5] scale-110"
                     : "bg-gray-300"
                 }`}
