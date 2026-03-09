@@ -411,6 +411,7 @@ function ResultContent() {
   const [showPricing, setShowPricing] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginLoading, setLoginLoading] = useState<string | null>(null);
+  const [userImages, setUserImages] = useState<string[]>([]);
 
   const handleSocialLogin = (provider: string) => {
     setLoginLoading(provider);
@@ -426,6 +427,17 @@ function ResultContent() {
   };
 
   const blogContentRef = useRef<HTMLDivElement>(null);
+
+  // sessionStorage에서 사용자 업로드 이미지 로드
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("user_images");
+      if (stored) {
+        setUserImages(JSON.parse(stored));
+        sessionStorage.removeItem("user_images");
+      }
+    } catch {}
+  }, []);
 
   // 블로그 본문에 이미지 붙여넣기 지원
   useEffect(() => {
@@ -664,6 +676,10 @@ function ResultContent() {
 
               if (event.result) {
                 const mapped = mapResponseToResultData(event.result);
+                // 사용자 업로드 이미지를 frameUrls 뒤에 추가
+                if (userImages.length > 0) {
+                  mapped.frameUrls = [...mapped.frameUrls, ...userImages];
+                }
                 setResultData(mapped);
                 setEditedData(JSON.parse(JSON.stringify(mapped)));
                 // 결과를 sessionStorage에 캐시

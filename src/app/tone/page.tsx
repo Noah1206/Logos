@@ -1,7 +1,10 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, Suspense } from "react";
+import { useState, useRef, useEffect, useCallback, Suspense } from "react";
+
+const MAX_IMAGES = 10;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const tones = [
   {
@@ -35,9 +38,86 @@ function ToneContent() {
   const router = useRouter();
   const url = searchParams.get("url") || "";
   const [selected, setSelected] = useState<"일상" | "자영업자" | null>(null);
+  const [images, setImages] = useState<string[]>([]);
+  const [checkedImages, setCheckedImages] = useState<Set<number>>(new Set());
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
+
+  const addFiles = useCallback((files: FileList | File[]) => {
+    const fileArray = Array.from(files).filter(
+      (f) => f.type.startsWith("image/") && f.size <= MAX_FILE_SIZE
+    );
+    if (fileArray.length === 0) return;
+
+    const remaining = MAX_IMAGES - images.length;
+    const toProcess = fileArray.slice(0, remaining);
+
+    toProcess.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImages((prev) => {
+          if (prev.length >= MAX_IMAGES) return prev;
+          const newIndex = prev.length;
+          setCheckedImages((cs) => new Set([...cs, newIndex]));
+          return [...prev, reader.result as string];
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  }, [images.length]);
+
+  // 페이지 전체 붙여넣기
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const imageFiles: File[] = [];
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) imageFiles.push(file);
+        }
+      }
+      if (imageFiles.length > 0) {
+        e.preventDefault();
+        addFiles(imageFiles);
+      }
+    };
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, [addFiles]);
+
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+    setCheckedImages((prev) => {
+      const next = new Set<number>();
+      for (const idx of prev) {
+        if (idx < index) next.add(idx);
+        else if (idx > index) next.add(idx - 1);
+      }
+      return next;
+    });
+  };
+
+  const toggleCheck = (index: number) => {
+    setCheckedImages((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
 
   const handleStart = () => {
     if (!selected || !url) return;
+    // 체크된 이미지만 sessionStorage에 저장
+    const selectedImages = images.filter((_, i) => checkedImages.has(i));
+    if (selectedImages.length > 0) {
+      sessionStorage.setItem("user_images", JSON.stringify(selectedImages));
+    } else {
+      sessionStorage.removeItem("user_images");
+    }
     router.push(`/result?url=${encodeURIComponent(url)}&tone=${encodeURIComponent(selected)}`);
   };
 
@@ -101,6 +181,112 @@ function ToneContent() {
                 </ul>
               </button>
             ))}
+          </div>
+
+          {/* Image Upload Section */}
+          <div className="mb-10">
+            <h2 className="text-lg font-bold text-gray-900 mb-2">
+              사진 추가 <span className="text-sm font-normal text-gray-400">(선택)</span>
+            </h2>
+            <p className="text-sm text-gray-500 mb-4">
+              블로그에 넣고 싶은 사진이 있으면 추가해주세요. 복사+붙여넣기도 가능해요.
+            </p>
+
+            {/* Drop zone */}
+            <div
+              ref={dropZoneRef}
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                if (e.dataTransfer.files.length > 0) addFiles(e.dataTransfer.files);
+              }}
+              onClick={() => images.length < MAX_IMAGES && fileInputRef.current?.click()}
+              className={`border-2 border-dashed rounded-2xl p-6 transition-all duration-200 cursor-pointer ${
+                isDragging
+                  ? "border-[#4F46E5] bg-[#EEF2FF]"
+                  : "border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100"
+              }`}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files) addFiles(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              {images.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-4">
+                  <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+                  </svg>
+                  <p className="text-sm text-gray-400">
+                    클릭하거나 사진을 드래그하세요
+                  </p>
+                  <p className="text-xs text-gray-300">
+                    Ctrl+V로 붙여넣기도 가능 · 최대 {MAX_IMAGES}장
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                  {images.map((src, i) => (
+                    <div key={i} className="relative group">
+                      <div
+                        onClick={(e) => { e.stopPropagation(); toggleCheck(i); }}
+                        className={`aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                          checkedImages.has(i)
+                            ? "border-[#4F46E5] ring-2 ring-[#4F46E5]/20"
+                            : "border-transparent opacity-50"
+                        }`}
+                      >
+                        <img
+                          src={src}
+                          alt={`업로드 ${i + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      {/* 체크박스 */}
+                      <div
+                        onClick={(e) => { e.stopPropagation(); toggleCheck(i); }}
+                        className={`absolute bottom-1.5 left-1.5 w-5 h-5 rounded flex items-center justify-center cursor-pointer transition-all ${
+                          checkedImages.has(i)
+                            ? "bg-[#4F46E5]"
+                            : "bg-white/80 border border-gray-300"
+                        }`}
+                      >
+                        {checkedImages.has(i) && (
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                      {/* 삭제 버튼 */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removeImage(i); }}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  {images.length < MAX_IMAGES && (
+                    <div className="aspect-square flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg text-gray-300 text-2xl hover:border-gray-300 hover:text-gray-400 transition-colors">
+                      +
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {images.length > 0 && (
+              <p className="text-xs text-gray-400 mt-2 text-right">
+                {checkedImages.size}장 선택 / {images.length}장 업로드
+              </p>
+            )}
           </div>
 
           {/* CTA Button */}
