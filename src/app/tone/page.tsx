@@ -172,8 +172,10 @@ function ToneContent() {
                   </div>
                 )}
 
-                <div className="text-3xl mb-3">{tone.emoji}</div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">{tone.label}</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+                  <span className="text-2xl">{tone.emoji}</span>
+                  {tone.label}
+                </h3>
                 <p className={`text-sm mb-4 ${selected === tone.key ? "text-[#4F46E5]" : "text-gray-500"}`}>
                   {tone.desc}
                 </p>
