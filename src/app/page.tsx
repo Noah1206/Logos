@@ -163,7 +163,7 @@ export default function Home() {
           {langSweep !== "idle" && (
             <div key={langSweep} className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
               <div
-                className={langSweep === "ko" ? "ob-sweep-br-tl" : "ob-sweep-tl-br"}
+                className={langSweep === "ko" ? "ob-sweep-down" : "ob-sweep-up"}
               />
             </div>
           )}
@@ -176,8 +176,8 @@ export default function Home() {
                 onClick={() => {
                   const next = locale === "en" ? "ko" : "en";
                   setLangSweep(next);
-                  setTimeout(() => setLocale(next), 700);
-                  setTimeout(() => setLangSweep("idle"), 1400);
+                  setTimeout(() => setLocale(next), 1200);
+                  setTimeout(() => setLangSweep("idle"), 2400);
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md bg-white/[0.08] border border-white/[0.12] hover:bg-white/[0.14] hover:border-white/[0.22] transition-all duration-300"
               >
@@ -335,14 +335,13 @@ export default function Home() {
 
           {/* Keyframe animations — elements only, no background movement */}
           <style>{`
-            .ob-sweep-br-tl, .ob-sweep-tl-br {
+            .ob-sweep-down, .ob-sweep-up {
               position: absolute;
-              width: 250%;
+              width: 100%;
               height: 250%;
-              top: -75%;
-              left: -75%;
+              left: 0;
               background: linear-gradient(
-                135deg,
+                180deg,
                 transparent 0%,
                 transparent 36%,
                 rgba(255,255,255,0.04) 38%,
@@ -359,27 +358,27 @@ export default function Home() {
               );
               opacity: 0;
             }
-            .ob-sweep-br-tl {
-              animation: obSweepBrTl 1.4s ease both;
+            .ob-sweep-down {
+              animation: obSweepDown 2.4s ease both;
             }
-            .ob-sweep-tl-br {
-              animation: obSweepTlBr 1.4s ease both;
+            .ob-sweep-up {
+              animation: obSweepUp 2.4s ease both;
             }
-            @keyframes obSweepBrTl {
-              0%   { transform: translate(80%, 80%); opacity: 0; }
+            @keyframes obSweepDown {
+              0%   { transform: translateY(-100%); opacity: 0; }
               20%  { opacity: 0.4; }
               40%  { opacity: 1; }
               60%  { opacity: 1; }
               80%  { opacity: 0.4; }
-              100% { transform: translate(-80%, -80%); opacity: 0; }
+              100% { transform: translateY(100%); opacity: 0; }
             }
-            @keyframes obSweepTlBr {
-              0%   { transform: translate(-80%, -80%); opacity: 0; }
+            @keyframes obSweepUp {
+              0%   { transform: translateY(100%); opacity: 0; }
               20%  { opacity: 0.4; }
               40%  { opacity: 1; }
               60%  { opacity: 1; }
               80%  { opacity: 0.4; }
-              100% { transform: translate(80%, 80%); opacity: 0; }
+              100% { transform: translateY(-100%); opacity: 0; }
             }
             .ob-lang-enter {
               animation: obLangIn 0.9s cubic-bezier(0.22,1,0.36,1) both;
