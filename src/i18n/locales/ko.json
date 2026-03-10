@@ -304,7 +304,13 @@
     "convertError": "변환 중 오류가 발생했습니다.",
     "conversionFailedShort": "변환 실패",
     "imageDownloadFailed": "이미지 다운로드에 실패했습니다.",
-    "creditRemaining": "크레딧 {{count}}회 남음"
+    "creditRemaining": "크레딧 {{count}}회 남음",
+    "gallery": {
+      "title": "영상에서 사진 선택",
+      "addPhoto": "+ 사진 추가",
+      "close": "닫기",
+      "timestamp": "{{seconds}}초"
+    }
   },
   "dashboard": {
     "title": "대시보드",
@@ -390,6 +396,7 @@
       "학습 노트는 지식 베이스에 자동 저장돼요"
     ],
     "result": {
+      "sectionTitle": "학습 노트",
       "executiveSummary": "핵심 요약",
       "keyConcepts": "핵심 개념",
       "detailedNotes": "상세 노트",

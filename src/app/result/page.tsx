@@ -13,6 +13,7 @@ interface BlogSection {
   title: string;
   content: string;
   frame_index?: number | null;
+  extraImages?: string[];
 }
 
 interface ResultData {
@@ -388,6 +389,7 @@ function mapResponseToResultData(data: any): ResultData {
       title: s.title ?? "",
       content: s.content ?? "",
       frame_index: s.frame_index ?? null,
+      extraImages: [],
     })
   );
 
@@ -489,6 +491,11 @@ function ResultContent() {
   const [excludeFrames, setExcludeFrames] = useState(false);
   const [studyResult, setStudyResult] = useState<any>(null);
   const [openQuestions, setOpenQuestions] = useState<Set<number>>(new Set());
+  const [blogStudyStructure, setBlogStudyStructure] = useState<any>(null);
+  const [openBlogStudyQuestions, setOpenBlogStudyQuestions] = useState<Set<number>>(new Set());
+  const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [insertAfterIdx, setInsertAfterIdx] = useState<number | null>(null);
 
   const handleSocialLogin = (provider: string) => {
     setLoginLoading(provider);
@@ -929,6 +936,14 @@ function ResultContent() {
                 }
                 setResultData(mapped);
                 setEditedData(JSON.parse(JSON.stringify(mapped)));
+                // 학습 노트 저장
+                if (event.result.study_structure) {
+                  setBlogStudyStructure(event.result.study_structure);
+                }
+                // 갤러리 프레임 URL 설정
+                if (event.result.gallery_frame_urls?.length) {
+                  setGalleryUrls(event.result.gallery_frame_urls);
+                }
                 // 결과를 sessionStorage에 캐시
                 sessionStorage.setItem(cacheKey, JSON.stringify(mapped));
                 setProgress(100);
@@ -1017,6 +1032,13 @@ function ResultContent() {
       if (frameUrl) {
         htmlParts.push(`<p><img src="${frameUrl}" style="max-width:100%;height:auto;" /></p>`);
       }
+
+      // 사용자가 갤러리에서 추가한 이미지
+      if (s.extraImages) {
+        for (const imgUrl of s.extraImages) {
+          htmlParts.push(`<p><img src="${imgUrl}" style="max-width:100%;height:auto;" /></p>`);
+        }
+      }
     });
 
     // 해시태그
@@ -1086,6 +1108,21 @@ function ResultContent() {
       return next;
     });
   }, []);
+
+  // 갤러리에서 프레임 삽입
+  const handleInsertFrame = useCallback((frameUrl: string) => {
+    const targetIdx = insertAfterIdx ?? (editedData?.sections.length ?? 1) - 1;
+    updateEdited((d) => {
+      if (targetIdx >= 0 && targetIdx < d.sections.length) {
+        if (!d.sections[targetIdx].extraImages) {
+          d.sections[targetIdx].extraImages = [];
+        }
+        d.sections[targetIdx].extraImages!.push(frameUrl);
+      }
+    });
+    setGalleryOpen(false);
+    setInsertAfterIdx(null);
+  }, [insertAfterIdx, editedData, updateEdited]);
 
   // 표시용 데이터 (편집본 우선)
   const displayData = editedData ?? resultData;
@@ -1990,6 +2027,39 @@ function ResultContent() {
                         />
                       );
                     })()}
+
+                    {/* 사용자가 갤러리에서 추가한 이미지들 */}
+                    {section.extraImages?.map((imgUrl, imgIdx) => (
+                      <BlogImage
+                        key={`extra-${idx}-${imgIdx}`}
+                        src={imgUrl}
+                        alt={`추가 이미지 ${imgIdx + 1}`}
+                        onReplace={(newSrc) => {
+                          updateEdited((d) => {
+                            if (d.sections[idx].extraImages) {
+                              d.sections[idx].extraImages![imgIdx] = newSrc;
+                            }
+                          });
+                        }}
+                        onDelete={() => {
+                          updateEdited((d) => {
+                            d.sections[idx].extraImages?.splice(imgIdx, 1);
+                          });
+                        }}
+                      />
+                    ))}
+
+                    {/* 섹션 사이 "+" 사진 추가 버튼 (갤러리 프레임이 있을 때만) */}
+                    {galleryUrls.length > 0 && (
+                      <div className="flex justify-center py-2 opacity-0 hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => { setInsertAfterIdx(idx); setGalleryOpen(true); }}
+                          className="px-3 py-1.5 text-xs text-gray-400 border border-dashed border-gray-300 rounded-lg hover:text-[#4F46E5] hover:border-[#4F46E5] transition-colors"
+                        >
+                          {t("result.gallery.addPhoto")}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -2006,6 +2076,137 @@ function ResultContent() {
                     })}
                     className="text-[#4F46E5] px-1 -mx-1"
                   />
+                </div>
+              )}
+
+              {/* ===== 학습 노트 섹션 (블로그 변환에서 병렬 생성) ===== */}
+              {blogStudyStructure && (
+                <div className="mt-16 pt-10 border-t-2 border-gray-200">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">{t("study.result.sectionTitle")}</h2>
+                  </div>
+
+                  {/* 핵심 요약 */}
+                  <section id="blog-study-summary" className="mb-10 scroll-mt-20">
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
+                      <h3 className="font-bold text-gray-900">{t("study.result.executiveSummary")}</h3>
+                    </div>
+                    <p className="text-gray-600 leading-[2] whitespace-pre-line">{blogStudyStructure.executive_summary}</p>
+                  </section>
+
+                  {/* 핵심 개념 */}
+                  {blogStudyStructure.key_concepts?.length > 0 && (
+                    <section id="blog-study-concepts" className="mb-10 scroll-mt-20">
+                      <div className="flex items-center gap-2 mb-4">
+                        <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
+                        <h3 className="font-bold text-gray-900">{t("study.result.keyConcepts")}</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {blogStudyStructure.key_concepts.map((concept: any, i: number) => (
+                          <div key={i} className="rounded-2xl bg-gray-50 border border-gray-200 p-5 hover:shadow-sm transition-shadow">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                concept.importance === "high" ? "bg-red-400" :
+                                concept.importance === "medium" ? "bg-amber-400" :
+                                "bg-gray-300"
+                              }`} />
+                              <h4 className="text-sm font-bold text-gray-900">{concept.name}</h4>
+                              <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                                concept.importance === "high" ? "bg-red-50 text-red-500" :
+                                concept.importance === "medium" ? "bg-amber-50 text-amber-600" :
+                                "bg-gray-100 text-gray-400"
+                              }`}>
+                                {t(`study.result.importance.${concept.importance}`)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-500 leading-relaxed">{concept.definition}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* 상세 노트 */}
+                  {blogStudyStructure.detailed_notes?.length > 0 && (
+                    <section id="blog-study-notes" className="mb-10 scroll-mt-20">
+                      <div className="flex items-center gap-2 mb-4">
+                        <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
+                        <h3 className="font-bold text-gray-900">{t("study.result.detailedNotes")}</h3>
+                      </div>
+                      {blogStudyStructure.detailed_notes.map((note: any, i: number) => (
+                        <div key={i} id={`blog-study-note-${i}`} className="mb-6 scroll-mt-20">
+                          <h4 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                            <span className="text-gray-300 text-xs font-mono">{String(i + 1).padStart(2, "0")}</span>
+                            {note.topic}
+                          </h4>
+                          <p className="text-gray-600 leading-[2] whitespace-pre-line">{note.content}</p>
+                          {i < blogStudyStructure.detailed_notes.length - 1 && (
+                            <div className="border-b border-gray-100 mt-6" />
+                          )}
+                        </div>
+                      ))}
+                    </section>
+                  )}
+
+                  {/* 연습 문제 */}
+                  {blogStudyStructure.study_questions?.length > 0 && (
+                    <section id="blog-study-questions" className="mb-10 scroll-mt-20">
+                      <div className="flex items-center gap-2 mb-4">
+                        <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
+                        <h3 className="font-bold text-gray-900">{t("study.result.studyQuestions")}</h3>
+                      </div>
+                      <div className="space-y-3">
+                        {blogStudyStructure.study_questions.map((q: any, i: number) => (
+                          <div key={i} className="rounded-2xl bg-gray-50 border border-gray-200 overflow-hidden">
+                            <button
+                              onClick={() => {
+                                const next = new Set(openBlogStudyQuestions);
+                                next.has(i) ? next.delete(i) : next.add(i);
+                                setOpenBlogStudyQuestions(next);
+                              }}
+                              className="w-full text-left px-5 py-4 flex items-start gap-3 hover:bg-gray-100 transition-colors"
+                            >
+                              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 text-gray-600 text-xs font-bold flex items-center justify-center mt-0.5">
+                                {i + 1}
+                              </span>
+                              <span className="text-sm font-medium text-gray-900 flex-1">{q.question}</span>
+                              <svg className={`w-4 h-4 text-gray-400 flex-shrink-0 mt-1 transition-transform ${openBlogStudyQuestions.has(i) ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                            {openBlogStudyQuestions.has(i) && (
+                              <div className="px-5 pb-4 pl-14">
+                                <p className="text-sm text-gray-600 leading-relaxed">{q.answer}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* 관련 주제 */}
+                  {blogStudyStructure.related_topics?.length > 0 && (
+                    <section id="blog-study-related" className="mb-10 scroll-mt-20">
+                      <div className="flex items-center gap-2 mb-4">
+                        <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
+                        <h3 className="font-bold text-gray-900">{t("study.result.relatedTopics")}</h3>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {blogStudyStructure.related_topics.map((topic: string, i: number) => (
+                          <span key={i} className="px-3 py-1.5 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors">
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
+                    </section>
+                  )}
                 </div>
               )}
 
@@ -2044,6 +2245,18 @@ function ResultContent() {
                     </button>
                   </div>
                   <div className="flex items-center gap-2">
+                    {galleryUrls.length > 0 && (
+                      <button
+                        onClick={() => { setInsertAfterIdx(null); setGalleryOpen(true); }}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-lg transition-all text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-100"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        {t("result.gallery.addPhoto")}
+                      </button>
+                    )}
                     {displayData?.frameUrls && displayData.frameUrls.length > 0 && (
                       <button
                         onClick={handleDownloadImages}
@@ -2087,6 +2300,51 @@ function ResultContent() {
           </div>
         </div>
       )}
+      {/* 갤러리 드로어 (하단 슬라이드업) */}
+      {galleryOpen && galleryUrls.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-[60] bg-white border-t border-gray-200 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] rounded-t-2xl max-h-[50vh] flex flex-col">
+          {/* 헤더 */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+            <h3 className="font-bold text-gray-900">{t("result.gallery.title")}</h3>
+            <button
+              onClick={() => { setGalleryOpen(false); setInsertAfterIdx(null); }}
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          {/* 프레임 그리드 */}
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              {galleryUrls.map((gUrl, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleInsertFrame(gUrl)}
+                  className="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-[#4F46E5] hover:shadow-md transition-all"
+                >
+                  <img
+                    src={gUrl}
+                    className="w-full aspect-video object-cover"
+                    loading="lazy"
+                    alt={`${i}s`}
+                  />
+                  <span className="absolute bottom-0.5 right-1 text-[10px] text-white bg-black/50 px-1 rounded">
+                    {i}s
+                  </span>
+                  <div className="absolute inset-0 bg-[#4F46E5]/0 group-hover:bg-[#4F46E5]/10 transition-colors flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 요금제 모달 */}
       {showPricing && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center">

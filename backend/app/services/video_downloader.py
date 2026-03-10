@@ -1229,7 +1229,38 @@ async def extract_frames(video_path: str, max_frames: int = 6) -> List[str]:
     return frame_paths
 
 
-def persist_frames(frame_paths: List[str], job_id: str) -> List[str]:
+async def extract_dense_frames(video_path: str, interval: float = 1.0) -> List[str]:
+    """영상 전체에서 interval초 간격으로 프레임 추출 (갤러리용)"""
+    base = os.path.splitext(video_path)[0]
+    frame_dir = base + "_dense_frames"
+    os.makedirs(frame_dir, exist_ok=True)
+
+    duration = await _get_video_duration(video_path)
+    output_pattern = os.path.join(frame_dir, "dense_%03d.jpg")
+
+    cmd = [
+        "ffmpeg", "-y",
+        "-i", video_path,
+        "-vf", f"fps=1/{interval}",
+        "-pix_fmt", "yuvj420p",
+        "-q:v", "4",
+        output_pattern
+    ]
+
+    process = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    await process.communicate()
+
+    # ffmpeg fps 필터는 1-indexed: dense_001.jpg, dense_002.jpg, ...
+    frame_paths = sorted(glob.glob(os.path.join(frame_dir, "dense_*.jpg")))
+    print(f"[DenseFrames] {len(frame_paths)}장 추출 (영상 {duration:.1f}초, {interval}초 간격)")
+    return frame_paths
+
+
+def persist_frames(frame_paths: List[str], job_id: str, prefix: str = "frame") -> List[str]:
     """프레임 이미지를 영구 디렉토리로 복사하여 서빙 가능하게 함"""
     import shutil
 
@@ -1240,7 +1271,7 @@ def persist_frames(frame_paths: List[str], job_id: str) -> List[str]:
     for i, frame_path in enumerate(frame_paths):
         if not os.path.exists(frame_path):
             continue
-        filename = f"frame_{i:02d}.jpg"
+        filename = f"{prefix}_{i:02d}.jpg"
         dest = os.path.join(frames_dir, filename)
         shutil.copy2(frame_path, dest)
         saved_urls.append(f"/api/frames/{job_id}/{filename}")

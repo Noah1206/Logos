@@ -76,7 +76,9 @@ class ConvertResponse(BaseModel):
     seo_keywords: Optional[SEOKeywords] = None
     blog_content: Optional[str] = None
     blog_structure: Optional[BlogStructure] = None
+    study_structure: Optional[StudyStructure] = None
     frame_urls: List[str] = []
+    gallery_frame_urls: List[str] = []
     error: Optional[str] = None
 
 

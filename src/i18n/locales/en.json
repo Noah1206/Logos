@@ -304,7 +304,13 @@
     "convertError": "An error occurred during conversion.",
     "conversionFailedShort": "Conversion Failed",
     "imageDownloadFailed": "Failed to download images.",
-    "creditRemaining": "{{count}} credits left"
+    "creditRemaining": "{{count}} credits left",
+    "gallery": {
+      "title": "Select photo from video",
+      "addPhoto": "+ Add Photo",
+      "close": "Close",
+      "timestamp": "{{seconds}}s"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -390,6 +396,7 @@
       "Study notes are saved to your knowledge base"
     ],
     "result": {
+      "sectionTitle": "Study Notes",
       "executiveSummary": "Executive Summary",
       "keyConcepts": "Key Concepts",
       "detailedNotes": "Detailed Notes",

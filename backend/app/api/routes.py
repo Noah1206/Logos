@@ -228,8 +228,9 @@ async def serve_frame(job_id: str, filename: str):
     if ".." in job_id or "/" in job_id or ".." in filename or "/" in filename:
         raise HTTPException(status_code=400, detail="잘못된 요청입니다")
 
-    # 파일명 검증 (frame_XX.jpg 형식만 허용)
-    if not filename.startswith("frame_") or not filename.endswith(".jpg"):
+    # 파일명 검증 (frame_XX.jpg 또는 gallery_XX.jpg 형식만 허용)
+    import re as _re
+    if not _re.match(r'^(frame|gallery)_\d+\.jpg$', filename):
         raise HTTPException(status_code=400, detail="잘못된 파일명입니다")
 
     from ..core.config import get_settings

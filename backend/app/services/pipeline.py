@@ -9,12 +9,13 @@ from typing import Optional, Callable, Awaitable
 from ..models.schemas import ConvertResponse, StudyResponse
 from .video_downloader import (
     download_video, extract_audio_from_video, extract_frames,
-    cleanup_temp_files, detect_platform, persist_frames,
-    get_downloaded_images, convert_images_to_jpg
+    extract_dense_frames, cleanup_temp_files, detect_platform,
+    persist_frames, get_downloaded_images, convert_images_to_jpg
 )
 from .stt_service import transcribe_audio
 from .vision_analyzer import analyze_frames
 from .blog_writer import write_blog
+from .study_writer import write_study_notes
 
 # progress_callback 타입: (progress: int, message: str) -> None
 ProgressCallback = Callable[[int, str], Awaitable[None]]
@@ -58,6 +59,8 @@ async def run_conversion_pipeline(
             print(f"[Pipeline] 설명: {video_info.description[:100]}...")
         await emit(30, "이미지를 분석 중이에요" if is_feed else "다운로드 완료! 콘텐츠를 분석 중이에요")
 
+        dense_frame_paths: list = []
+
         if video_info.content_type == "image":
             # === 이미지 피드 (STT 스킵) ===
             await emit(35, "이미지를 분석하고 있어요")
@@ -75,11 +78,12 @@ async def run_conversion_pipeline(
             # === 비디오 (기존 그대로) ===
             await emit(35, "오디오와 프레임을 추출하고 있어요")
             print("[Pipeline] 오디오/프레임 추출 중...")
-            audio_path, frame_paths = await asyncio.gather(
+            audio_path, frame_paths, dense_frame_paths = await asyncio.gather(
                 extract_audio_from_video(content_path),
-                extract_frames(content_path, max_frames=6)
+                extract_frames(content_path, max_frames=6),
+                extract_dense_frames(content_path, interval=1.0),
             )
-            print(f"[Pipeline] 오디오: {audio_path}, 프레임: {len(frame_paths)}장")
+            print(f"[Pipeline] 오디오: {audio_path}, 프레임: {len(frame_paths)}장, 갤러리: {len(dense_frame_paths)}장")
 
             await emit(50, "음성을 텍스트로 변환하고 있어요")
             print("[Pipeline] 음성 인식 + 화면 분석 중...")
@@ -101,9 +105,13 @@ async def run_conversion_pipeline(
         # Step 3.5: 프레임 이미지 영구 저장
         job_id = str(uuid.uuid4())
         frame_urls = []
+        gallery_frame_urls = []
         if frame_paths:
-            frame_urls = persist_frames(frame_paths, job_id)
+            frame_urls = persist_frames(frame_paths, job_id, prefix="frame")
             print(f"[Pipeline] 프레임 {len(frame_urls)}장 저장 완료 (job_id: {job_id})")
+        if video_info.content_type != "image" and dense_frame_paths:
+            gallery_frame_urls = persist_frames(dense_frame_paths, job_id, prefix="gallery")
+            print(f"[Pipeline] 갤러리 프레임 {len(gallery_frame_urls)}장 저장 완료")
 
         # Step 3.6: 컨텐츠 충분성 검증
         has_transcript = len(transcript.strip()) >= 15
@@ -129,21 +137,50 @@ async def run_conversion_pipeline(
         ]
         print(f"[Pipeline] 블로그용 프레임: {len(frame_desc_list)}개 (quality >= 0.3)")
 
-        # Step 4: 블로그 글 생성
+        # Step 4: 블로그 글 + 학습 노트 병렬 생성
         await emit(70, "SEO 최적화 블로그 글을 작성 중이에요")
-        print("[Pipeline] 블로그 글 생성 중...")
-        blog_structure, seo_keywords, blog_content = await write_blog(
-            transcript=transcript if has_transcript else None,
-            screen_text=screen_text if has_screen_text else None,
-            description=video_info.description if has_description else None,
-            video_title=video_info.title,
-            location=location,
-            frame_descriptions=frame_desc_list if frame_desc_list else None,
-            tone=tone
+        print("[Pipeline] 블로그 글 + 학습 노트 병렬 생성 중...")
+
+        # 학습 노트용 텍스트 조합
+        study_input_parts = []
+        if video_info.title:
+            study_input_parts.append(f"제목: {video_info.title}")
+        if transcript and has_transcript:
+            study_input_parts.append(transcript)
+        if video_info.description and has_description:
+            study_input_parts.append(f"설명: {video_info.description[:500]}")
+        study_input_text = "\n\n".join(study_input_parts) if study_input_parts else ""
+
+        # 블로그 + 학습 노트 병렬 실행
+        async def _safe_study():
+            if not study_input_text or len(study_input_text.strip()) < 30:
+                return None
+            try:
+                return await write_study_notes(study_input_text)
+            except Exception as e:
+                print(f"[Pipeline] 학습 노트 생성 실패 (무시): {e}")
+                return None
+
+        blog_result, study_result = await asyncio.gather(
+            write_blog(
+                transcript=transcript if has_transcript else None,
+                screen_text=screen_text if has_screen_text else None,
+                description=video_info.description if has_description else None,
+                video_title=video_info.title,
+                location=location,
+                frame_descriptions=frame_desc_list if frame_desc_list else None,
+                tone=tone
+            ),
+            _safe_study(),
         )
+        blog_structure, seo_keywords, blog_content = blog_result
+        study_structure = study_result[0] if study_result else None
+
         await emit(95, "블로그 글 작성 완료! 마무리 중이에요")
         print(f"[Pipeline] 블로그 생성 완료: {blog_structure.title}")
         print(f"[Pipeline] 섹션 {len(blog_structure.sections)}개, 해시태그 {len(seo_keywords.hashtags)}개")
+        if study_structure:
+            print(f"[Pipeline] 학습 노트 생성 완료: {study_structure.title}")
 
         # Step 4.5: 중복 frame_index 후처리 (첫 번째만 유지)
         used = set()
@@ -161,7 +198,9 @@ async def run_conversion_pipeline(
             seo_keywords=seo_keywords,
             blog_content=blog_content,
             blog_structure=blog_structure,
-            frame_urls=frame_urls
+            study_structure=study_structure,
+            frame_urls=frame_urls,
+            gallery_frame_urls=gallery_frame_urls,
         )
 
     except Exception as e:
