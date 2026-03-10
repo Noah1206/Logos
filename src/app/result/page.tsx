@@ -1374,14 +1374,15 @@ function ResultContent() {
           </div>
         </div>
       ) : isStudyMode && studyResult?.study_structure ? (
-        /* Study Result State — Same layout as blog result (white, sidebar) */
+        /* Study Result State — 블로그 결과 페이지와 동일한 레이아웃 */
         <div className="flex min-h-screen">
-          {/* ===== 왼쪽 사이드바 (블로그와 동일) ===== */}
+          {/* ===== 왼쪽 사이드바 (블로그와 완전 동일) ===== */}
           <aside
             className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 flex flex-col z-50 transition-all duration-300 overflow-hidden ${
               sidebarOpen ? "w-60" : "w-0"
             }`}
           >
+            {/* 로고 + 토글 */}
             <div className="flex-shrink-0 flex items-center justify-between px-4 pt-5 pb-3">
               <div className="flex items-center gap-1.5">
                 <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-6 w-6" />
@@ -1394,43 +1395,60 @@ function ResultContent() {
               </button>
             </div>
 
+            {/* 새 변환 버튼 */}
             <div className="flex-shrink-0 px-3 mb-4">
               <button onClick={handleGoBack} className="w-full flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-500 hover:bg-gray-50 transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
                 {t("result.newConvertFull")}
               </button>
             </div>
 
-            {/* 목차 */}
-            <div className="flex-1 min-h-0 overflow-y-auto px-3">
-              <div className="px-3 mb-2">
-                <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Contents</span>
+            {/* 네비게이션 */}
+            <nav className="flex-shrink-0 px-3">
+              <div className="space-y-0.5">
+                <button onClick={() => requireAuth(() => {})} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                  <svg className="w-[18px] h-[18px] text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {t("result.conversionHistory")}
+                </button>
               </div>
-              <nav className="space-y-0.5">
-                {[
-                  { id: "summary", label: t("study.result.executiveSummary") },
-                  { id: "concepts", label: t("study.result.keyConcepts") },
-                  { id: "notes", label: t("study.result.detailedNotes") },
-                  { id: "questions", label: t("study.result.studyQuestions") },
-                  ...(studyResult.study_structure.related_topics?.length > 0 ? [{ id: "related", label: t("study.result.relatedTopics") }] : []),
-                ].map((item) => (
-                  <a key={item.id} href={`#study-${item.id}`} className="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors truncate">
-                    {item.label}
-                  </a>
-                ))}
-                {studyResult.study_structure.detailed_notes?.map((note: any, i: number) => (
-                  <a key={`dn-${i}`} href={`#study-note-${i}`} className="block pl-6 pr-3 py-1.5 text-xs text-gray-400 hover:text-gray-600 rounded-lg transition-colors truncate">
-                    {note.topic}
-                  </a>
-                ))}
-              </nav>
+            </nav>
+
+            {/* 최근 변환 */}
+            <div className="flex-1 min-h-0 overflow-y-auto px-3 mt-4">
+              <div className="flex items-center justify-between px-3 mb-2">
+                <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{t("result.recentConversions")}</span>
+              </div>
+              <div className="space-y-0.5">
+                {studyResult?.study_structure && (
+                  <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left">
+                    <span className="text-gray-300 text-xs flex-shrink-0">📄</span>
+                    <span className="truncate">{studyResult.study_structure.title}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* 하단 영역 */}
+            <div className="flex-shrink-0 border-t border-gray-100 px-3 py-3 space-y-1">
+              <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {t("common.help")}
+              </button>
             </div>
 
             {/* 유저 프로필 */}
             <div className="flex-shrink-0 border-t border-gray-100 px-3 py-4">
               <div className="flex items-center gap-3 px-2">
                 <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
@@ -1439,10 +1457,24 @@ function ResultContent() {
                   </div>
                   <p className="text-xs text-gray-400 truncate">{t("result.creditRemaining", { count: user?.credits ?? 0 })}</p>
                 </div>
+                <button className="p-1 hover:bg-gray-100 rounded transition-colors">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
               </div>
+              {/* 업그레이드 버튼 */}
+              <button
+                onClick={() => setShowPricing(true)}
+                className="w-full mt-3 py-2.5 bg-[#FEF9C3] hover:bg-[#FEF08A] text-gray-900 text-sm font-medium rounded-lg transition-colors"
+              >
+                {t("common.upgrade")}
+              </button>
             </div>
           </aside>
 
+          {/* 사이드바 닫혔을 때 열기 버튼 */}
           {!sidebarOpen && (
             <button onClick={() => setSidebarOpen(true)} className="fixed top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm transition-colors">
               <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
@@ -1581,14 +1613,28 @@ function ResultContent() {
               )}
             </div>
 
-            {/* 하단 액션 바 (블로그와 동일 스타일) */}
+            {/* 하단 액션 바 (블로그와 동일) */}
             <div className={`fixed bottom-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transition-all duration-300 ${sidebarOpen ? "left-60" : "left-0"}`}>
               <div className="max-w-4xl mx-auto px-8 py-4">
                 <div className="flex items-center justify-between">
-                  <button onClick={handleGoBack} className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                    {t("result.newConvert")}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button onClick={handleGoBack} className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                      {t("result.newConvert")}
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(window.location.href);
+                        alert(t("result.linkCopied"));
+                      }}
+                      className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                      {t("result.copyLink")}
+                    </button>
+                  </div>
                   <button
                     onClick={async () => {
                       if (studyResult?.study_content) {

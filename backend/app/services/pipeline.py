@@ -240,7 +240,7 @@ async def run_study_pipeline(
         transcript = ""
 
         if mode == "pdf":
-            await emit(10, "PDF를 분석하고 있어요")
+            await emit(10, "PDF에서 학습 자료를 읽고 있어요")
 
             if pdf_text:
                 text = pdf_text
@@ -249,23 +249,23 @@ async def run_study_pipeline(
             else:
                 return StudyResponse(success=False, error="PDF 텍스트 또는 URL이 필요합니다")
 
-            await emit(40, "PDF 텍스트 추출 완료!")
+            await emit(40, "텍스트 추출 완료! 핵심 내용을 파악 중이에요")
 
         elif mode == "youtube":
             if not url:
                 return StudyResponse(success=False, error="YouTube URL이 필요합니다")
 
-            await emit(5, "영상을 분석하고 있어요")
+            await emit(5, "영상 내용을 파악하고 있어요")
             platform, video_id = detect_platform(url)
 
-            await emit(10, "영상을 다운로드하고 있어요")
+            await emit(10, "학습할 영상을 가져오고 있어요")
             content_path, video_info = await download_video(url)
             video_path = content_path
 
-            await emit(30, "오디오를 추출하고 있어요")
+            await emit(30, "영상에서 핵심 내용을 추출하고 있어요")
             audio_path = await extract_audio_from_video(content_path)
 
-            await emit(40, "음성을 텍스트로 변환하고 있어요")
+            await emit(40, "강의 내용을 텍스트로 정리하고 있어요")
             transcript = await transcribe_audio(audio_path)
 
             if not transcript or len(transcript.strip()) < 30:
@@ -280,16 +280,16 @@ async def run_study_pipeline(
             if video_info.description:
                 text = f"{text}\n\n설명: {video_info.description[:500]}"
 
-            await emit(55, "음성 인식 완료!")
+            await emit(55, "내용 파악 완료! 학습 노트를 준비 중이에요")
 
         else:
             return StudyResponse(success=False, error=f"지원하지 않는 모드: {mode}")
 
         # 학습 노트 생성
-        await emit(65, "학습 노트를 생성하고 있어요")
+        await emit(65, "핵심 개념과 연습 문제를 만들고 있어요")
         study_structure, study_content = await write_study_notes(text)
 
-        await emit(95, "학습 노트 생성 완료!")
+        await emit(95, "학습 노트가 완성됐어요!")
 
         return StudyResponse(
             success=True,
