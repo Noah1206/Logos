@@ -148,14 +148,14 @@ export default function Home() {
           {/* Frosted glass background - page shows through */}
           <div className="absolute inset-0 backdrop-blur-2xl bg-black/30" />
 
-          {/* Gradient color overlay (semi-transparent so page bleeds through) */}
-          <div className="absolute inset-0 ob-gradient-overlay" />
+          {/* Static gradient color overlay */}
+          <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(15,10,46,0.55) 0%, rgba(26,17,69,0.45) 25%, rgba(45,27,105,0.4) 50%, rgba(76,29,149,0.35) 75%, rgba(91,33,182,0.3) 100%)" }} />
 
-          {/* Floating orbs (lighter, more transparent) */}
+          {/* Static orbs (no animation) */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="ob-orb ob-orb-1" />
-            <div className="ob-orb ob-orb-2" />
-            <div className="ob-orb ob-orb-3" />
+            <div className="absolute rounded-full" style={{ width: 450, height: 450, top: "-10%", right: "-5%", background: "radial-gradient(circle, rgba(139,92,246,0.18), transparent 70%)", filter: "blur(100px)" }} />
+            <div className="absolute rounded-full" style={{ width: 400, height: 400, bottom: "-5%", left: "-5%", background: "radial-gradient(circle, rgba(99,102,241,0.15), transparent 70%)", filter: "blur(100px)" }} />
+            <div className="absolute rounded-full" style={{ width: 300, height: 300, top: "40%", left: "50%", transform: "translateX(-50%)", background: "radial-gradient(circle, rgba(217,70,239,0.12), transparent 70%)", filter: "blur(100px)" }} />
           </div>
 
           {/* Content */}
@@ -267,10 +267,10 @@ export default function Home() {
                   }`}
                   style={{
                     animationName: "obCardIn",
-                    animationDuration: "0.7s",
-                    animationTimingFunction: "cubic-bezier(0.16,1,0.3,1)",
+                    animationDuration: "0.9s",
+                    animationTimingFunction: "cubic-bezier(0.22,1,0.36,1)",
                     animationFillMode: "both",
-                    animationDelay: `${0.3 + i * 0.12}s`,
+                    animationDelay: `${0.35 + i * 0.15}s`,
                   }}
                 >
                   {/* Glass card background - double layer for depth */}
@@ -318,100 +318,69 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Keyframe animations */}
+          {/* Keyframe animations — elements only, no background movement */}
           <style>{`
-            .ob-gradient-overlay {
-              background: linear-gradient(135deg,
-                rgba(15, 10, 46, 0.55) 0%,
-                rgba(26, 17, 69, 0.45) 25%,
-                rgba(45, 27, 105, 0.4) 50%,
-                rgba(76, 29, 149, 0.35) 75%,
-                rgba(91, 33, 182, 0.3) 100%
-              );
-              background-size: 200% 200%;
-              animation: obGradientShift 8s ease-in-out infinite;
-            }
-            @keyframes obGradientShift {
-              0%, 100% { background-position: 0% 50%; }
-              50% { background-position: 100% 50%; }
-            }
-            .ob-orb {
-              position: absolute;
-              border-radius: 50%;
-              filter: blur(100px);
-            }
-            .ob-orb-1 {
-              width: 450px; height: 450px;
-              background: radial-gradient(circle, rgba(139, 92, 246, 0.18), transparent 70%);
-              top: -10%; right: -5%;
-              animation: obFloat1 12s ease-in-out infinite;
-            }
-            .ob-orb-2 {
-              width: 400px; height: 400px;
-              background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
-              bottom: -5%; left: -5%;
-              animation: obFloat2 15s ease-in-out infinite;
-            }
-            .ob-orb-3 {
-              width: 300px; height: 300px;
-              background: radial-gradient(circle, rgba(217, 70, 239, 0.12), transparent 70%);
-              top: 40%; left: 50%;
-              animation: obFloat3 10s ease-in-out infinite;
-            }
-            @keyframes obFloat1 {
-              0%, 100% { transform: translate(0, 0) scale(1); }
-              33% { transform: translate(-40px, 30px) scale(1.1); }
-              66% { transform: translate(20px, -20px) scale(0.95); }
-            }
-            @keyframes obFloat2 {
-              0%, 100% { transform: translate(0, 0) scale(1); }
-              50% { transform: translate(50px, -40px) scale(1.15); }
-            }
-            @keyframes obFloat3 {
-              0%, 100% { transform: translate(-50%, 0) scale(1); }
-              50% { transform: translate(-50%, -30px) scale(1.2); }
-            }
             .ob-lang-enter {
-              animation: obLangIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+              animation: obLangIn 0.9s cubic-bezier(0.22,1,0.36,1) both;
             }
             @keyframes obLangIn {
-              from { opacity: 0; transform: translateY(-12px); }
-              to { opacity: 1; transform: translateY(0); }
+              0% { opacity: 0; transform: translateY(-30px) scale(0.8); filter: blur(4px); }
+              60% { opacity: 1; filter: blur(0); }
+              80% { transform: translateY(3px) scale(1.02); }
+              100% { transform: translateY(0) scale(1); }
             }
             .ob-logo-enter {
-              animation: obLogoIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.08s both;
+              animation: obLogoIn 1s cubic-bezier(0.22,1,0.36,1) 0.1s both;
             }
             @keyframes obLogoIn {
-              from { opacity: 0; transform: translateY(-20px) scale(0.9); }
-              to { opacity: 1; transform: translateY(0) scale(1); }
+              0% { opacity: 0; transform: translateY(-40px) scale(0.7) rotate(-5deg); filter: blur(6px); }
+              50% { opacity: 1; filter: blur(0); }
+              75% { transform: translateY(4px) scale(1.04) rotate(0.5deg); }
+              100% { transform: translateY(0) scale(1) rotate(0); }
             }
             .ob-subtitle-enter {
-              animation: obSubIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.18s both;
+              animation: obSubIn 0.8s cubic-bezier(0.22,1,0.36,1) 0.25s both;
             }
             @keyframes obSubIn {
-              from { opacity: 0; transform: translateY(10px); }
-              to { opacity: 1; transform: translateY(0); }
+              0% { opacity: 0; transform: translateY(20px); filter: blur(4px); letter-spacing: 0.3em; }
+              60% { opacity: 1; filter: blur(0); }
+              100% { transform: translateY(0); letter-spacing: 0.05em; }
             }
             @keyframes obCardIn {
-              from { opacity: 0; transform: translateY(32px) scale(0.95); }
-              to { opacity: 1; transform: translateY(0) scale(1); }
+              0% { opacity: 0; transform: translateY(60px) scale(0.85) rotateX(8deg); filter: blur(6px); }
+              50% { opacity: 1; filter: blur(0); }
+              80% { transform: translateY(-4px) scale(1.02) rotateX(-1deg); }
+              100% { transform: translateY(0) scale(1) rotateX(0); }
             }
             .ob-card {
               transform-style: preserve-3d;
               perspective: 800px;
+              transition: transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s ease;
             }
             .ob-card:hover {
-              transform: translateY(-6px);
+              transform: translateY(-8px) scale(1.02);
+              box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            }
+            .ob-card:active {
+              transform: translateY(-2px) scale(0.98);
+              transition-duration: 0.15s;
             }
             .ob-card-selected {
-              box-shadow: 0 0 40px rgba(139, 92, 246, 0.25), 0 0 80px rgba(139, 92, 246, 0.08);
+              box-shadow: 0 0 50px rgba(139, 92, 246, 0.3), 0 0 100px rgba(139, 92, 246, 0.1);
+              animation: obCardPulse 0.6s ease-in-out;
+            }
+            @keyframes obCardPulse {
+              0% { transform: scale(1); }
+              30% { transform: scale(1.1); }
+              60% { transform: scale(1.06); }
+              100% { transform: scale(1.08); }
             }
             .ob-skip-enter {
-              animation: obSkipIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.7s both;
+              animation: obSkipIn 0.6s cubic-bezier(0.22,1,0.36,1) 0.8s both;
             }
             @keyframes obSkipIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
+              0% { opacity: 0; transform: translateY(12px); }
+              100% { opacity: 1; transform: translateY(0); }
             }
           `}</style>
         </div>
