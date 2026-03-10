@@ -1,5 +1,11 @@
-import { auth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
+// PrismaAdapter(DB 세션)는 Edge Runtime에서 동작하지 않으므로
+// 세션 쿠키 존재 여부로 인증을 판별합니다.
+// 실제 세션 유효성은 각 API 핸들러의 auth() 호출에서 2차 검증됩니다.
+
+const SESSION_COOKIE = "authjs.session-token";
+const SECURE_SESSION_COOKIE = "__Secure-authjs.session-token";
 
 // 인증이 필요한 페이지 경로
 const protectedPages = ["/result", "/dashboard", "/tone", "/study"];
@@ -25,6 +31,13 @@ const publicApi = [
   "/api/frames",
 ];
 
+function hasSessionCookie(req: NextRequest): boolean {
+  return !!(
+    req.cookies.get(SESSION_COOKIE)?.value ||
+    req.cookies.get(SECURE_SESSION_COOKIE)?.value
+  );
+}
+
 function isPublicPath(pathname: string): boolean {
   return publicApi.some((p) => pathname.startsWith(p));
 }
@@ -37,7 +50,7 @@ function isProtectedApi(pathname: string): boolean {
   return protectedApi.some((p) => pathname.startsWith(p));
 }
 
-export default auth((req) => {
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // 공개 경로는 통과
@@ -45,7 +58,7 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  const isLoggedIn = !!req.auth?.user;
+  const isLoggedIn = hasSessionCookie(req);
 
   // 보호된 페이지: 미인증 시 메인으로 리다이렉트
   if (isProtectedPage(pathname) && !isLoggedIn) {
@@ -64,7 +77,7 @@ export default auth((req) => {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [
