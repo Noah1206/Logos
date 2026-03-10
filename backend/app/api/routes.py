@@ -12,10 +12,17 @@ from ..models.schemas import (
     GenerateVideoRequest,
     GenerateVideoResponse,
     JobResponse,
-    JobStatus
+    JobStatus,
+    KnowledgeExtractionRequest,
+    KnowledgeExtractionResponse,
+    StudyRequest,
+    StudyResponse,
+    ThinkRequest,
 )
-from ..services.pipeline import run_conversion_pipeline
+from ..services.pipeline import run_conversion_pipeline, run_study_pipeline
 from ..services.video_generator import generate_video_from_blog
+from ..services.knowledge_extractor import extract_knowledge
+from ..services.thinking_engine import generate_thinking_response
 
 router = APIRouter()
 
@@ -236,6 +243,87 @@ async def serve_frame(job_id: str, filename: str):
         raise HTTPException(status_code=404, detail="이미지를 찾을 수 없습니다")
 
     return FileResponse(file_path, media_type="image/jpeg")
+
+
+@router.post("/extract-knowledge", response_model=KnowledgeExtractionResponse)
+async def extract_knowledge_endpoint(request: KnowledgeExtractionRequest):
+    """콘텐츠에서 지식 추출"""
+    result = await extract_knowledge(
+        content=request.content,
+        transcript=request.transcript,
+    )
+    return KnowledgeExtractionResponse(**result)
+
+
+@router.post("/study/stream")
+async def study_stream(request: StudyRequest):
+    """Study 모드 SSE 스트리밍"""
+    progress_queue: asyncio.Queue = asyncio.Queue()
+
+    async def progress_callback(progress: int, message: str):
+        await progress_queue.put({"progress": progress, "message": message})
+
+    async def event_generator():
+        task = asyncio.create_task(
+            run_study_pipeline(
+                mode=request.mode,
+                url=request.url,
+                pdf_text=request.pdf_text,
+                pdf_url=request.pdf_url,
+                progress_callback=progress_callback,
+            )
+        )
+
+        while not task.done():
+            try:
+                event = await asyncio.wait_for(progress_queue.get(), timeout=1.0)
+                yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+            except asyncio.TimeoutError:
+                yield f": heartbeat\n\n"
+
+        while not progress_queue.empty():
+            event = progress_queue.get_nowait()
+            yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+
+        result: StudyResponse = task.result()
+        if result.success:
+            result_data = result.model_dump()
+            yield f"data: {json.dumps({'progress': 100, 'message': '완료!', 'result': result_data}, ensure_ascii=False)}\n\n"
+        else:
+            yield f"data: {json.dumps({'progress': -1, 'message': result.error or '학습 요약 실패', 'error': True}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@router.post("/think")
+async def think_endpoint(request: ThinkRequest):
+    """AI Thinking 스트리밍 응답"""
+    async def event_generator():
+        async for chunk in generate_thinking_response(
+            question=request.question,
+            knowledge_context=request.knowledge_context,
+            topic_filter=request.topic_filter,
+        ):
+            yield f"data: {json.dumps({'content': chunk}, ensure_ascii=False)}\n\n"
+        yield f"data: {json.dumps({'done': True}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.get("/health")

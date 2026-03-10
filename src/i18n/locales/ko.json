@@ -32,7 +32,8 @@
     "timeFormat": "{{hours}}시간 {{minutes}}분 {{seconds}}초"
   },
   "nav": {
-    "pricing": "요금제"
+    "pricing": "요금제",
+    "dashboard": "대시보드"
   },
   "hero": {
     "videoToBlog": {
@@ -54,7 +55,7 @@
   "tabs": {
     "videoToBlog": "영상 → 블로그",
     "feedToBlog": "피드 → 블로그",
-    "blogToVideo": "블로그 → 숏폼"
+    "study": "학습"
   },
   "convert": {
     "freeTrial": "무료 1회",
@@ -288,6 +289,78 @@
     "conversionFailedShort": "변환 실패",
     "imageDownloadFailed": "이미지 다운로드에 실패했습니다.",
     "creditRemaining": "크레딧 {{count}}회 남음"
+  },
+  "dashboard": {
+    "title": "대시보드",
+    "tabs": {
+      "videoToBlog": "릴스/쇼츠 → 블로그",
+      "feedToBlog": "피드 → 블로그",
+      "study": "학습"
+    },
+    "empty": {
+      "title": "아직 변환 기록이 없어요",
+      "desc": "영상이나 피드 게시물을 블로그 글로 변환해보세요.",
+      "cta": "변환 시작하기"
+    },
+    "card": {
+      "viewResult": "결과 보기",
+      "delete": "삭제",
+      "deleteConfirm": "이 변환 기록을 삭제하시겠습니까?",
+      "deleted": "변환 기록이 삭제되었습니다"
+    },
+    "loadMore": "더 보기",
+    "aiBrain": "AI 브레인",
+    "think": {
+      "title": "AI 브레인",
+      "subtitle": "축적된 지식을 기반으로 질문해보세요",
+      "placeholder": "콘텐츠에 대해 무엇이든 물어보세요...",
+      "send": "보내기",
+      "suggestions": ["콘텐츠 아이디어", "학습 내용 복습", "주제 연결"],
+      "empty": "AI 브레인과 대화를 시작하세요. 모든 변환에서 축적된 지식을 활용해 맞춤형 인사이트를 제공합니다.",
+      "thinking": "생각 중..."
+    }
+  },
+  "study": {
+    "title1": "AI와 함께",
+    "title2": "스마트 학습",
+    "desc": "PDF를 업로드하거나 유튜브 영상 링크를 붙여넣으면, AI가 핵심 개념, 상세 요약, 연습 문제가 포함된 학습 노트를 자동 생성합니다.",
+    "urlPlaceholder": "유튜브 영상 URL을 붙여넣으세요...",
+    "pdfUpload": {
+      "title": "PDF 업로드",
+      "dropzone": "클릭하거나 PDF 파일을 드래그하세요",
+      "hint": "최대 10MB, PDF 파일만 가능",
+      "uploaded": "PDF 업로드 완료: {{name}}"
+    },
+    "orDivider": "또는",
+    "startStudy": "학습 노트 생성",
+    "loading": [
+      "콘텐츠를 분석하고 있어요",
+      "핵심 개념을 추출하고 있어요",
+      "학습 구조를 만들고 있어요",
+      "연습 문제를 생성하고 있어요",
+      "상세 노트를 정리하고 있어요",
+      "최종 검수 중이에요"
+    ],
+    "tips": [
+      "긴 콘텐츠일수록 더 상세한 학습 노트가 만들어져요",
+      "핵심 개념은 중요도별로 표시돼요",
+      "연습 문제로 학습을 강화할 수 있어요",
+      "학습 노트는 지식 베이스에 자동 저장돼요"
+    ],
+    "result": {
+      "executiveSummary": "핵심 요약",
+      "keyConcepts": "핵심 개념",
+      "detailedNotes": "상세 노트",
+      "studyQuestions": "연습 문제",
+      "relatedTopics": "관련 주제",
+      "showAnswer": "정답 보기",
+      "hideAnswer": "정답 숨기기",
+      "importance": {
+        "high": "높음",
+        "medium": "보통",
+        "low": "낮음"
+      }
+    }
   },
   "payment": {
     "completed": "결제가 완료되었습니다! 현재 크레딧: {{credits}}회",

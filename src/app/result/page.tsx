@@ -418,17 +418,21 @@ function ResultContent() {
   const { t } = useTranslation();
   const blogLoadingMessages = useTranslationArray("result.blogLoading");
   const videoLoadingMessages = useTranslationArray("result.videoLoading");
+  const studyLoadingMessages = useTranslationArray("study.loading");
   const blogLoadingTips = useTranslationArray("result.blogTips");
   const videoLoadingTips = useTranslationArray("result.videoTips");
+  const studyLoadingTips = useTranslationArray("study.tips");
 
   const searchParams = useSearchParams();
   const url = searchParams.get("url") || "";
   const tone = searchParams.get("tone") || "";
   const pageMode = searchParams.get("mode") || "";
+  const studyMode = searchParams.get("studyMode") || "";
   const isVideoMode = pageMode === "blog-to-video";
+  const isStudyMode = pageMode === "study";
 
-  const loadingMessages = isVideoMode ? videoLoadingMessages : blogLoadingMessages;
-  const loadingTips = isVideoMode ? videoLoadingTips : blogLoadingTips;
+  const loadingMessages = isVideoMode ? videoLoadingMessages : isStudyMode ? studyLoadingMessages : blogLoadingMessages;
+  const loadingTips = isVideoMode ? videoLoadingTips : isStudyMode ? studyLoadingTips : blogLoadingTips;
 
   const { data: session, update: updateSession } = useSession();
   const user = session?.user;
@@ -483,6 +487,8 @@ function ResultContent() {
   const [loginLoading, setLoginLoading] = useState<string | null>(null);
   const [userImages, setUserImages] = useState<string[]>([]);
   const [excludeFrames, setExcludeFrames] = useState(false);
+  const [studyResult, setStudyResult] = useState<any>(null);
+  const [openQuestions, setOpenQuestions] = useState<Set<number>>(new Set());
 
   const handleSocialLogin = (provider: string) => {
     setLoginLoading(provider);
@@ -498,6 +504,51 @@ function ResultContent() {
   };
 
   const blogContentRef = useRef<HTMLDivElement>(null);
+
+  // 변환 결과를 DB에 저장 (fire-and-forget)
+  const saveConversion = useCallback(async (resultEvent: any, mapped: ResultData) => {
+    try {
+      const isInstagramFeed = url.includes("instagram.com/p/");
+      const isInstagram = url.includes("instagram.com");
+      const platformVal = isInstagram ? "instagram" : "youtube";
+      let sourceType = "youtube_shorts";
+      if (isInstagramFeed) sourceType = "instagram_feed";
+      else if (isInstagram) sourceType = "instagram_reel";
+
+      const modeVal = isInstagramFeed ? "feed-to-blog" : "video-to-blog";
+
+      const body = {
+        sourceUrl: url,
+        sourceType,
+        platform: platformVal,
+        mode: modeVal,
+        tone: tone || null,
+        title: mapped.blogTitle,
+        resultContent: mapped.rawContent || null,
+        resultJson: resultEvent.blog_structure || null,
+        transcript: resultEvent.transcript || null,
+        creditUsed: 1,
+      };
+
+      const res = await fetch("/api/conversions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        const { data: conversion } = await res.json();
+        // 비동기로 지식 추출 트리거 (fire-and-forget)
+        fetch("/api/knowledge/extract", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ conversionId: conversion.id }),
+        }).catch(() => {});
+      }
+    } catch {
+      // 저장 실패해도 사용자 경험에 영향 없음
+    }
+  }, [url, tone]);
 
   // sessionStorage에서 사용자 설정 로드
   useEffect(() => {
@@ -685,9 +736,121 @@ function ResultContent() {
     return () => clearInterval(progressInterval);
   }, [isVideoMode]);
 
+  // Study 모드 SSE 스트리밍
+  useEffect(() => {
+    if (!isStudyMode) return;
+
+    let cancelled = false;
+
+    const callStudySSE = async () => {
+      try {
+        const body: Record<string, string | null> = {};
+        if (studyMode === "pdf") {
+          body.mode = "pdf";
+          body.pdf_url = sessionStorage.getItem("study-pdf-url");
+        } else {
+          body.mode = "youtube";
+          body.url = url || sessionStorage.getItem("study-url") || "";
+        }
+
+        const res = await fetch("/api/study/stream", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          setErrorMessage(errData.error || t("result.convertError"));
+          setIsError(true);
+          return;
+        }
+
+        const reader = res.body?.getReader();
+        if (!reader) return;
+
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done || cancelled) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const jsonStr = line.slice(6).trim();
+            if (!jsonStr) continue;
+
+            try {
+              const event = JSON.parse(jsonStr);
+
+              if (event.error) {
+                setErrorMessage(event.message ?? t("result.conversionFailedShort"));
+                setIsError(true);
+                return;
+              }
+              if (event.message) setSseMessage(event.message);
+              if (event.progress !== undefined && event.progress >= 0) setProgress(event.progress);
+
+              if (event.result) {
+                setStudyResult(event.result);
+                setProgress(100);
+                updateSession();
+
+                // Save study conversion to DB
+                try {
+                  const sourceUrl = url || sessionStorage.getItem("study-url") || sessionStorage.getItem("study-pdf-url") || "";
+                  const convBody = {
+                    sourceUrl,
+                    sourceType: studyMode === "pdf" ? "pdf" : "youtube_long",
+                    platform: studyMode === "pdf" ? "pdf" : "youtube",
+                    mode: "study",
+                    title: event.result.title,
+                    resultContent: event.result.study_content,
+                    resultJson: event.result.study_structure,
+                    transcript: event.result.transcript,
+                    creditUsed: 1,
+                  };
+                  const saveRes = await fetch("/api/conversions", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(convBody),
+                  });
+                  if (saveRes.ok) {
+                    const { data: conversion } = await saveRes.json();
+                    fetch("/api/knowledge/extract", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ conversionId: conversion.id }),
+                    }).catch(() => {});
+                  }
+                } catch {}
+
+                setTimeout(() => setIsComplete(true), 400);
+                return;
+              }
+            } catch {}
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          setErrorMessage(t("result.serverError"));
+          setIsError(true);
+        }
+      }
+    };
+
+    callStudySSE();
+    return () => { cancelled = true; };
+  }, [isStudyMode, studyMode]);
+
   // URL→블로그 SSE 스트리밍 API 호출 (캐시된 결과가 있으면 바로 표시)
   useEffect(() => {
-    if (!url || isVideoMode) return;
+    if (!url || isVideoMode || isStudyMode) return;
 
     // sessionStorage에 캐시된 결과 확인
     const cacheKey = `convert_result_${url}`;
@@ -770,6 +933,8 @@ function ResultContent() {
                 sessionStorage.setItem(cacheKey, JSON.stringify(mapped));
                 setProgress(100);
                 updateSession();
+                // DB에 변환 결과 저장
+                saveConversion(event.result, mapped);
                 setTimeout(() => setIsComplete(true), 400);
                 return;
               }
@@ -1169,6 +1334,150 @@ function ResultContent() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      ) : isStudyMode && studyResult?.study_structure ? (
+        /* Study Result State */
+        <div className="min-h-screen bg-gray-50">
+          {/* Header */}
+          <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between h-14">
+                <a href="/" className="flex items-center gap-2">
+                  <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-6 w-6" />
+                  <span className="text-lg font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
+                </a>
+                <div className="flex items-center gap-3">
+                  <button onClick={handleGoBack} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors">
+                    {t("result.newConvert")}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (studyResult?.study_content) {
+                        await navigator.clipboard.writeText(studyResult.study_content);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-white bg-[#4F46E5] rounded-full hover:bg-[#4338CA] transition-colors"
+                  >
+                    {copied ? t("result.copied") : t("result.copyContent")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Title */}
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
+              {studyResult.study_structure.title}
+            </h1>
+
+            {/* Executive Summary */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5 text-[#4F46E5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {t("study.result.executiveSummary")}
+              </h2>
+              <p className="text-gray-700 leading-relaxed">{studyResult.study_structure.executive_summary}</p>
+            </div>
+
+            {/* Key Concepts */}
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-[#4F46E5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                {t("study.result.keyConcepts")}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {studyResult.study_structure.key_concepts.map((concept: any, i: number) => (
+                  <div key={i} className="rounded-2xl border border-gray-200 bg-white p-5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-semibold text-gray-900">{concept.name}</h3>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        concept.importance === "high" ? "bg-red-100 text-red-700" :
+                        concept.importance === "medium" ? "bg-yellow-100 text-yellow-700" :
+                        "bg-gray-100 text-gray-600"
+                      }`}>
+                        {t(`study.result.importance.${concept.importance}`)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">{concept.definition}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Detailed Notes */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-[#4F46E5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                {t("study.result.detailedNotes")}
+              </h2>
+              <div className="space-y-6">
+                {studyResult.study_structure.detailed_notes.map((note: any, i: number) => (
+                  <div key={i}>
+                    <h3 className="font-semibold text-gray-900 mb-2">{note.topic}</h3>
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">{note.content}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Study Questions */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-[#4F46E5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {t("study.result.studyQuestions")}
+              </h2>
+              <div className="space-y-4">
+                {studyResult.study_structure.study_questions.map((q: any, i: number) => (
+                  <div key={i} className="border border-gray-100 rounded-xl p-4">
+                    <p className="font-medium text-gray-900 mb-2">Q{i + 1}. {q.question}</p>
+                    <button
+                      onClick={() => {
+                        const next = new Set(openQuestions);
+                        next.has(i) ? next.delete(i) : next.add(i);
+                        setOpenQuestions(next);
+                      }}
+                      className="text-xs text-[#4F46E5] font-medium hover:text-[#4338CA] transition-colors mb-2"
+                    >
+                      {openQuestions.has(i) ? t("study.result.hideAnswer") : t("study.result.showAnswer")}
+                    </button>
+                    {openQuestions.has(i) && (
+                      <p className="text-sm text-gray-600 bg-indigo-50 rounded-lg p-3 mt-1">{q.answer}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Related Topics */}
+            {studyResult.study_structure.related_topics?.length > 0 && (
+              <div className="rounded-2xl border border-gray-200 bg-white p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-[#4F46E5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  {t("study.result.relatedTopics")}
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {studyResult.study_structure.related_topics.map((topic: string, i: number) => (
+                    <span key={i} className="px-3 py-1.5 bg-indigo-50 text-[#4F46E5] rounded-full text-sm font-medium">
+                      {topic}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : (

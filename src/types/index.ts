@@ -31,9 +31,57 @@ export interface ConversionHistory {
   id: string;
   userId: string;
   sourceUrl: string;
-  platform: "youtube" | "instagram";
-  resultContent: string;
-  createdAt: Date;
+  sourceType: string;
+  platform: string;
+  mode: string;
+  tone?: string;
+  title?: string;
+  resultContent?: string;
+  resultJson?: Record<string, unknown>;
+  transcript?: string;
+  creditUsed: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  knowledge?: KnowledgeEntry;
+}
+
+// 지식 추출 타입
+export interface KnowledgeEntry {
+  id: string;
+  conversionId: string;
+  userId: string;
+  summary?: string;
+  keyConcepts?: string[];
+  keywords?: string[];
+  topic?: string;
+  subtopics?: string[];
+  createdAt: string;
+}
+
+// Study 관련 타입
+export interface StudyConcept {
+  name: string;
+  definition: string;
+  importance: "high" | "medium" | "low";
+}
+
+export interface StudyStructure {
+  title: string;
+  executive_summary: string;
+  key_concepts: StudyConcept[];
+  detailed_notes: { topic: string; content: string }[];
+  study_questions: { question: string; answer: string }[];
+  related_topics: string[];
+}
+
+export interface StudyResponse {
+  success: boolean;
+  title?: string;
+  transcript?: string;
+  study_structure?: StudyStructure;
+  study_content?: string;
+  error?: string;
 }
 
 // 결제 타입

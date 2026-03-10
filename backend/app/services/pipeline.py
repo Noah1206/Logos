@@ -6,7 +6,7 @@ import asyncio
 import re
 import uuid
 from typing import Optional, Callable, Awaitable
-from ..models.schemas import ConvertResponse
+from ..models.schemas import ConvertResponse, StudyResponse
 from .video_downloader import (
     download_video, extract_audio_from_video, extract_frames,
     cleanup_temp_files, detect_platform, persist_frames,
@@ -173,6 +173,98 @@ async def run_conversion_pipeline(
             platform="unknown",
             error=str(e)
         )
+
+    finally:
+        if video_path:
+            cleanup_temp_files(video_path)
+
+
+async def run_study_pipeline(
+    mode: str,  # "youtube" | "pdf"
+    url: Optional[str] = None,
+    pdf_text: Optional[str] = None,
+    pdf_url: Optional[str] = None,
+    progress_callback: Optional[ProgressCallback] = None,
+) -> StudyResponse:
+    """
+    Study 모드 파이프라인
+    YouTube 장편 영상 or PDF → 학습 요약 생성
+    """
+    from .study_writer import write_study_notes
+    from .pdf_extractor import extract_pdf_text
+
+    emit = progress_callback or _noop_progress
+    video_path = None
+
+    try:
+        text = ""
+        transcript = ""
+
+        if mode == "pdf":
+            await emit(10, "PDF를 분석하고 있어요")
+
+            if pdf_text:
+                text = pdf_text
+            elif pdf_url:
+                text = await extract_pdf_text(pdf_url=pdf_url)
+            else:
+                return StudyResponse(success=False, error="PDF 텍스트 또는 URL이 필요합니다")
+
+            await emit(40, "PDF 텍스트 추출 완료!")
+
+        elif mode == "youtube":
+            if not url:
+                return StudyResponse(success=False, error="YouTube URL이 필요합니다")
+
+            await emit(5, "영상을 분석하고 있어요")
+            platform, video_id = detect_platform(url)
+
+            await emit(10, "영상을 다운로드하고 있어요")
+            content_path, video_info = await download_video(url)
+            video_path = content_path
+
+            await emit(30, "오디오를 추출하고 있어요")
+            audio_path = await extract_audio_from_video(content_path)
+
+            await emit(40, "음성을 텍스트로 변환하고 있어요")
+            transcript = await transcribe_audio(audio_path)
+
+            if not transcript or len(transcript.strip()) < 30:
+                return StudyResponse(
+                    success=False,
+                    error="영상에서 충분한 음성을 추출할 수 없습니다."
+                )
+
+            text = transcript
+            if video_info.title:
+                text = f"제목: {video_info.title}\n\n{text}"
+            if video_info.description:
+                text = f"{text}\n\n설명: {video_info.description[:500]}"
+
+            await emit(55, "음성 인식 완료!")
+
+        else:
+            return StudyResponse(success=False, error=f"지원하지 않는 모드: {mode}")
+
+        # 학습 노트 생성
+        await emit(65, "학습 노트를 생성하고 있어요")
+        study_structure, study_content = await write_study_notes(text)
+
+        await emit(95, "학습 노트 생성 완료!")
+
+        return StudyResponse(
+            success=True,
+            title=study_structure.title,
+            transcript=transcript if transcript else None,
+            study_structure=study_structure,
+            study_content=study_content,
+        )
+
+    except Exception as e:
+        print(f"[StudyPipeline] 오류 발생: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return StudyResponse(success=False, error=str(e))
 
     finally:
         if video_path:

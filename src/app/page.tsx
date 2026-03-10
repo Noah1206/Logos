@@ -7,7 +7,7 @@ import { PROMOTION } from "@/lib/promotion";
 import { useTranslation } from "@/i18n";
 import LanguageToggle from "@/components/LanguageToggle";
 
-type ConvertMode = "video-to-blog" | "feed-to-blog" | "blog-to-video";
+type ConvertMode = "video-to-blog" | "feed-to-blog" | "study";
 
 export default function Home() {
   const { t } = useTranslation();
@@ -18,6 +18,9 @@ export default function Home() {
   const [mode, setMode] = useState<ConvertMode>("video-to-blog");
   const [blogContent, setBlogContent] = useState("");
   const [videoStyle, setVideoStyle] = useState("");
+  const [studyUrl, setStudyUrl] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfUploading, setPdfUploading] = useState(false);
 
   const { data: session, status, update: updateSession } = useSession();
   const isAuthLoading = status === "loading";
@@ -77,7 +80,7 @@ export default function Home() {
     signOut({ callbackUrl: "/" });
   };
 
-  const handleConvert = () => {
+  const handleConvert = async () => {
     if (isConverting) return;
 
     if (!user) {
@@ -85,14 +88,33 @@ export default function Home() {
       return;
     }
 
-    if (mode === "blog-to-video") {
-      if (!blogContent.trim()) return;
+    if (mode === "study") {
+      // Study 모드: PDF 또는 YouTube URL
+      if (!studyUrl.trim() && !pdfFile) return;
       setIsConverting(true);
-      sessionStorage.setItem("blog-to-video-content", blogContent);
-      sessionStorage.setItem("blog-to-video-style", videoStyle);
-      setTimeout(() => {
-        window.location.href = `/result?mode=blog-to-video`;
-      }, 600);
+
+      if (pdfFile) {
+        // PDF 업로드 후 result 페이지로
+        setPdfUploading(true);
+        try {
+          const formData = new FormData();
+          formData.append("file", pdfFile);
+          const res = await fetch("/api/study/upload", { method: "POST", body: formData });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error);
+          sessionStorage.setItem("study-pdf-url", data.url);
+          sessionStorage.setItem("study-pdf-name", data.fileName);
+          window.location.href = `/result?mode=study&studyMode=pdf`;
+        } catch {
+          setIsConverting(false);
+          setPdfUploading(false);
+          return;
+        }
+      } else {
+        // YouTube URL
+        sessionStorage.setItem("study-url", studyUrl);
+        window.location.href = `/result?mode=study&studyMode=youtube&url=${encodeURIComponent(studyUrl)}`;
+      }
     } else {
       if (!url.trim()) return;
       setIsConverting(true);
@@ -123,8 +145,11 @@ export default function Home() {
 
             {/* Navigation + Actions */}
             <div className="flex items-center gap-6">
-              <nav className="hidden md:flex items-center">
+              <nav className="hidden md:flex items-center gap-4">
                 <a href="#pricing" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">{t("nav.pricing")}</a>
+                {user && (
+                  <a href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">{t("nav.dashboard")}</a>
+                )}
               </nav>
               <LanguageToggle />
               {user && (
@@ -155,13 +180,13 @@ export default function Home() {
           <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-8">
             {mode === "video-to-blog" && (<>{t("hero.videoToBlog.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("hero.videoToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
             {mode === "feed-to-blog" && (<>{t("hero.feedToBlog.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("hero.feedToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
-            {mode === "blog-to-video" && (<>{t("hero.blogToVideo.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("hero.blogToVideo.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
+            {mode === "study" && (<>{t("study.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("study.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
           </h1>
 
           <p className="text-sm md:text-base text-gray-500 max-w-2xl mx-auto mb-12 leading-relaxed whitespace-pre-line">
             {mode === "video-to-blog" && t("hero.videoToBlog.desc")}
             {mode === "feed-to-blog" && t("hero.feedToBlog.desc")}
-            {mode === "blog-to-video" && t("hero.blogToVideo.desc")}
+            {mode === "study" && t("study.desc")}
           </p>
 
           {/* CTA Button */}
@@ -181,26 +206,20 @@ export default function Home() {
             {/* 모드 선택 탭 */}
             <div className="flex justify-center gap-2 mb-6">
               {([
-                { key: "video-to-blog" as ConvertMode, label: t("tabs.videoToBlog"), disabled: false },
-                { key: "feed-to-blog" as ConvertMode, label: t("tabs.feedToBlog"), disabled: false },
-                { key: "blog-to-video" as ConvertMode, label: t("tabs.blogToVideo"), disabled: true },
+                { key: "video-to-blog" as ConvertMode, label: t("tabs.videoToBlog") },
+                { key: "feed-to-blog" as ConvertMode, label: t("tabs.feedToBlog") },
+                { key: "study" as ConvertMode, label: t("tabs.study") },
               ]).map((tab) => (
                 <button
                   key={tab.key}
-                  onClick={() => !tab.disabled && setMode(tab.key)}
-                  disabled={tab.disabled}
+                  onClick={() => setMode(tab.key)}
                   className={`relative px-5 py-2.5 rounded-full transition-all text-sm font-medium ${
-                    tab.disabled
-                      ? "bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed"
-                      : mode === tab.key
-                        ? "bg-[#4F46E5] text-white"
-                        : "bg-white border border-gray-200 hover:border-gray-300 text-gray-700"
+                    mode === tab.key
+                      ? "bg-[#4F46E5] text-white"
+                      : "bg-white border border-gray-200 hover:border-gray-300 text-gray-700"
                   }`}
                 >
                   {tab.label}
-                  {tab.disabled && (
-                    <span className="ml-1.5 text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full">{t("common.testing")}</span>
-                  )}
                 </button>
               ))}
             </div>
@@ -313,53 +332,92 @@ export default function Home() {
               </>
             )}
 
-            {/* blog-to-video: textarea + 스타일 선택 */}
-            {mode === "blog-to-video" && (
+            {/* study: YouTube URL 또는 PDF 업로드 */}
+            {mode === "study" && (
               <>
-                <div
-                  className={`transition-all duration-300 ${
-                    isConverting ? "scale-[0.97] opacity-70" : ""
-                  }`}
-                >
-                  <textarea
-                    id="hero-blog-input"
-                    rows={8}
-                    value={blogContent}
-                    onChange={(e) => setBlogContent(e.target.value)}
-                    disabled={isConverting}
-                    placeholder={t("convert.blogPlaceholder")}
-                    className={`w-full px-5 py-4 border rounded-xl focus:outline-none text-base resize-none transition-all duration-300 ${
-                      isConverting ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border-gray-200 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] text-gray-900 placeholder-gray-400"
+                {/* YouTube URL 입력 */}
+                <div className={`transition-all duration-300 ${isConverting ? "scale-[0.97] opacity-70" : ""}`}>
+                  <input
+                    id="hero-url-input"
+                    type="url"
+                    value={studyUrl}
+                    onChange={(e) => { setStudyUrl(e.target.value); setPdfFile(null); }}
+                    onKeyDown={(e) => { if (e.key === "Enter" && studyUrl.trim()) handleConvert(); }}
+                    disabled={isConverting || !!pdfFile}
+                    placeholder={t("study.urlPlaceholder")}
+                    className={`w-full px-5 py-3 border rounded-xl focus:outline-none text-base transition-all duration-300 ${
+                      isConverting || pdfFile ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border-gray-200 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] text-gray-900 placeholder-gray-400"
                     }`}
                   />
-                  {/* 스타일 선택 칩 */}
-                  <div className="flex justify-center gap-2 mt-4 mb-4">
-                    {([
-                      { key: "감성", label: t("convert.styleEmotional") },
-                      { key: "활기", label: t("convert.styleEnergetic") },
-                      { key: "정보", label: t("convert.styleInformative") },
-                    ]).map((s) => (
-                      <button
-                        key={s.key}
-                        onClick={() => setVideoStyle(videoStyle === s.key ? "" : s.key)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                          videoStyle === s.key
-                            ? "bg-[#4F46E5] text-white"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                        }`}
-                      >
-                        {s.label}
-                      </button>
-                    ))}
+
+                  {/* OR divider */}
+                  <div className="flex items-center gap-3 my-4">
+                    <div className="flex-1 h-px bg-gray-200" />
+                    <span className="text-xs text-gray-400 font-medium">{t("study.orDivider")}</span>
+                    <div className="flex-1 h-px bg-gray-200" />
                   </div>
-                  {/* 변환 버튼 */}
+
+                  {/* PDF Upload zone */}
+                  <div
+                    className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${
+                      pdfFile ? "border-[#4F46E5] bg-indigo-50" : "border-gray-300 hover:border-gray-400 bg-gray-50"
+                    }`}
+                    onClick={() => !isConverting && document.getElementById("pdf-input")?.click()}
+                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file?.type === "application/pdf") {
+                        setPdfFile(file);
+                        setStudyUrl("");
+                      }
+                    }}
+                  >
+                    <input
+                      id="pdf-input"
+                      type="file"
+                      accept="application/pdf"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) { setPdfFile(file); setStudyUrl(""); }
+                        e.target.value = "";
+                      }}
+                    />
+                    {pdfFile ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <svg className="w-5 h-5 text-[#4F46E5]" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" />
+                        </svg>
+                        <span className="text-sm text-[#4F46E5] font-medium">{pdfFile.name}</span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setPdfFile(null); }}
+                          className="ml-2 text-gray-400 hover:text-red-500"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                        </svg>
+                        <p className="text-sm text-gray-500">{t("study.pdfUpload.dropzone")}</p>
+                        <p className="text-xs text-gray-400 mt-1">{t("study.pdfUpload.hint")}</p>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Start Study button */}
                   <button
                     onClick={handleConvert}
-                    disabled={!blogContent.trim() || isConverting}
-                    className={`w-full py-3 rounded-xl font-medium text-base transition-all duration-300 disabled:cursor-not-allowed ${
+                    disabled={(!studyUrl.trim() && !pdfFile) || isConverting}
+                    className={`w-full py-3 rounded-xl font-medium text-base mt-4 transition-all duration-300 disabled:cursor-not-allowed ${
                       isConverting
                         ? "bg-gray-300 text-white"
-                        : blogContent.trim()
+                        : (studyUrl.trim() || pdfFile)
                           ? "bg-[#4F46E5] text-white hover:bg-[#4338CA] active:scale-[0.98]"
                           : "bg-gray-200 text-gray-400"
                     }`}
@@ -367,16 +425,13 @@ export default function Home() {
                     {isConverting ? (
                       <span className="flex items-center justify-center gap-2">
                         <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                        {t("convert.converting")}
+                        {pdfUploading ? t("common.processing") : t("convert.converting")}
                       </span>
                     ) : (
-                      t("convert.generateVideo")
+                      t("study.startStudy")
                     )}
                   </button>
                 </div>
-                <p className="text-center text-sm text-gray-500 mt-4">
-                  {t("convert.blogToVideoDesc")}
-                </p>
               </>
             )}
           </div>

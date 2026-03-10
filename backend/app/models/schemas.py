@@ -105,3 +105,59 @@ class JobResponse(BaseModel):
     status: JobStatus
     progress: int = 0
     result: Optional[ConvertResponse] = None
+
+
+# ─── Knowledge Extraction ───
+
+class KnowledgeExtractionRequest(BaseModel):
+    content: str
+    transcript: Optional[str] = None
+
+
+class KnowledgeExtractionResponse(BaseModel):
+    summary: str
+    key_concepts: List[str]
+    keywords: List[str]
+    topic: str
+    subtopics: List[str]
+
+
+# ─── Study Mode ───
+
+class StudyRequest(BaseModel):
+    mode: str  # "youtube" | "pdf"
+    url: Optional[str] = None
+    pdf_text: Optional[str] = None
+    pdf_url: Optional[str] = None
+
+
+class StudyConcept(BaseModel):
+    name: str
+    definition: str
+    importance: str  # "high" | "medium" | "low"
+
+
+class StudyStructure(BaseModel):
+    title: str
+    executive_summary: str
+    key_concepts: List[StudyConcept]
+    detailed_notes: List[dict]  # [{topic, content}]
+    study_questions: List[dict]  # [{question, answer}]
+    related_topics: List[str]
+
+
+class StudyResponse(BaseModel):
+    success: bool
+    title: Optional[str] = None
+    transcript: Optional[str] = None
+    study_structure: Optional[StudyStructure] = None
+    study_content: Optional[str] = None
+    error: Optional[str] = None
+
+
+# ─── AI Thinking ───
+
+class ThinkRequest(BaseModel):
+    question: str
+    knowledge_context: List[dict] = []
+    topic_filter: Optional[str] = None

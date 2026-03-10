@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     # App Settings
     TEMP_DIR: str = "./temp"
     MAX_VIDEO_DURATION: int = 180  # 3분 (쇼츠/릴스 최대)
+    MAX_STUDY_DURATION: int = 3600  # 1시간 (Study 모드 장편 영상)
 
     # OpenAI Settings
     WHISPER_MODEL: str = "whisper-1"
