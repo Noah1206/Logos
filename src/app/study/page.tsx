@@ -123,33 +123,18 @@ export default function StudyPage() {
 
         {/* Step 1: Method Selection */}
         {!method && (
-          <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto animate-in fade-in duration-300">
+          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {/* Import Materials Card */}
             <button
               onClick={() => setMethod("import")}
-              className="group relative text-left p-6 bg-white rounded-2xl border-2 border-gray-200 hover:border-[#4F46E5] hover:shadow-lg transition-all duration-200"
+              className="group relative text-left p-5 pb-4 bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-200"
             >
-              <div className="absolute top-4 right-4">
-                <span className="px-2 py-0.5 text-[10px] font-bold text-white bg-[#4F46E5] rounded-full uppercase tracking-wider">
-                  {t("common.recommended")}
-                </span>
-              </div>
-              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-indigo-100 transition-colors">
-                <svg className="w-6 h-6 text-[#4F46E5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-1.5">{t("study.page.importTitle")}</h3>
-              <p className="text-sm text-gray-500 mb-4">{t("study.page.importDesc")}</p>
-              <div className="flex flex-wrap gap-2">
-                {["YouTube", "PDF"].map((src) => (
-                  <span key={src} className="px-2.5 py-1 bg-gray-100 rounded-lg text-xs font-medium text-gray-600">
-                    {src}
-                  </span>
-                ))}
-              </div>
-              <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg className="w-5 h-5 text-[#4F46E5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <p className="text-[13px] font-semibold text-gray-900 mb-1">{t("study.page.importTitle")}</p>
+              <p className="text-xs text-gray-400 leading-relaxed mb-4">{t("study.page.importDesc")}</p>
+              <div className="flex items-center gap-1.5">
+                <span className="px-2 py-0.5 bg-gray-50 rounded text-[11px] text-gray-500">YouTube</span>
+                <span className="px-2 py-0.5 bg-gray-50 rounded text-[11px] text-gray-500">PDF</span>
+                <svg className="w-4 h-4 text-gray-300 ml-auto group-hover:text-[#4F46E5] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
               </div>
@@ -158,24 +143,15 @@ export default function StudyPage() {
             {/* Start by Topic Card */}
             <button
               onClick={() => setMethod("topic")}
-              className="group relative text-left p-6 bg-white rounded-2xl border-2 border-gray-200 hover:border-[#4F46E5] hover:shadow-lg transition-all duration-200"
+              className="group relative text-left p-5 pb-4 bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-200"
             >
-              <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-amber-100 transition-colors">
-                <svg className="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-1.5">{t("study.page.topicTitle")}</h3>
-              <p className="text-sm text-gray-500 mb-4">{t("study.page.topicDesc")}</p>
-              <div className="flex flex-wrap gap-2">
-                {topicExamples.map((ex: string, i: number) => (
-                  <span key={i} className="px-2.5 py-1 bg-amber-50 rounded-lg text-xs font-medium text-amber-600">
-                    {ex}
-                  </span>
+              <p className="text-[13px] font-semibold text-gray-900 mb-1">{t("study.page.topicTitle")}</p>
+              <p className="text-xs text-gray-400 leading-relaxed mb-4">{t("study.page.topicDesc")}</p>
+              <div className="flex items-center gap-1.5">
+                {topicExamples.slice(0, 2).map((ex: string, i: number) => (
+                  <span key={i} className="px-2 py-0.5 bg-gray-50 rounded text-[11px] text-gray-500 truncate max-w-[100px]">{ex}</span>
                 ))}
-              </div>
-              <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg className="w-5 h-5 text-[#4F46E5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-gray-300 ml-auto group-hover:text-[#4F46E5] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
               </div>
