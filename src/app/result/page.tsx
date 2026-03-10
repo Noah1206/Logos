@@ -574,13 +574,14 @@ function ResultContent() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ conversionId: conversion.id }),
         }).catch(() => {});
-        // 사이드바 기록 갱신
-        refreshSidebarHistory();
+      } else {
+        console.error("[Blog] Save failed:", res.status);
       }
-    } catch {
-      // 저장 실패해도 사용자 경험에 영향 없음
+    } catch (e) {
+      console.error("[Blog] Save error:", e);
     }
-  }, [url, tone]);
+    refreshSidebarHistory();
+  }, [url, tone, refreshSidebarHistory]);
 
   // sessionStorage에서 사용자 설정 로드
   useEffect(() => {
@@ -841,10 +842,10 @@ function ResultContent() {
                     sourceType: studyMode === "pdf" ? "pdf" : "youtube_long",
                     platform: studyMode === "pdf" ? "pdf" : "youtube",
                     mode: "study",
-                    title: event.result.title,
-                    resultContent: event.result.study_content,
-                    resultJson: event.result.study_structure,
-                    transcript: event.result.transcript,
+                    title: event.result.title || event.result.study_structure?.title || "학습 노트",
+                    resultContent: event.result.study_content || null,
+                    resultJson: event.result.study_structure || null,
+                    transcript: event.result.transcript || null,
                     creditUsed: 1,
                   };
                   const saveRes = await fetch("/api/conversions", {
@@ -859,9 +860,13 @@ function ResultContent() {
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ conversionId: conversion.id }),
                     }).catch(() => {});
-                    refreshSidebarHistory();
+                  } else {
+                    console.error("[Study] Save failed:", saveRes.status, await saveRes.text());
                   }
-                } catch {}
+                } catch (e) {
+                  console.error("[Study] Save error:", e);
+                }
+                refreshSidebarHistory();
 
                 setTimeout(() => setIsComplete(true), 400);
                 return;
