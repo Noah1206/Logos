@@ -321,10 +321,12 @@
     }
   },
   "study": {
+    "badge": "AI Study",
     "title1": "Learn Smarter",
     "title2": "with AI",
     "desc": "Upload a PDF or paste a YouTube video link, and AI will generate comprehensive study notes with key concepts, detailed summaries, and practice questions.",
     "urlPlaceholder": "Paste YouTube video URL here...",
+    "uploadError": "File upload failed. Please try again.",
     "pdfUpload": {
       "title": "Upload PDF",
       "dropzone": "Click or drag a PDF file here",
@@ -333,6 +335,30 @@
     },
     "orDivider": "or",
     "startStudy": "Generate Study Notes",
+    "page": {
+      "title": "How would you like to study?",
+      "subtitle": "Import materials or type a topic to generate AI-powered study notes.",
+      "importTitle": "Import Materials",
+      "importDesc": "Extract key insights from YouTube videos or PDF documents and auto-generate study notes.",
+      "topicTitle": "Explore by Topic",
+      "topicDesc": "Type any topic and AI will create structured study materials for you.",
+      "topicExamples": ["Marketing Strategy", "Programming Basics", "Economics 101"],
+      "source": {
+        "youtube": "YouTube Video",
+        "pdf": "PDF Document"
+      },
+      "youtubeLabel": "YouTube Video URL",
+      "youtubeHint": "Paste a link to a lecture, seminar, tutorial, or any learning video",
+      "removeFile": "Remove file",
+      "topicLabel": "Topic you want to learn about",
+      "topicPlaceholder": "e.g. How blockchain works and real-world use cases",
+      "quickTopics": "Quick start",
+      "quickTopicList": ["Digital Marketing Basics", "Investment Fundamentals", "Effective Time Management", "Intro to AI & Machine Learning"],
+      "generateFromTopic": "Generate AI Study Notes",
+      "infoTime": "Takes 1-2 min",
+      "infoSafe": "Data stored securely",
+      "infoAi": "Powered by GPT-4o"
+    },
     "loading": [
       "Analyzing the content",
       "Extracting key concepts",

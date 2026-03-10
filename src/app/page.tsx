@@ -208,13 +208,19 @@ export default function Home() {
               {([
                 { key: "video-to-blog" as ConvertMode, label: t("tabs.videoToBlog") },
                 { key: "feed-to-blog" as ConvertMode, label: t("tabs.feedToBlog") },
-                { key: "study" as ConvertMode, label: t("tabs.study") },
+                { key: "study" as ConvertMode, label: t("tabs.study"), href: "/study" },
               ]).map((tab) => (
                 <button
                   key={tab.key}
-                  onClick={() => setMode(tab.key)}
+                  onClick={() => {
+                    if (tab.href) {
+                      window.location.href = tab.href;
+                    } else {
+                      setMode(tab.key);
+                    }
+                  }}
                   className={`relative px-5 py-2.5 rounded-full transition-all text-sm font-medium ${
-                    mode === tab.key
+                    mode === tab.key && !tab.href
                       ? "bg-[#4F46E5] text-white"
                       : "bg-white border border-gray-200 hover:border-gray-300 text-gray-700"
                   }`}

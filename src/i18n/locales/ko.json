@@ -321,10 +321,12 @@
     }
   },
   "study": {
+    "badge": "AI 학습",
     "title1": "AI와 함께",
     "title2": "스마트 학습",
     "desc": "PDF를 업로드하거나 유튜브 영상 링크를 붙여넣으면, AI가 핵심 개념, 상세 요약, 연습 문제가 포함된 학습 노트를 자동 생성합니다.",
     "urlPlaceholder": "유튜브 영상 URL을 붙여넣으세요...",
+    "uploadError": "파일 업로드에 실패했습니다. 다시 시도해주세요.",
     "pdfUpload": {
       "title": "PDF 업로드",
       "dropzone": "클릭하거나 PDF 파일을 드래그하세요",
@@ -333,6 +335,30 @@
     },
     "orDivider": "또는",
     "startStudy": "학습 노트 생성",
+    "page": {
+      "title": "어떤 방법으로 학습할까요?",
+      "subtitle": "자료를 가져오거나, 관심 있는 주제를 직접 입력해 AI 학습 노트를 생성하세요.",
+      "importTitle": "자료 가져오기",
+      "importDesc": "유튜브 영상이나 PDF 파일에서 핵심 내용을 추출하고 학습 노트를 자동 생성합니다.",
+      "topicTitle": "주제로 탐구하기",
+      "topicDesc": "궁금한 주제를 입력하면 AI가 체계적인 학습 자료를 생성합니다.",
+      "topicExamples": ["마케팅 전략", "프로그래밍 기초", "경제학 원론"],
+      "source": {
+        "youtube": "유튜브 영상",
+        "pdf": "PDF 문서"
+      },
+      "youtubeLabel": "유튜브 영상 URL",
+      "youtubeHint": "강의, 세미나, 튜토리얼 등 학습용 영상의 링크를 입력하세요",
+      "removeFile": "파일 제거",
+      "topicLabel": "학습하고 싶은 주제",
+      "topicPlaceholder": "예: 블록체인의 작동 원리와 실제 활용 사례",
+      "quickTopics": "빠른 시작",
+      "quickTopicList": ["디지털 마케팅 기초", "투자의 기본 원칙", "효과적인 시간 관리법", "AI와 머신러닝 입문"],
+      "generateFromTopic": "AI 학습 노트 생성",
+      "infoTime": "1~2분 소요",
+      "infoSafe": "데이터 안전 보관",
+      "infoAi": "GPT-4o 기반"
+    },
     "loading": [
       "콘텐츠를 분석하고 있어요",
       "핵심 개념을 추출하고 있어요",
