@@ -26,6 +26,7 @@ export default function Home() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingPhase, setOnboardingPhase] = useState<"idle" | "selected" | "exiting">("idle");
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
+  const [langSweep, setLangSweep] = useState<"idle" | "ko" | "en">("idle");
 
   useEffect(() => {
     if (!localStorage.getItem("logos_path_selected")) {
@@ -158,12 +159,26 @@ export default function Home() {
             <div className="absolute rounded-full" style={{ width: 300, height: 300, top: "40%", left: "50%", transform: "translateX(-50%)", background: "radial-gradient(circle, rgba(217,70,239,0.12), transparent 70%)", filter: "blur(100px)" }} />
           </div>
 
+          {/* Language switch diagonal light sweep */}
+          {langSweep !== "idle" && (
+            <div key={langSweep} className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
+              <div
+                className={langSweep === "ko" ? "ob-sweep-br-tl" : "ob-sweep-tl-br"}
+              />
+            </div>
+          )}
+
           {/* Content */}
           <div className="relative z-10 flex flex-col items-center">
             {/* Language toggle */}
             <div className="ob-lang-enter mb-8">
               <button
-                onClick={() => setLocale(locale === "en" ? "ko" : "en")}
+                onClick={() => {
+                  const next = locale === "en" ? "ko" : "en";
+                  setLangSweep(next);
+                  setTimeout(() => setLocale(next), 300);
+                  setTimeout(() => setLangSweep("idle"), 700);
+                }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md bg-white/[0.08] border border-white/[0.12] hover:bg-white/[0.14] hover:border-white/[0.22] transition-all duration-300"
               >
                 <span className={`text-xs transition-colors duration-200 ${locale === "ko" ? "text-white font-semibold" : "text-white/40"}`}>KO</span>
@@ -320,6 +335,41 @@ export default function Home() {
 
           {/* Keyframe animations — elements only, no background movement */}
           <style>{`
+            .ob-sweep-br-tl, .ob-sweep-tl-br {
+              position: absolute;
+              width: 250%;
+              height: 250%;
+              top: -75%;
+              left: -75%;
+              background: linear-gradient(
+                135deg,
+                transparent 0%,
+                transparent 38%,
+                rgba(255,255,255,0.08) 40%,
+                rgba(255,255,255,0.25) 44%,
+                rgba(255,255,255,0.6) 48%,
+                rgba(255,255,255,0.9) 50%,
+                rgba(255,255,255,0.6) 52%,
+                rgba(255,255,255,0.25) 56%,
+                rgba(255,255,255,0.08) 60%,
+                transparent 62%,
+                transparent 100%
+              );
+            }
+            .ob-sweep-br-tl {
+              animation: obSweepBrTl 0.65s cubic-bezier(0.4, 0, 0.15, 1) both;
+            }
+            .ob-sweep-tl-br {
+              animation: obSweepTlBr 0.65s cubic-bezier(0.4, 0, 0.15, 1) both;
+            }
+            @keyframes obSweepBrTl {
+              0% { transform: translate(80%, 80%); }
+              100% { transform: translate(-80%, -80%); }
+            }
+            @keyframes obSweepTlBr {
+              0% { transform: translate(-80%, -80%); }
+              100% { transform: translate(80%, 80%); }
+            }
             .ob-lang-enter {
               animation: obLangIn 0.9s cubic-bezier(0.22,1,0.36,1) both;
             }
