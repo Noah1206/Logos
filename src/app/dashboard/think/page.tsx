@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useTranslation } from "@/i18n";
+import { useTranslation, useTranslationArray } from "@/i18n";
 import { useThink } from "@/hooks/useThink";
 import LanguageToggle from "@/components/LanguageToggle";
 
@@ -33,7 +33,7 @@ export default function ThinkPage() {
     setInput("");
   };
 
-  const suggestions = t("dashboard.think.suggestions") as unknown as string[];
+  const suggestions = useTranslationArray("dashboard.think.suggestions");
 
   if (status === "loading") {
     return (

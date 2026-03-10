@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useTranslation } from "@/i18n";
+import { useTranslation, useTranslationArray } from "@/i18n";
 import LanguageToggle from "@/components/LanguageToggle";
 
 type StudyMethod = "import" | "topic" | null;
@@ -14,6 +14,9 @@ export default function StudyPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const user = session?.user;
+
+  const topicExamples = useTranslationArray("study.page.topicExamples");
+  const quickTopicList = useTranslationArray("study.page.quickTopicList");
 
   const [method, setMethod] = useState<StudyMethod>(null);
   const [sourceType, setSourceType] = useState<SourceType>("youtube");
@@ -171,7 +174,7 @@ export default function StudyPage() {
               <h3 className="text-lg font-bold text-gray-900 mb-1.5">{t("study.page.topicTitle")}</h3>
               <p className="text-sm text-gray-500 mb-4">{t("study.page.topicDesc")}</p>
               <div className="flex flex-wrap gap-2">
-                {(t("study.page.topicExamples") as unknown as string[]).map((ex: string, i: number) => (
+                {topicExamples.map((ex: string, i: number) => (
                   <span key={i} className="px-2.5 py-1 bg-amber-50 rounded-lg text-xs font-medium text-amber-600">
                     {ex}
                   </span>
@@ -370,7 +373,7 @@ export default function StudyPage() {
               <div>
                 <p className="text-xs text-gray-400 mb-2">{t("study.page.quickTopics")}</p>
                 <div className="flex flex-wrap gap-2">
-                  {(t("study.page.quickTopicList") as unknown as string[]).map((topic: string, i: number) => (
+                  {quickTopicList.map((topic: string, i: number) => (
                     <button
                       key={i}
                       onClick={() => setTopicText(topic)}
