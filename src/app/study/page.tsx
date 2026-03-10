@@ -238,7 +238,7 @@ export default function StudyPage() {
                       onChange={(e) => setYoutubeUrl(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter" && youtubeUrl.trim()) handleStart(); }}
                       placeholder={t("study.urlPlaceholder")}
-                      className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-xl focus:outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] text-sm bg-gray-50 placeholder-gray-400"
+                      className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-xl focus:outline-none focus:border-[#4F46E5] focus:ring-0 text-sm bg-gray-50 placeholder-gray-400"
                     />
                     <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.7-3.338a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L4.343 8.52" />
