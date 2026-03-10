@@ -123,18 +123,18 @@ export default function StudyPage() {
 
         {/* Step 1: Method Selection */}
         {!method && (
-          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+          <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
             {/* Import Materials Card */}
             <button
               onClick={() => setMethod("import")}
-              className="group relative text-left p-5 pb-4 bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-200"
+              className="group relative text-left p-7 pb-6 bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-200"
             >
-              <p className="text-lg font-bold text-gray-900 mb-3 mt-1">📄 {t("study.page.importTitle")}</p>
-              <p className="text-xs text-gray-400 leading-relaxed mb-5">{t("study.page.importDesc")}</p>
-              <div className="flex items-center gap-1.5">
-                <span className="px-2 py-0.5 bg-gray-50 rounded text-[11px] text-gray-500">YouTube</span>
-                <span className="px-2 py-0.5 bg-gray-50 rounded text-[11px] text-gray-500">PDF</span>
-                <svg className="w-4 h-4 text-gray-300 ml-auto group-hover:text-[#4F46E5] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <p className="text-xl font-bold text-gray-900 mb-3 mt-2">📄 {t("study.page.importTitle")}</p>
+              <p className="text-sm text-gray-400 leading-relaxed mb-8">{t("study.page.importDesc")}</p>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-1 bg-gray-50 rounded-lg text-xs text-gray-500">YouTube</span>
+                <span className="px-2.5 py-1 bg-gray-50 rounded-lg text-xs text-gray-500">PDF</span>
+                <svg className="w-5 h-5 text-gray-300 ml-auto group-hover:text-[#4F46E5] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
               </div>
@@ -143,15 +143,15 @@ export default function StudyPage() {
             {/* Start by Topic Card */}
             <button
               onClick={() => setMethod("topic")}
-              className="group relative text-left p-5 pb-4 bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-200"
+              className="group relative text-left p-7 pb-6 bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-200"
             >
-              <p className="text-lg font-bold text-gray-900 mb-3 mt-1">💡 {t("study.page.topicTitle")}</p>
-              <p className="text-xs text-gray-400 leading-relaxed mb-5">{t("study.page.topicDesc")}</p>
-              <div className="flex items-center gap-1.5">
+              <p className="text-xl font-bold text-gray-900 mb-3 mt-2">💡 {t("study.page.topicTitle")}</p>
+              <p className="text-sm text-gray-400 leading-relaxed mb-8">{t("study.page.topicDesc")}</p>
+              <div className="flex items-center gap-2">
                 {topicExamples.slice(0, 2).map((ex: string, i: number) => (
-                  <span key={i} className="px-2 py-0.5 bg-gray-50 rounded text-[11px] text-gray-500 truncate max-w-[100px]">{ex}</span>
+                  <span key={i} className="px-2.5 py-1 bg-gray-50 rounded-lg text-xs text-gray-500 truncate max-w-[120px]">{ex}</span>
                 ))}
-                <svg className="w-4 h-4 text-gray-300 ml-auto group-hover:text-[#4F46E5] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-5 h-5 text-gray-300 ml-auto group-hover:text-[#4F46E5] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
               </div>
