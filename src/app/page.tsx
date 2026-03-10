@@ -10,7 +10,7 @@ import LanguageToggle from "@/components/LanguageToggle";
 type ConvertMode = "video-to-blog" | "feed-to-blog" | "study";
 
 export default function Home() {
-  const { t } = useTranslation();
+  const { t, locale, setLocale } = useTranslation();
   const [url, setUrl] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [platform, setPlatform] = useState<"youtube" | "instagram">("instagram");
@@ -145,26 +145,38 @@ export default function Home() {
             onboardingPhase === "exiting" ? "opacity-0 scale-105 pointer-events-none" : "opacity-100 scale-100"
           }`}
         >
-          {/* Animated gradient background */}
-          <div className="absolute inset-0 ob-bg" />
+          {/* Frosted glass background - page shows through */}
+          <div className="absolute inset-0 backdrop-blur-2xl bg-black/30" />
 
-          {/* Floating orbs */}
+          {/* Gradient color overlay (semi-transparent so page bleeds through) */}
+          <div className="absolute inset-0 ob-gradient-overlay" />
+
+          {/* Floating orbs (lighter, more transparent) */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="ob-orb ob-orb-1" />
             <div className="ob-orb ob-orb-2" />
             <div className="ob-orb ob-orb-3" />
           </div>
 
-          {/* Noise texture overlay */}
-          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
-
           {/* Content */}
           <div className="relative z-10 flex flex-col items-center">
+            {/* Language toggle */}
+            <div className="ob-lang-enter mb-8">
+              <button
+                onClick={() => setLocale(locale === "en" ? "ko" : "en")}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md bg-white/[0.08] border border-white/[0.12] hover:bg-white/[0.14] hover:border-white/[0.22] transition-all duration-300"
+              >
+                <span className={`text-xs transition-colors duration-200 ${locale === "ko" ? "text-white font-semibold" : "text-white/40"}`}>KO</span>
+                <span className="text-white/20 text-xs">/</span>
+                <span className={`text-xs transition-colors duration-200 ${locale === "en" ? "text-white font-semibold" : "text-white/40"}`}>EN</span>
+              </button>
+            </div>
+
             {/* Logo with glow */}
             <div className="ob-logo-enter flex items-center gap-2.5 mb-3">
               <div className="relative">
                 <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-9 w-9 brightness-0 invert opacity-95 relative z-10" />
-                <div className="absolute inset-0 blur-xl bg-white/30 rounded-full scale-150" />
+                <div className="absolute inset-0 blur-xl bg-white/20 rounded-full scale-150" />
               </div>
               <span className="text-[26px] font-extrabold text-white font-[var(--font-poppins)] tracking-tight drop-shadow-lg">LOGOS.ai</span>
             </div>
@@ -178,7 +190,8 @@ export default function Home() {
                   title: t("onboarding.card1.title"),
                   desc: t("onboarding.card1.desc"),
                   gradient: "from-violet-500/20 via-indigo-500/10 to-transparent",
-                  glowColor: "rgba(139, 92, 246, 0.15)",
+                  glowColor: "rgba(139, 92, 246, 0.12)",
+                  borderGradient: "linear-gradient(135deg, rgba(139,92,246,0.3), rgba(99,102,241,0.1), transparent)",
                   icon1: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
@@ -195,7 +208,8 @@ export default function Home() {
                   title: t("onboarding.card2.title"),
                   desc: t("onboarding.card2.desc"),
                   gradient: "from-blue-500/20 via-cyan-500/10 to-transparent",
-                  glowColor: "rgba(59, 130, 246, 0.15)",
+                  glowColor: "rgba(59, 130, 246, 0.12)",
+                  borderGradient: "linear-gradient(135deg, rgba(59,130,246,0.3), rgba(6,182,212,0.1), transparent)",
                   icon1: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
@@ -212,7 +226,8 @@ export default function Home() {
                   title: t("onboarding.card3.title"),
                   desc: t("onboarding.card3.desc"),
                   gradient: "from-fuchsia-500/20 via-pink-500/10 to-transparent",
-                  glowColor: "rgba(217, 70, 239, 0.15)",
+                  glowColor: "rgba(217, 70, 239, 0.12)",
+                  borderGradient: "linear-gradient(135deg, rgba(217,70,239,0.3), rgba(236,72,153,0.1), transparent)",
                   icon1: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
@@ -258,31 +273,31 @@ export default function Home() {
                     animationDelay: `${0.3 + i * 0.12}s`,
                   }}
                 >
-                  {/* Glass card background */}
-                  <div className="absolute inset-0 rounded-2xl bg-white/[0.07] backdrop-blur-xl border border-white/[0.12] group-hover:bg-white/[0.12] group-hover:border-white/[0.22] transition-all duration-500" />
+                  {/* Glass card background - double layer for depth */}
+                  <div className="absolute inset-0 rounded-2xl backdrop-blur-xl bg-white/[0.06] border border-white/[0.1] group-hover:bg-white/[0.1] group-hover:border-white/[0.2] transition-all duration-500" />
                   {/* Inner gradient glow */}
                   <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
                   {/* Top edge shine */}
-                  <div className="absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-white/25 to-transparent rounded-full" />
+                  <div className="absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full" />
                   {/* Bottom glow on hover */}
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-8 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: card.glowColor }} />
+                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-2/3 h-10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: card.glowColor }} />
 
                   {/* Content */}
                   <div className="relative z-10">
                     <div className="flex items-center gap-2.5 mb-4">
-                      <span className="text-white/60 group-hover:text-white/90 transition-colors duration-300">{card.icon1}</span>
-                      <svg className="w-3 h-3 text-white/20 group-hover:text-white/40 transition-colors duration-300 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ transition: "transform 0.3s, color 0.3s" }}>
+                      <span className="text-white/50 group-hover:text-white/85 transition-colors duration-300">{card.icon1}</span>
+                      <svg className="w-3 h-3 text-white/15 group-hover:text-white/35 transition-all duration-300 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                       </svg>
-                      <span className="text-white/60 group-hover:text-white/90 transition-colors duration-300">{card.icon2}</span>
+                      <span className="text-white/50 group-hover:text-white/85 transition-colors duration-300">{card.icon2}</span>
                     </div>
-                    <h3 className="text-[15px] font-bold text-white/90 mb-1.5 group-hover:text-white transition-colors duration-300">{card.title}</h3>
-                    <p className="text-xs text-white/40 leading-relaxed group-hover:text-white/55 transition-colors duration-300">{card.desc}</p>
+                    <h3 className="text-[15px] font-bold text-white/85 mb-1.5 group-hover:text-white transition-colors duration-300">{card.title}</h3>
+                    <p className="text-xs text-white/35 leading-relaxed group-hover:text-white/50 transition-colors duration-300">{card.desc}</p>
                   </div>
 
                   {/* Hover arrow */}
                   <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 transition-all duration-300">
-                    <svg className="w-4 h-4 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="w-4 h-4 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
                     </svg>
                   </div>
@@ -297,7 +312,7 @@ export default function Home() {
                 setOnboardingPhase("exiting");
                 setTimeout(() => setShowOnboarding(false), 400);
               }}
-              className="ob-skip-enter mt-10 text-xs text-white/25 hover:text-white/50 transition-colors duration-300 tracking-wider"
+              className="ob-skip-enter mt-10 text-xs text-white/20 hover:text-white/45 transition-colors duration-300 tracking-wider"
             >
               {t("onboarding.skip")}
             </button>
@@ -305,8 +320,14 @@ export default function Home() {
 
           {/* Keyframe animations */}
           <style>{`
-            .ob-bg {
-              background: linear-gradient(135deg, #0f0a2e 0%, #1a1145 25%, #2d1b69 50%, #4c1d95 75%, #5b21b6 100%);
+            .ob-gradient-overlay {
+              background: linear-gradient(135deg,
+                rgba(15, 10, 46, 0.55) 0%,
+                rgba(26, 17, 69, 0.45) 25%,
+                rgba(45, 27, 105, 0.4) 50%,
+                rgba(76, 29, 149, 0.35) 75%,
+                rgba(91, 33, 182, 0.3) 100%
+              );
               background-size: 200% 200%;
               animation: obGradientShift 8s ease-in-out infinite;
             }
@@ -317,23 +338,23 @@ export default function Home() {
             .ob-orb {
               position: absolute;
               border-radius: 50%;
-              filter: blur(80px);
+              filter: blur(100px);
             }
             .ob-orb-1 {
-              width: 400px; height: 400px;
-              background: radial-gradient(circle, rgba(139, 92, 246, 0.3), transparent 70%);
+              width: 450px; height: 450px;
+              background: radial-gradient(circle, rgba(139, 92, 246, 0.18), transparent 70%);
               top: -10%; right: -5%;
               animation: obFloat1 12s ease-in-out infinite;
             }
             .ob-orb-2 {
-              width: 350px; height: 350px;
-              background: radial-gradient(circle, rgba(99, 102, 241, 0.25), transparent 70%);
+              width: 400px; height: 400px;
+              background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
               bottom: -5%; left: -5%;
               animation: obFloat2 15s ease-in-out infinite;
             }
             .ob-orb-3 {
-              width: 250px; height: 250px;
-              background: radial-gradient(circle, rgba(217, 70, 239, 0.2), transparent 70%);
+              width: 300px; height: 300px;
+              background: radial-gradient(circle, rgba(217, 70, 239, 0.12), transparent 70%);
               top: 40%; left: 50%;
               animation: obFloat3 10s ease-in-out infinite;
             }
@@ -350,15 +371,22 @@ export default function Home() {
               0%, 100% { transform: translate(-50%, 0) scale(1); }
               50% { transform: translate(-50%, -30px) scale(1.2); }
             }
+            .ob-lang-enter {
+              animation: obLangIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+            }
+            @keyframes obLangIn {
+              from { opacity: 0; transform: translateY(-12px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
             .ob-logo-enter {
-              animation: obLogoIn 0.8s cubic-bezier(0.16,1,0.3,1) both;
+              animation: obLogoIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.08s both;
             }
             @keyframes obLogoIn {
               from { opacity: 0; transform: translateY(-20px) scale(0.9); }
               to { opacity: 1; transform: translateY(0) scale(1); }
             }
             .ob-subtitle-enter {
-              animation: obSubIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+              animation: obSubIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.18s both;
             }
             @keyframes obSubIn {
               from { opacity: 0; transform: translateY(10px); }
@@ -376,7 +404,7 @@ export default function Home() {
               transform: translateY(-6px);
             }
             .ob-card-selected {
-              box-shadow: 0 0 40px rgba(139, 92, 246, 0.3), 0 0 80px rgba(139, 92, 246, 0.1);
+              box-shadow: 0 0 40px rgba(139, 92, 246, 0.25), 0 0 80px rgba(139, 92, 246, 0.08);
             }
             .ob-skip-enter {
               animation: obSkipIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.7s both;
