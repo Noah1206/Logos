@@ -129,7 +129,7 @@ export default function StudyPage() {
               onClick={() => setMethod("import")}
               className="group relative text-left p-5 pb-4 bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-200"
             >
-              <p className="text-[13px] font-semibold text-gray-900 mb-1">{t("study.page.importTitle")}</p>
+              <p className="text-[14px] font-bold text-gray-900 mb-1.5">📄 {t("study.page.importTitle")}</p>
               <p className="text-xs text-gray-400 leading-relaxed mb-4">{t("study.page.importDesc")}</p>
               <div className="flex items-center gap-1.5">
                 <span className="px-2 py-0.5 bg-gray-50 rounded text-[11px] text-gray-500">YouTube</span>
@@ -145,7 +145,7 @@ export default function StudyPage() {
               onClick={() => setMethod("topic")}
               className="group relative text-left p-5 pb-4 bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-200"
             >
-              <p className="text-[13px] font-semibold text-gray-900 mb-1">{t("study.page.topicTitle")}</p>
+              <p className="text-[14px] font-bold text-gray-900 mb-1.5">💡 {t("study.page.topicTitle")}</p>
               <p className="text-xs text-gray-400 leading-relaxed mb-4">{t("study.page.topicDesc")}</p>
               <div className="flex items-center gap-1.5">
                 {topicExamples.slice(0, 2).map((ex: string, i: number) => (
