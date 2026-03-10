@@ -496,6 +496,26 @@ function ResultContent() {
   const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [insertAfterIdx, setInsertAfterIdx] = useState<number | null>(null);
+  const [sidebarHistory, setSidebarHistory] = useState<{ blog: any[]; study: any[] }>({ blog: [], study: [] });
+
+  // 사이드바 변환 기록 불러오기
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const res = await fetch("/api/conversions?limit=10");
+        if (!res.ok) return;
+        const { data } = await res.json();
+        const blog: any[] = [];
+        const study: any[] = [];
+        for (const c of data) {
+          if (c.mode === "study") study.push(c);
+          else blog.push(c);
+        }
+        setSidebarHistory({ blog, study });
+      } catch {}
+    })();
+  }, [user]);
 
   const handleSocialLogin = (provider: string) => {
     setLoginLoading(provider);
@@ -1405,30 +1425,44 @@ function ResultContent() {
               </button>
             </div>
 
-            {/* 네비게이션 */}
-            <nav className="flex-shrink-0 px-3">
-              <div className="space-y-0.5">
-                <button onClick={() => requireAuth(() => {})} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                  <svg className="w-[18px] h-[18px] text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {t("result.conversionHistory")}
-                </button>
+            {/* 변환 기록 - 블로그/학습 분리 */}
+            <div className="flex-1 min-h-0 overflow-y-auto px-3 mt-1">
+              {/* 블로그 변환 */}
+              <div className="mb-3">
+                <div className="flex items-center gap-2 px-3 py-2">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t("result.blogHistory")}</span>
+                </div>
+                <div className="space-y-0.5">
+                  {sidebarHistory.blog.map((c: any) => (
+                    <button key={c.id} className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left group">
+                      <svg className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      <span className="truncate">{c.title || "Untitled"}</span>
+                    </button>
+                  ))}
+                  {sidebarHistory.blog.length === 0 && (
+                    <p className="px-3 py-1.5 text-xs text-gray-300">{t("result.conversionHistory")}</p>
+                  )}
+                </div>
               </div>
-            </nav>
 
-            {/* 최근 변환 */}
-            <div className="flex-1 min-h-0 overflow-y-auto px-3 mt-4">
-              <div className="flex items-center justify-between px-3 mb-2">
-                <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{t("result.recentConversions")}</span>
-              </div>
-              <div className="space-y-0.5">
-                {studyResult?.study_structure && (
-                  <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left">
-                    <span className="text-gray-300 text-xs flex-shrink-0">📄</span>
-                    <span className="truncate">{studyResult.study_structure.title}</span>
-                  </button>
-                )}
+              {/* 학습 노트 */}
+              <div className="mb-3">
+                <div className="flex items-center gap-2 px-3 py-2">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t("result.studyHistory")}</span>
+                </div>
+                <div className="space-y-0.5">
+                  {sidebarHistory.study.map((c: any) => (
+                    <button key={c.id} className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left group">
+                      <svg className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      <span className="truncate">{c.title || "Untitled"}</span>
+                    </button>
+                  ))}
+                  {sidebarHistory.study.length === 0 && (
+                    <p className="px-3 py-1.5 text-xs text-gray-300">{t("result.conversionHistory")}</p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1696,30 +1730,44 @@ function ResultContent() {
               </button>
             </div>
 
-            {/* 네비게이션 */}
-            <nav className="flex-shrink-0 px-3">
-              <div className="space-y-0.5">
-                <button onClick={() => requireAuth(() => {})} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                  <svg className="w-[18px] h-[18px] text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {t("result.conversionHistory")}
-                </button>
+            {/* 변환 기록 - 블로그/학습 분리 */}
+            <div className="flex-1 min-h-0 overflow-y-auto px-3 mt-1">
+              {/* 블로그 변환 */}
+              <div className="mb-3">
+                <div className="flex items-center gap-2 px-3 py-2">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t("result.blogHistory")}</span>
+                </div>
+                <div className="space-y-0.5">
+                  {sidebarHistory.blog.map((c: any) => (
+                    <button key={c.id} className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left group">
+                      <svg className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      <span className="truncate">{c.title || "Untitled"}</span>
+                    </button>
+                  ))}
+                  {sidebarHistory.blog.length === 0 && !displayData && (
+                    <p className="px-3 py-1.5 text-xs text-gray-300">{t("result.conversionHistory")}</p>
+                  )}
+                </div>
               </div>
-            </nav>
 
-            {/* 최근 변환 - 스크롤 가능 */}
-            <div className="flex-1 min-h-0 overflow-y-auto px-3 mt-4">
-              <div className="flex items-center justify-between px-3 mb-2">
-                <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{t("result.recentConversions")}</span>
-              </div>
-              <div className="space-y-0.5">
-                {displayData && (
-                  <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left">
-                    <span className="text-gray-300 text-xs flex-shrink-0">📄</span>
-                    <span className="truncate">{displayData.blogTitle}</span>
-                  </button>
-                )}
+              {/* 학습 노트 */}
+              <div className="mb-3">
+                <div className="flex items-center gap-2 px-3 py-2">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t("result.studyHistory")}</span>
+                </div>
+                <div className="space-y-0.5">
+                  {sidebarHistory.study.map((c: any) => (
+                    <button key={c.id} className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left group">
+                      <svg className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      <span className="truncate">{c.title || "Untitled"}</span>
+                    </button>
+                  ))}
+                  {sidebarHistory.study.length === 0 && (
+                    <p className="px-3 py-1.5 text-xs text-gray-300">{t("result.conversionHistory")}</p>
+                  )}
+                </div>
               </div>
             </div>
 
