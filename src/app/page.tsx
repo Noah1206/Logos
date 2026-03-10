@@ -141,137 +141,249 @@ export default function Home() {
       {/* ===== Onboarding Path Selector Overlay ===== */}
       {showOnboarding && (
         <div
-          className={`fixed inset-0 z-[100] flex flex-col items-center justify-center transition-opacity duration-300 ${
-            onboardingPhase === "exiting" ? "opacity-0 pointer-events-none" : "opacity-100"
+          className={`fixed inset-0 z-[100] flex flex-col items-center justify-center transition-all duration-500 ${
+            onboardingPhase === "exiting" ? "opacity-0 scale-105 pointer-events-none" : "opacity-100 scale-100"
           }`}
-          style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4338CA 70%, #7C3AED 100%)" }}
         >
-          {/* Logo */}
-          <div className="flex items-center gap-2 mb-4">
-            <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-8 w-8 brightness-0 invert opacity-90" />
-            <span className="text-2xl font-extrabold text-white font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
-          </div>
-          <p className="text-white/60 text-sm mb-10">{t("onboarding.subtitle")}</p>
+          {/* Animated gradient background */}
+          <div className="absolute inset-0 ob-bg" />
 
-          {/* Cards */}
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 px-6 max-w-3xl w-full">
-            {([
-              {
-                mode: "video-to-blog" as ConvertMode,
-                title: t("onboarding.card1.title"),
-                desc: t("onboarding.card1.desc"),
-                icon1: (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-                  </svg>
-                ),
-                icon2: (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                  </svg>
-                ),
-              },
-              {
-                mode: "feed-to-blog" as ConvertMode,
-                title: t("onboarding.card2.title"),
-                desc: t("onboarding.card2.desc"),
-                icon1: (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                  </svg>
-                ),
-                icon2: (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                  </svg>
-                ),
-              },
-              {
-                mode: "study" as ConvertMode,
-                title: t("onboarding.card3.title"),
-                desc: t("onboarding.card3.desc"),
-                icon1: (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-                  </svg>
-                ),
-                icon2: (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                  </svg>
-                ),
-              },
-            ]).map((card, i) => (
-              <button
-                key={card.mode}
-                onClick={() => {
-                  if (onboardingPhase !== "idle") return;
-                  setSelectedCard(i);
-                  setOnboardingPhase("selected");
-                  localStorage.setItem("logos_path_selected", card.mode);
-
-                  setTimeout(() => {
-                    setOnboardingPhase("exiting");
-                    if (card.mode === "study") {
-                      setTimeout(() => { window.location.href = "/study"; }, 300);
-                    } else {
-                      setMode(card.mode);
-                      setTimeout(() => { setShowOnboarding(false); }, 300);
-                    }
-                  }, 600);
-                }}
-                className={`group relative flex-1 text-left rounded-2xl p-6 backdrop-blur-md border transition-all duration-300 ${
-                  onboardingPhase === "selected" && selectedCard !== i
-                    ? "opacity-0 scale-95 pointer-events-none"
-                    : onboardingPhase === "selected" && selectedCard === i
-                    ? "scale-105 border-white/40 bg-white/20 shadow-2xl shadow-white/10"
-                    : "bg-white/10 border-white/15 hover:-translate-y-2 hover:bg-white/15 hover:border-white/30 hover:shadow-lg hover:shadow-[#7C3AED]/20"
-                }`}
-                style={{
-                  animationName: "onboardCardIn",
-                  animationDuration: "0.5s",
-                  animationTimingFunction: "cubic-bezier(0.16,1,0.3,1)",
-                  animationFillMode: "both",
-                  animationDelay: `${i * 0.1}s`,
-                }}
-              >
-                {/* Icons */}
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-white/70">{card.icon1}</span>
-                  <svg className="w-3.5 h-3.5 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                  </svg>
-                  <span className="text-white/70">{card.icon2}</span>
-                </div>
-                <h3 className="text-base font-bold text-white mb-1.5">{card.title}</h3>
-                <p className="text-xs text-white/50 leading-relaxed">{card.desc}</p>
-                {/* Hover arrow */}
-                <div className="absolute top-6 right-5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <svg className="w-4 h-4 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
-                  </svg>
-                </div>
-              </button>
-            ))}
+          {/* Floating orbs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="ob-orb ob-orb-1" />
+            <div className="ob-orb ob-orb-2" />
+            <div className="ob-orb ob-orb-3" />
           </div>
 
-          {/* Skip link */}
-          <button
-            onClick={() => {
-              localStorage.setItem("logos_path_selected", "video-to-blog");
-              setOnboardingPhase("exiting");
-              setTimeout(() => setShowOnboarding(false), 300);
-            }}
-            className="mt-8 text-xs text-white/30 hover:text-white/50 transition-colors"
-          >
-            {t("onboarding.skip")}
-          </button>
+          {/* Noise texture overlay */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
 
-          {/* Keyframe animation injected via style tag */}
+          {/* Content */}
+          <div className="relative z-10 flex flex-col items-center">
+            {/* Logo with glow */}
+            <div className="ob-logo-enter flex items-center gap-2.5 mb-3">
+              <div className="relative">
+                <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-9 w-9 brightness-0 invert opacity-95 relative z-10" />
+                <div className="absolute inset-0 blur-xl bg-white/30 rounded-full scale-150" />
+              </div>
+              <span className="text-[26px] font-extrabold text-white font-[var(--font-poppins)] tracking-tight drop-shadow-lg">LOGOS.ai</span>
+            </div>
+            <p className="ob-subtitle-enter text-white/50 text-sm mb-12 tracking-wide">{t("onboarding.subtitle")}</p>
+
+            {/* Cards */}
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 px-6 max-w-3xl w-full">
+              {([
+                {
+                  mode: "video-to-blog" as ConvertMode,
+                  title: t("onboarding.card1.title"),
+                  desc: t("onboarding.card1.desc"),
+                  gradient: "from-violet-500/20 via-indigo-500/10 to-transparent",
+                  glowColor: "rgba(139, 92, 246, 0.15)",
+                  icon1: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                    </svg>
+                  ),
+                  icon2: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                  ),
+                },
+                {
+                  mode: "feed-to-blog" as ConvertMode,
+                  title: t("onboarding.card2.title"),
+                  desc: t("onboarding.card2.desc"),
+                  gradient: "from-blue-500/20 via-cyan-500/10 to-transparent",
+                  glowColor: "rgba(59, 130, 246, 0.15)",
+                  icon1: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                    </svg>
+                  ),
+                  icon2: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                  ),
+                },
+                {
+                  mode: "study" as ConvertMode,
+                  title: t("onboarding.card3.title"),
+                  desc: t("onboarding.card3.desc"),
+                  gradient: "from-fuchsia-500/20 via-pink-500/10 to-transparent",
+                  glowColor: "rgba(217, 70, 239, 0.15)",
+                  icon1: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                    </svg>
+                  ),
+                  icon2: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                    </svg>
+                  ),
+                },
+              ]).map((card, i) => (
+                <button
+                  key={card.mode}
+                  onClick={() => {
+                    if (onboardingPhase !== "idle") return;
+                    setSelectedCard(i);
+                    setOnboardingPhase("selected");
+                    localStorage.setItem("logos_path_selected", card.mode);
+
+                    setTimeout(() => {
+                      setOnboardingPhase("exiting");
+                      if (card.mode === "study") {
+                        setTimeout(() => { window.location.href = "/study"; }, 400);
+                      } else {
+                        setMode(card.mode);
+                        setTimeout(() => { setShowOnboarding(false); }, 400);
+                      }
+                    }, 700);
+                  }}
+                  className={`ob-card group relative flex-1 text-left rounded-2xl p-6 transition-all duration-500 ${
+                    onboardingPhase === "selected" && selectedCard !== i
+                      ? "opacity-0 scale-90 blur-sm pointer-events-none"
+                      : onboardingPhase === "selected" && selectedCard === i
+                      ? "ob-card-selected scale-[1.08]"
+                      : ""
+                  }`}
+                  style={{
+                    animationName: "obCardIn",
+                    animationDuration: "0.7s",
+                    animationTimingFunction: "cubic-bezier(0.16,1,0.3,1)",
+                    animationFillMode: "both",
+                    animationDelay: `${0.3 + i * 0.12}s`,
+                  }}
+                >
+                  {/* Glass card background */}
+                  <div className="absolute inset-0 rounded-2xl bg-white/[0.07] backdrop-blur-xl border border-white/[0.12] group-hover:bg-white/[0.12] group-hover:border-white/[0.22] transition-all duration-500" />
+                  {/* Inner gradient glow */}
+                  <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                  {/* Top edge shine */}
+                  <div className="absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-white/25 to-transparent rounded-full" />
+                  {/* Bottom glow on hover */}
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-8 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: card.glowColor }} />
+
+                  {/* Content */}
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2.5 mb-4">
+                      <span className="text-white/60 group-hover:text-white/90 transition-colors duration-300">{card.icon1}</span>
+                      <svg className="w-3 h-3 text-white/20 group-hover:text-white/40 transition-colors duration-300 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ transition: "transform 0.3s, color 0.3s" }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                      </svg>
+                      <span className="text-white/60 group-hover:text-white/90 transition-colors duration-300">{card.icon2}</span>
+                    </div>
+                    <h3 className="text-[15px] font-bold text-white/90 mb-1.5 group-hover:text-white transition-colors duration-300">{card.title}</h3>
+                    <p className="text-xs text-white/40 leading-relaxed group-hover:text-white/55 transition-colors duration-300">{card.desc}</p>
+                  </div>
+
+                  {/* Hover arrow */}
+                  <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 transition-all duration-300">
+                    <svg className="w-4 h-4 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                    </svg>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Skip link */}
+            <button
+              onClick={() => {
+                localStorage.setItem("logos_path_selected", "video-to-blog");
+                setOnboardingPhase("exiting");
+                setTimeout(() => setShowOnboarding(false), 400);
+              }}
+              className="ob-skip-enter mt-10 text-xs text-white/25 hover:text-white/50 transition-colors duration-300 tracking-wider"
+            >
+              {t("onboarding.skip")}
+            </button>
+          </div>
+
+          {/* Keyframe animations */}
           <style>{`
-            @keyframes onboardCardIn {
-              from { opacity: 0; transform: translateY(24px); }
+            .ob-bg {
+              background: linear-gradient(135deg, #0f0a2e 0%, #1a1145 25%, #2d1b69 50%, #4c1d95 75%, #5b21b6 100%);
+              background-size: 200% 200%;
+              animation: obGradientShift 8s ease-in-out infinite;
+            }
+            @keyframes obGradientShift {
+              0%, 100% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+            }
+            .ob-orb {
+              position: absolute;
+              border-radius: 50%;
+              filter: blur(80px);
+            }
+            .ob-orb-1 {
+              width: 400px; height: 400px;
+              background: radial-gradient(circle, rgba(139, 92, 246, 0.3), transparent 70%);
+              top: -10%; right: -5%;
+              animation: obFloat1 12s ease-in-out infinite;
+            }
+            .ob-orb-2 {
+              width: 350px; height: 350px;
+              background: radial-gradient(circle, rgba(99, 102, 241, 0.25), transparent 70%);
+              bottom: -5%; left: -5%;
+              animation: obFloat2 15s ease-in-out infinite;
+            }
+            .ob-orb-3 {
+              width: 250px; height: 250px;
+              background: radial-gradient(circle, rgba(217, 70, 239, 0.2), transparent 70%);
+              top: 40%; left: 50%;
+              animation: obFloat3 10s ease-in-out infinite;
+            }
+            @keyframes obFloat1 {
+              0%, 100% { transform: translate(0, 0) scale(1); }
+              33% { transform: translate(-40px, 30px) scale(1.1); }
+              66% { transform: translate(20px, -20px) scale(0.95); }
+            }
+            @keyframes obFloat2 {
+              0%, 100% { transform: translate(0, 0) scale(1); }
+              50% { transform: translate(50px, -40px) scale(1.15); }
+            }
+            @keyframes obFloat3 {
+              0%, 100% { transform: translate(-50%, 0) scale(1); }
+              50% { transform: translate(-50%, -30px) scale(1.2); }
+            }
+            .ob-logo-enter {
+              animation: obLogoIn 0.8s cubic-bezier(0.16,1,0.3,1) both;
+            }
+            @keyframes obLogoIn {
+              from { opacity: 0; transform: translateY(-20px) scale(0.9); }
+              to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            .ob-subtitle-enter {
+              animation: obSubIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+            }
+            @keyframes obSubIn {
+              from { opacity: 0; transform: translateY(10px); }
               to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes obCardIn {
+              from { opacity: 0; transform: translateY(32px) scale(0.95); }
+              to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            .ob-card {
+              transform-style: preserve-3d;
+              perspective: 800px;
+            }
+            .ob-card:hover {
+              transform: translateY(-6px);
+            }
+            .ob-card-selected {
+              box-shadow: 0 0 40px rgba(139, 92, 246, 0.3), 0 0 80px rgba(139, 92, 246, 0.1);
+            }
+            .ob-skip-enter {
+              animation: obSkipIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.7s both;
+            }
+            @keyframes obSkipIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
             }
           `}</style>
         </div>
