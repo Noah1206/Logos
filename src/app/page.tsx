@@ -273,7 +273,7 @@ export default function Home() {
                       }
                     }, 700);
                   }}
-                  className={`ob-card group relative flex-1 text-left rounded-2xl p-6 transition-all duration-500 ${
+                  className={`ob-card group relative flex-1 text-left rounded-2xl p-8 pb-7 transition-all duration-500 ${
                     onboardingPhase === "selected" && selectedCard !== i
                       ? "opacity-0 scale-90 blur-sm pointer-events-none"
                       : onboardingPhase === "selected" && selectedCard === i
@@ -299,15 +299,15 @@ export default function Home() {
 
                   {/* Content */}
                   <div className="relative z-10">
-                    <div className="flex items-center gap-2.5 mb-4">
+                    <div className="flex items-center gap-2.5 mb-6">
                       <span className="text-white/50 group-hover:text-white/85 transition-colors duration-300">{card.icon1}</span>
                       <svg className="w-3 h-3 text-white/15 group-hover:text-white/35 transition-all duration-300 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                       </svg>
                       <span className="text-white/50 group-hover:text-white/85 transition-colors duration-300">{card.icon2}</span>
                     </div>
-                    <h3 className="text-[15px] font-bold text-white/85 mb-1.5 group-hover:text-white transition-colors duration-300">{card.title}</h3>
-                    <p className="text-xs text-white/35 leading-relaxed group-hover:text-white/50 transition-colors duration-300">{card.desc}</p>
+                    <h3 className="text-base font-bold text-white/85 mb-2 group-hover:text-white transition-colors duration-300">{card.title}</h3>
+                    <p className="text-sm text-white/35 leading-relaxed group-hover:text-white/50 transition-colors duration-300">{card.desc}</p>
                   </div>
 
                   {/* Hover arrow */}
