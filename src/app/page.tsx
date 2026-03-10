@@ -22,6 +22,17 @@ export default function Home() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfUploading, setPdfUploading] = useState(false);
 
+  // Onboarding path selector
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingPhase, setOnboardingPhase] = useState<"idle" | "selected" | "exiting">("idle");
+  const [selectedCard, setSelectedCard] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!localStorage.getItem("logos_path_selected")) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
   const { data: session, status, update: updateSession } = useSession();
   const isAuthLoading = status === "loading";
   const user = session?.user;
@@ -127,6 +138,145 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white">
+      {/* ===== Onboarding Path Selector Overlay ===== */}
+      {showOnboarding && (
+        <div
+          className={`fixed inset-0 z-[100] flex flex-col items-center justify-center transition-opacity duration-300 ${
+            onboardingPhase === "exiting" ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
+          style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4338CA 70%, #7C3AED 100%)" }}
+        >
+          {/* Logo */}
+          <div className="flex items-center gap-2 mb-4">
+            <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-8 w-8 brightness-0 invert opacity-90" />
+            <span className="text-2xl font-extrabold text-white font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
+          </div>
+          <p className="text-white/60 text-sm mb-10">{t("onboarding.subtitle")}</p>
+
+          {/* Cards */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 px-6 max-w-3xl w-full">
+            {([
+              {
+                mode: "video-to-blog" as ConvertMode,
+                title: t("onboarding.card1.title"),
+                desc: t("onboarding.card1.desc"),
+                icon1: (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                  </svg>
+                ),
+                icon2: (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                ),
+              },
+              {
+                mode: "feed-to-blog" as ConvertMode,
+                title: t("onboarding.card2.title"),
+                desc: t("onboarding.card2.desc"),
+                icon1: (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                  </svg>
+                ),
+                icon2: (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                ),
+              },
+              {
+                mode: "study" as ConvertMode,
+                title: t("onboarding.card3.title"),
+                desc: t("onboarding.card3.desc"),
+                icon1: (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                  </svg>
+                ),
+                icon2: (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                  </svg>
+                ),
+              },
+            ]).map((card, i) => (
+              <button
+                key={card.mode}
+                onClick={() => {
+                  if (onboardingPhase !== "idle") return;
+                  setSelectedCard(i);
+                  setOnboardingPhase("selected");
+                  localStorage.setItem("logos_path_selected", card.mode);
+
+                  setTimeout(() => {
+                    setOnboardingPhase("exiting");
+                    if (card.mode === "study") {
+                      setTimeout(() => { window.location.href = "/study"; }, 300);
+                    } else {
+                      setMode(card.mode);
+                      setTimeout(() => { setShowOnboarding(false); }, 300);
+                    }
+                  }, 600);
+                }}
+                className={`group relative flex-1 text-left rounded-2xl p-6 backdrop-blur-md border transition-all duration-300 ${
+                  onboardingPhase === "selected" && selectedCard !== i
+                    ? "opacity-0 scale-95 pointer-events-none"
+                    : onboardingPhase === "selected" && selectedCard === i
+                    ? "scale-105 border-white/40 bg-white/20 shadow-2xl shadow-white/10"
+                    : "bg-white/10 border-white/15 hover:-translate-y-2 hover:bg-white/15 hover:border-white/30 hover:shadow-lg hover:shadow-[#7C3AED]/20"
+                }`}
+                style={{
+                  animationName: "onboardCardIn",
+                  animationDuration: "0.5s",
+                  animationTimingFunction: "cubic-bezier(0.16,1,0.3,1)",
+                  animationFillMode: "both",
+                  animationDelay: `${i * 0.1}s`,
+                }}
+              >
+                {/* Icons */}
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-white/70">{card.icon1}</span>
+                  <svg className="w-3.5 h-3.5 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                  <span className="text-white/70">{card.icon2}</span>
+                </div>
+                <h3 className="text-base font-bold text-white mb-1.5">{card.title}</h3>
+                <p className="text-xs text-white/50 leading-relaxed">{card.desc}</p>
+                {/* Hover arrow */}
+                <div className="absolute top-6 right-5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <svg className="w-4 h-4 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                  </svg>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Skip link */}
+          <button
+            onClick={() => {
+              localStorage.setItem("logos_path_selected", "video-to-blog");
+              setOnboardingPhase("exiting");
+              setTimeout(() => setShowOnboarding(false), 300);
+            }}
+            className="mt-8 text-xs text-white/30 hover:text-white/50 transition-colors"
+          >
+            {t("onboarding.skip")}
+          </button>
+
+          {/* Keyframe animation injected via style tag */}
+          <style>{`
+            @keyframes onboardCardIn {
+              from { opacity: 0; transform: translateY(24px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
+        </div>
+      )}
+
       {/* Promotion Banner */}
       {isPromoActive && (
         <div className="bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] text-white text-center py-2.5 px-4 text-sm font-medium">

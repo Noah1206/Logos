@@ -26,6 +26,22 @@
     "instagram": "Instagram",
     "testing": "Beta"
   },
+  "onboarding": {
+    "subtitle": "What can we help you with?",
+    "card1": {
+      "title": "Video to Blog",
+      "desc": "Just paste a YouTube Shorts or Instagram Reels link and get a Naver blog post"
+    },
+    "card2": {
+      "title": "Instagram Feed to Blog",
+      "desc": "Paste an Instagram photo post link and it auto-converts to an SEO blog post"
+    },
+    "card3": {
+      "title": "Study with Video & PDF",
+      "desc": "Upload a YouTube video or PDF and AI creates key concepts and study notes for you"
+    },
+    "skip": "Skip"
+  },
   "promo": {
     "banner": "\uD83C\uDF89 Launch Special: 48-hour free event! Unlimited free use with login — Time left: ",
     "freeUsing": "\u2728 Free Access",
