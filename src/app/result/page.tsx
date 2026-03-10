@@ -1337,42 +1337,39 @@ function ResultContent() {
           </div>
         </div>
       ) : isStudyMode && studyResult?.study_structure ? (
-        /* Study Result State — Obsidian-inspired dark knowledge view */
-        <div className="min-h-screen bg-[#1e1e2e] text-[#cdd6f4]">
-          {/* Header */}
-          <header className="sticky top-0 z-50 bg-[#181825]/90 backdrop-blur-md border-b border-[#313244]">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-between h-14">
-                <a href="/" className="flex items-center gap-2">
-                  <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-6 w-6 brightness-0 invert opacity-80" />
-                  <span className="text-lg font-extrabold text-[#cdd6f4] font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
-                </a>
-                <div className="flex items-center gap-3">
-                  <button onClick={handleGoBack} className="px-4 py-2 text-sm text-[#a6adc8] hover:text-[#cdd6f4] border border-[#45475a] rounded-lg hover:bg-[#313244] transition-colors">
-                    {t("result.newConvert")}
-                  </button>
-                  <button
-                    onClick={async () => {
-                      if (studyResult?.study_content) {
-                        await navigator.clipboard.writeText(studyResult.study_content);
-                        setCopied(true);
-                        setTimeout(() => setCopied(false), 2000);
-                      }
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-white bg-[#7c3aed] rounded-lg hover:bg-[#6d28d9] transition-colors"
-                  >
-                    {copied ? t("result.copied") : t("result.copyContent")}
-                  </button>
-                </div>
+        /* Study Result State — Same layout as blog result (white, sidebar) */
+        <div className="flex min-h-screen">
+          {/* ===== 왼쪽 사이드바 (블로그와 동일) ===== */}
+          <aside
+            className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 flex flex-col z-50 transition-all duration-300 overflow-hidden ${
+              sidebarOpen ? "w-60" : "w-0"
+            }`}
+          >
+            <div className="flex-shrink-0 flex items-center justify-between px-4 pt-5 pb-3">
+              <div className="flex items-center gap-1.5">
+                <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-6 w-6" />
+                <span className="text-[15px] font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
               </div>
+              <button onClick={() => setSidebarOpen(false)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                </svg>
+              </button>
             </div>
-          </header>
 
-          <div className="flex max-w-6xl mx-auto">
-            {/* Sidebar TOC */}
-            <aside className="hidden lg:block w-56 flex-shrink-0 sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto py-6 pl-4 pr-2">
-              <nav className="space-y-1">
-                <p className="text-[10px] font-semibold text-[#585b70] uppercase tracking-widest mb-3 px-2">Contents</p>
+            <div className="flex-shrink-0 px-3 mb-4">
+              <button onClick={handleGoBack} className="w-full flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-500 hover:bg-gray-50 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                {t("result.newConvertFull")}
+              </button>
+            </div>
+
+            {/* 목차 */}
+            <div className="flex-1 min-h-0 overflow-y-auto px-3">
+              <div className="px-3 mb-2">
+                <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Contents</span>
+              </div>
+              <nav className="space-y-0.5">
                 {[
                   { id: "summary", label: t("study.result.executiveSummary") },
                   { id: "concepts", label: t("study.result.keyConcepts") },
@@ -1380,33 +1377,49 @@ function ResultContent() {
                   { id: "questions", label: t("study.result.studyQuestions") },
                   ...(studyResult.study_structure.related_topics?.length > 0 ? [{ id: "related", label: t("study.result.relatedTopics") }] : []),
                 ].map((item) => (
-                  <a
-                    key={item.id}
-                    href={`#study-${item.id}`}
-                    className="block px-2 py-1.5 text-xs text-[#a6adc8] hover:text-[#cba6f7] hover:bg-[#313244] rounded-md transition-colors truncate"
-                  >
+                  <a key={item.id} href={`#study-${item.id}`} className="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors truncate">
                     {item.label}
                   </a>
                 ))}
                 {studyResult.study_structure.detailed_notes?.map((note: any, i: number) => (
-                  <a
-                    key={`dn-${i}`}
-                    href={`#study-note-${i}`}
-                    className="block pl-5 pr-2 py-1 text-[11px] text-[#585b70] hover:text-[#a6adc8] rounded-md transition-colors truncate"
-                  >
+                  <a key={`dn-${i}`} href={`#study-note-${i}`} className="block pl-6 pr-3 py-1.5 text-xs text-gray-400 hover:text-gray-600 rounded-lg transition-colors truncate">
                     {note.topic}
                   </a>
                 ))}
               </nav>
-            </aside>
+            </div>
 
-            {/* Main Content */}
-            <main className="flex-1 min-w-0 px-4 sm:px-8 py-8 lg:border-l border-[#313244]">
-              {/* Title */}
-              <h1 className="text-2xl md:text-3xl font-bold text-[#cdd6f4] mb-2 leading-tight">
+            {/* 유저 프로필 */}
+            <div className="flex-shrink-0 border-t border-gray-100 px-3 py-4">
+              <div className="flex items-center gap-3 px-2">
+                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium text-gray-900 truncate">{user?.name || t("common.guest")}</span>
+                    <span className="text-[10px] font-medium text-[#4F46E5] bg-[#EEF2FF] px-1.5 py-0.5 rounded">{user && user.credits > 1 ? t("common.pro") : t("common.free")}</span>
+                  </div>
+                  <p className="text-xs text-gray-400 truncate">{t("result.creditRemaining", { count: user?.credits ?? 0 })}</p>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {!sidebarOpen && (
+            <button onClick={() => setSidebarOpen(true)} className="fixed top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm transition-colors">
+              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+          )}
+
+          {/* ===== 오른쪽 메인 콘텐츠 ===== */}
+          <div className={`animate-fade-in flex-1 transition-all duration-300 ${sidebarOpen ? "ml-60" : "ml-0"}`}>
+            <div className="max-w-4xl mx-auto px-8 pt-10 pb-32">
+              {/* 제목 */}
+              <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-3">
                 {studyResult.study_structure.title}
               </h1>
-              <div className="flex items-center gap-3 mb-8 text-xs text-[#585b70]">
+              <div className="flex items-center gap-3 mb-10 text-sm text-gray-400">
                 <span className="flex items-center gap-1">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   {new Date().toLocaleDateString()}
@@ -1419,94 +1432,93 @@ function ResultContent() {
                 )}
               </div>
 
-              {/* Executive Summary */}
-              <section id="study-summary" className="mb-8 scroll-mt-20">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-1 h-5 bg-[#cba6f7] rounded-full" />
-                  <h2 className="text-base font-semibold text-[#cdd6f4]">{t("study.result.executiveSummary")}</h2>
+              {/* 핵심 요약 */}
+              <section id="study-summary" className="mb-10 scroll-mt-20">
+                <div className="flex items-center gap-2 mt-10 mb-4">
+                  <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
+                  <h2 className="font-bold text-gray-900">{t("study.result.executiveSummary")}</h2>
                 </div>
-                <div className="bg-[#181825] border border-[#313244] rounded-lg p-5">
-                  <p className="text-sm text-[#bac2de] leading-relaxed">{studyResult.study_structure.executive_summary}</p>
-                </div>
+                <p className="text-gray-600 leading-[2] whitespace-pre-line">{studyResult.study_structure.executive_summary}</p>
               </section>
 
-              {/* Key Concepts */}
-              <section id="study-concepts" className="mb-8 scroll-mt-20">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-1 h-5 bg-[#f9e2af] rounded-full" />
-                  <h2 className="text-base font-semibold text-[#cdd6f4]">{t("study.result.keyConcepts")}</h2>
+              {/* 핵심 개념 */}
+              <section id="study-concepts" className="mb-10 scroll-mt-20">
+                <div className="flex items-center gap-2 mt-10 mb-4">
+                  <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
+                  <h2 className="font-bold text-gray-900">{t("study.result.keyConcepts")}</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {studyResult.study_structure.key_concepts.map((concept: any, i: number) => (
-                    <div key={i} className="bg-[#181825] border border-[#313244] rounded-lg p-4 hover:border-[#45475a] transition-colors">
-                      <div className="flex items-center gap-2 mb-1.5">
+                    <div key={i} className="rounded-2xl bg-gray-50 border border-gray-200 p-5 hover:shadow-sm transition-shadow">
+                      <div className="flex items-center gap-2 mb-2">
                         <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                          concept.importance === "high" ? "bg-[#f38ba8]" :
-                          concept.importance === "medium" ? "bg-[#f9e2af]" :
-                          "bg-[#585b70]"
+                          concept.importance === "high" ? "bg-red-400" :
+                          concept.importance === "medium" ? "bg-amber-400" :
+                          "bg-gray-300"
                         }`} />
-                        <h3 className="text-sm font-semibold text-[#cdd6f4]">{concept.name}</h3>
+                        <h3 className="text-sm font-bold text-gray-900">{concept.name}</h3>
                         <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                          concept.importance === "high" ? "bg-[#f38ba8]/10 text-[#f38ba8]" :
-                          concept.importance === "medium" ? "bg-[#f9e2af]/10 text-[#f9e2af]" :
-                          "bg-[#585b70]/20 text-[#585b70]"
+                          concept.importance === "high" ? "bg-red-50 text-red-500" :
+                          concept.importance === "medium" ? "bg-amber-50 text-amber-600" :
+                          "bg-gray-100 text-gray-400"
                         }`}>
                           {t(`study.result.importance.${concept.importance}`)}
                         </span>
                       </div>
-                      <p className="text-xs text-[#a6adc8] leading-relaxed">{concept.definition}</p>
+                      <p className="text-sm text-gray-500 leading-relaxed">{concept.definition}</p>
                     </div>
                   ))}
                 </div>
               </section>
 
-              {/* Detailed Notes */}
-              <section id="study-notes" className="mb-8 scroll-mt-20">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-1 h-5 bg-[#94e2d5] rounded-full" />
-                  <h2 className="text-base font-semibold text-[#cdd6f4]">{t("study.result.detailedNotes")}</h2>
+              {/* 상세 노트 */}
+              <section id="study-notes" className="mb-10 scroll-mt-20">
+                <div className="flex items-center gap-2 mt-10 mb-4">
+                  <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
+                  <h2 className="font-bold text-gray-900">{t("study.result.detailedNotes")}</h2>
                 </div>
-                <div className="bg-[#181825] border border-[#313244] rounded-lg divide-y divide-[#313244]">
-                  {studyResult.study_structure.detailed_notes.map((note: any, i: number) => (
-                    <div key={i} id={`study-note-${i}`} className="p-5 scroll-mt-20">
-                      <h3 className="text-sm font-semibold text-[#94e2d5] mb-2 flex items-center gap-2">
-                        <span className="text-[#585b70] text-xs font-mono">{String(i + 1).padStart(2, "0")}</span>
-                        {note.topic}
-                      </h3>
-                      <p className="text-sm text-[#bac2de] leading-relaxed whitespace-pre-line">{note.content}</p>
-                    </div>
-                  ))}
-                </div>
+                {studyResult.study_structure.detailed_notes.map((note: any, i: number) => (
+                  <div key={i} id={`study-note-${i}`} className="mb-6 scroll-mt-20">
+                    <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                      <span className="text-gray-300 text-xs font-mono">{String(i + 1).padStart(2, "0")}</span>
+                      {note.topic}
+                    </h3>
+                    <p className="text-gray-600 leading-[2] whitespace-pre-line">{note.content}</p>
+                    {i < studyResult.study_structure.detailed_notes.length - 1 && (
+                      <div className="border-b border-gray-100 mt-6" />
+                    )}
+                  </div>
+                ))}
               </section>
 
-              {/* Study Questions */}
-              <section id="study-questions" className="mb-8 scroll-mt-20">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-1 h-5 bg-[#89b4fa] rounded-full" />
-                  <h2 className="text-base font-semibold text-[#cdd6f4]">{t("study.result.studyQuestions")}</h2>
+              {/* 연습 문제 */}
+              <section id="study-questions" className="mb-10 scroll-mt-20">
+                <div className="flex items-center gap-2 mt-10 mb-4">
+                  <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
+                  <h2 className="font-bold text-gray-900">{t("study.result.studyQuestions")}</h2>
                 </div>
                 <div className="space-y-3">
                   {studyResult.study_structure.study_questions.map((q: any, i: number) => (
-                    <div key={i} className="bg-[#181825] border border-[#313244] rounded-lg overflow-hidden">
+                    <div key={i} className="rounded-2xl bg-gray-50 border border-gray-200 overflow-hidden">
                       <button
                         onClick={() => {
                           const next = new Set(openQuestions);
                           next.has(i) ? next.delete(i) : next.add(i);
                           setOpenQuestions(next);
                         }}
-                        className="w-full text-left px-5 py-4 flex items-start gap-3 hover:bg-[#1e1e2e] transition-colors"
+                        className="w-full text-left px-5 py-4 flex items-start gap-3 hover:bg-gray-100 transition-colors"
                       >
-                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#89b4fa]/10 text-[#89b4fa] text-xs font-bold flex items-center justify-center mt-0.5">
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 text-gray-600 text-xs font-bold flex items-center justify-center mt-0.5">
                           {i + 1}
                         </span>
-                        <span className="text-sm font-medium text-[#cdd6f4] flex-1">{q.question}</span>
-                        <svg className={`w-4 h-4 text-[#585b70] flex-shrink-0 mt-1 transition-transform ${openQuestions.has(i) ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <span className="text-sm font-medium text-gray-900 flex-1">{q.question}</span>
+                        <svg className={`w-4 h-4 text-gray-400 flex-shrink-0 mt-1 transition-transform ${openQuestions.has(i) ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
                       {openQuestions.has(i) && (
                         <div className="px-5 pb-4 pl-14">
-                          <div className="text-sm text-[#a6adc8] bg-[#1e1e2e] border border-[#313244] rounded-md p-3 leading-relaxed">{q.answer}</div>
+                          <p className="text-sm text-gray-600 leading-relaxed">{q.answer}</p>
                         </div>
                       )}
                     </div>
@@ -1514,23 +1526,53 @@ function ResultContent() {
                 </div>
               </section>
 
-              {/* Related Topics */}
+              {/* 관련 주제 */}
               {studyResult.study_structure.related_topics?.length > 0 && (
-                <section id="study-related" className="mb-8 scroll-mt-20">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-1 h-5 bg-[#f5c2e7] rounded-full" />
-                    <h2 className="text-base font-semibold text-[#cdd6f4]">{t("study.result.relatedTopics")}</h2>
+                <section id="study-related" className="mb-10 scroll-mt-20">
+                  <div className="flex items-center gap-2 mt-10 mb-4">
+                    <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
+                    <h2 className="font-bold text-gray-900">{t("study.result.relatedTopics")}</h2>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {studyResult.study_structure.related_topics.map((topic: string, i: number) => (
-                      <span key={i} className="px-3 py-1.5 bg-[#181825] border border-[#313244] text-[#cba6f7] rounded-lg text-xs font-medium hover:border-[#cba6f7]/30 transition-colors">
+                      <span key={i} className="px-3 py-1.5 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors">
                         {topic}
                       </span>
                     ))}
                   </div>
                 </section>
               )}
-            </main>
+            </div>
+
+            {/* 하단 액션 바 (블로그와 동일 스타일) */}
+            <div className={`fixed bottom-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transition-all duration-300 ${sidebarOpen ? "left-60" : "left-0"}`}>
+              <div className="max-w-4xl mx-auto px-8 py-4">
+                <div className="flex items-center justify-between">
+                  <button onClick={handleGoBack} className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                    {t("result.newConvert")}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (studyResult?.study_content) {
+                        await navigator.clipboard.writeText(studyResult.study_content);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }
+                    }}
+                    className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all text-sm font-medium ${
+                      copied ? "bg-green-500 text-white" : "bg-gray-900 hover:bg-gray-800 text-white"
+                    }`}
+                  >
+                    {copied ? (
+                      <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>{t("result.copied")}</>
+                    ) : (
+                      <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>{t("result.copyContent")}</>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       ) : (
