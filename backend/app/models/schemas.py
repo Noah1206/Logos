@@ -132,6 +132,7 @@ class StudyRequest(BaseModel):
     url: Optional[str] = None
     pdf_text: Optional[str] = None
     pdf_url: Optional[str] = None
+    pdf_urls: Optional[List[str]] = None
 
 
 class StudyConcept(BaseModel):

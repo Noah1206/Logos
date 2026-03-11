@@ -381,7 +381,9 @@
       "title": "PDF 업로드",
       "dropzone": "클릭하거나 PDF 파일을 드래그하세요",
       "hint": "최대 10MB, PDF 파일만 가능",
-      "uploaded": "PDF 업로드 완료: {{name}}"
+      "hintMulti": "최대 10MB/파일, PDF 파일만 가능 · 최대 10개",
+      "uploaded": "PDF 업로드 완료: {{name}}",
+      "addMore": "파일 추가"
     },
     "orDivider": "또는",
     "startStudy": "학습 노트 생성",

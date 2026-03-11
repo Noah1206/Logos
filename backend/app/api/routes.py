@@ -277,6 +277,7 @@ async def study_stream(request: StudyRequest):
                 url=request.url,
                 pdf_text=request.pdf_text,
                 pdf_url=request.pdf_url,
+                pdf_urls=request.pdf_urls,
                 progress_callback=progress_callback,
             )
         )

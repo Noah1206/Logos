@@ -379,9 +379,11 @@
     "uploadError": "File upload failed. Please try again.",
     "pdfUpload": {
       "title": "Upload PDF",
-      "dropzone": "Click or drag a PDF file here",
+      "dropzone": "Click or drag PDF files here",
       "hint": "Max 10MB, PDF files only",
-      "uploaded": "PDF uploaded: {{name}}"
+      "hintMulti": "Max 10MB per file, PDF only · up to 10 files",
+      "uploaded": "PDF uploaded: {{name}}",
+      "addMore": "Add more"
     },
     "orDivider": "or",
     "startStudy": "Generate Study Notes",

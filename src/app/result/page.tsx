@@ -782,10 +782,19 @@ function ResultContent() {
 
     const callStudySSE = async () => {
       try {
-        const body: Record<string, string | null> = {};
+        const body: Record<string, any> = {};
         if (studyMode === "pdf") {
           body.mode = "pdf";
-          body.pdf_url = sessionStorage.getItem("study-pdf-url");
+          const pdfUrlsRaw = sessionStorage.getItem("study-pdf-urls");
+          if (pdfUrlsRaw) {
+            try {
+              body.pdf_urls = JSON.parse(pdfUrlsRaw);
+            } catch {
+              body.pdf_url = sessionStorage.getItem("study-pdf-url");
+            }
+          } else {
+            body.pdf_url = sessionStorage.getItem("study-pdf-url");
+          }
         } else {
           body.mode = "youtube";
           body.url = url || sessionStorage.getItem("study-url") || "";

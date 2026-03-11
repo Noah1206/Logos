@@ -205,6 +205,7 @@ async def run_study_pipeline(
     url: Optional[str] = None,
     pdf_text: Optional[str] = None,
     pdf_url: Optional[str] = None,
+    pdf_urls: Optional[list] = None,
     progress_callback: Optional[ProgressCallback] = None,
 ) -> StudyResponse:
     """
@@ -222,10 +223,19 @@ async def run_study_pipeline(
         transcript = ""
 
         if mode == "pdf":
-            await _emit(10, "PDF에서 학습 자료를 읽고 있어요")
+            await emit(10, "PDF에서 학습 자료를 읽고 있어요")
 
             if pdf_text:
                 text = pdf_text
+            elif pdf_urls and len(pdf_urls) > 0:
+                # 여러 PDF에서 텍스트 추출
+                all_texts = []
+                for i, pu in enumerate(pdf_urls):
+                    progress = 10 + int(25 * (i / len(pdf_urls)))
+                    await emit(progress, f"PDF {i+1}/{len(pdf_urls)} 읽는 중...")
+                    part = await extract_pdf_text(pdf_url=pu)
+                    all_texts.append(part)
+                text = "\n\n---\n\n".join(all_texts)
             elif pdf_url:
                 text = await extract_pdf_text(pdf_url=pdf_url)
             else:
@@ -240,11 +250,11 @@ async def run_study_pipeline(
             await emit(5, "영상 내용을 파악하고 있어요")
             platform, video_id = detect_platform(url)
 
-            await _emit(10, "학습할 영상을 가져오고 있어요")
+            await emit(10, "학습할 영상을 가져오고 있어요")
             content_path, video_info = await download_video(url)
             video_path = content_path
 
-            await _emit(30, "영상에서 핵심 내용을 추출하고 있어요")
+            await emit(30, "영상에서 핵심 내용을 추출하고 있어요")
             audio_path = await extract_audio_from_video(content_path)
 
             await emit(40, "강의 내용을 텍스트로 정리하고 있어요")
@@ -268,10 +278,10 @@ async def run_study_pipeline(
             return StudyResponse(success=False, error=f"지원하지 않는 모드: {mode}")
 
         # 학습 노트 생성
-        await _emit(65, "핵심 개념과 연습 문제를 만들고 있어요")
+        await emit(65, "핵심 개념과 연습 문제를 만들고 있어요")
         study_structure, study_content = await write_study_notes(text)
 
-        await _emit(95, "학습 노트가 완성됐어요!")
+        await emit(95, "학습 노트가 완성됐어요!")
 
         return StudyResponse(
             success=True,
