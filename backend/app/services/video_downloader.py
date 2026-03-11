@@ -795,6 +795,14 @@ def detect_platform(url: str) -> Tuple[Platform, str]:
         if match:
             return Platform.INSTAGRAM, match.group(1)
 
+    # Instagram 프로필 URL 감지 → 친절한 안내
+    if re.search(r'instagram\.com/([a-zA-Z0-9_.]+)/?(\?|$)', url):
+        raise ValueError(
+            "인스타그램 프로필 링크는 변환할 수 없어요. "
+            "릴스나 게시물의 링크를 넣어주세요. "
+            "(예: instagram.com/reel/... 또는 instagram.com/p/...)"
+        )
+
     raise ValueError(f"지원하지 않는 URL 형식입니다: {url}")
 
 
