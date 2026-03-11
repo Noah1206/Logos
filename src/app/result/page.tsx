@@ -562,7 +562,7 @@ function ResultContent() {
         tone: tone || null,
         title: mapped.blogTitle,
         resultContent: mapped.rawContent || null,
-        resultJson: resultEvent.blog_structure || null,
+        resultJson: mapped,
         transcript: resultEvent.transcript || null,
         creditUsed: 1,
       };
@@ -575,6 +575,8 @@ function ResultContent() {
 
       if (res.ok) {
         const { data: conversion } = await res.json();
+        // URL을 ID 기반으로 교체 (짧고 깔끔한 URL)
+        window.history.replaceState({}, "", `/result?id=${conversion.id}`);
         // 비동기로 지식 추출 트리거 (fire-and-forget)
         fetch("/api/knowledge/extract", {
           method: "POST",
@@ -907,9 +909,38 @@ function ResultContent() {
     return () => { cancelled = true; };
   }, [isStudyMode, studyMode]);
 
+  // ID 기반 결과 로드 (공유 URL, 새로고침, 사이드바 히스토리 클릭)
+  const id = searchParams.get("id") || "";
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    const loadById = async () => {
+      try {
+        const res = await fetch(`/api/conversions/${id}`);
+        if (!res.ok || cancelled) return;
+        const { data: conversion } = await res.json();
+        if (cancelled) return;
+        const stored = conversion.resultJson as ResultData | null;
+        if (stored) {
+          setResultData(stored);
+          setEditedData(JSON.parse(JSON.stringify(stored)));
+          // galleryUrls는 초당 프레임 썸네일 — resultJson에는 저장하지 않으므로 설정 안 함
+          setProgress(100);
+          setTimeout(() => setIsComplete(true), 200);
+        }
+      } catch (e) {
+        console.error("[ID Load] error:", e);
+        setErrorMessage(t("result.serverError"));
+        setIsError(true);
+      }
+    };
+    loadById();
+    return () => { cancelled = true; };
+  }, [id]);
+
   // URL→블로그 SSE 스트리밍 API 호출 (캐시된 결과가 있으면 바로 표시)
   useEffect(() => {
-    if (!url || isVideoMode || isStudyMode) return;
+    if (!url || isVideoMode || isStudyMode || id) return;
 
     // sessionStorage에 캐시된 결과 확인
     const cacheKey = `convert_result_${url}`;
@@ -1653,7 +1684,7 @@ function ResultContent() {
                 {blogSectionOpen && (
                   <div className="mt-0.5 space-y-0.5">
                     {sidebarHistory.blog.map((c: any) => (
-                      <button key={c.id} className="w-full flex items-center gap-2.5 px-3 py-2 pl-9 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left">
+                      <button key={c.id} onClick={() => window.location.href = `/result?id=${c.id}`} className="w-full flex items-center gap-2.5 px-3 py-2 pl-9 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left">
                         <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         <span className="truncate">{c.title || "Untitled"}</span>
                       </button>
@@ -1675,7 +1706,7 @@ function ResultContent() {
                 {studySectionOpen && (
                   <div className="mt-0.5 space-y-0.5">
                     {sidebarHistory.study.map((c: any) => (
-                      <button key={c.id} className="w-full flex items-center gap-2.5 px-3 py-2 pl-9 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left">
+                      <button key={c.id} onClick={() => window.location.href = `/result?id=${c.id}`} className="w-full flex items-center gap-2.5 px-3 py-2 pl-9 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left">
                         <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         <span className="truncate">{c.title || "Untitled"}</span>
                       </button>
@@ -1962,7 +1993,7 @@ function ResultContent() {
                 </div>
                 <div className="space-y-0.5">
                   {sidebarHistory.blog.map((c: any) => (
-                    <button key={c.id} className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left group">
+                    <button key={c.id} onClick={() => window.location.href = `/result?id=${c.id}`} className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left group">
                       <svg className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                       <span className="truncate">{c.title || "Untitled"}</span>
                     </button>
@@ -1981,7 +2012,7 @@ function ResultContent() {
                 </div>
                 <div className="space-y-0.5">
                   {sidebarHistory.study.map((c: any) => (
-                    <button key={c.id} className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left group">
+                    <button key={c.id} onClick={() => window.location.href = `/result?id=${c.id}`} className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left group">
                       <svg className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                       <span className="truncate">{c.title || "Untitled"}</span>
                     </button>
