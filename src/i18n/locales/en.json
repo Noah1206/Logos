@@ -330,8 +330,14 @@
     "gallery": {
       "title": "Select photo from video",
       "addPhoto": "+ Add Photo",
+      "uploadFromDevice": "Upload from device",
+      "uploadDuringConversion": "Have photos to include in your blog?",
+      "uploadHint": "Click or drag to add photos",
       "close": "Close",
-      "timestamp": "{{seconds}}s"
+      "timestamp": "{{seconds}}s",
+      "addToBlog": "Add to blog",
+      "scrubHint": "Drag left or right to find the perfect moment",
+      "timelineReady": "Pick a photo from the video timeline"
     }
   },
   "dashboard": {

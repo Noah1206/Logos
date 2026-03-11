@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback, useRef, Suspense } from "react
 import { useSession, signIn } from "next-auth/react";
 import { usePayment } from "@/hooks/usePayment";
 import { useTranslation, useTranslationArray } from "@/i18n";
+import VideoTimeline from "@/components/VideoTimeline";
 
 type ReportTab = "detailed" | "summary" | "easy" | "script";
 
@@ -496,6 +497,9 @@ function ResultContent() {
   const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [insertAfterIdx, setInsertAfterIdx] = useState<number | null>(null);
+  const [videoDuration, setVideoDuration] = useState<number | null>(null);
+  const sectionFileRef = useRef<HTMLInputElement>(null);
+  const loadingFileRef = useRef<HTMLInputElement>(null);
   const [sidebarHistory, setSidebarHistory] = useState<{ blog: any[]; study: any[] }>({ blog: [], study: [] });
   const [blogSectionOpen, setBlogSectionOpen] = useState(true);
   const [studySectionOpen, setStudySectionOpen] = useState(true);
@@ -958,6 +962,16 @@ function ResultContent() {
                 setProgress(event.progress);
               }
 
+              // 조기 갤러리 프레임 수신 (변환 완료 전)
+              if (event.gallery_frame_urls?.length && !event.result) {
+                setGalleryUrls((prev) =>
+                  prev.length === 0 ? event.gallery_frame_urls : prev
+                );
+              }
+              if (event.video_duration && !event.result) {
+                setVideoDuration(event.video_duration);
+              }
+
               if (event.result) {
                 const mapped = mapResponseToResultData(event.result);
                 // excludeFrames: 영상 프레임 제거, 사용자 이미지만 사용
@@ -970,7 +984,12 @@ function ResultContent() {
                 setEditedData(JSON.parse(JSON.stringify(mapped)));
                 // 갤러리 프레임 URL 설정
                 if (event.result.gallery_frame_urls?.length) {
-                  setGalleryUrls(event.result.gallery_frame_urls);
+                  setGalleryUrls((prev) =>
+                    prev.length === 0 ? event.result.gallery_frame_urls : prev
+                  );
+                }
+                if (event.result.video_duration) {
+                  setVideoDuration(event.result.video_duration);
                 }
                 // 결과를 sessionStorage에 캐시
                 sessionStorage.setItem(cacheKey, JSON.stringify(mapped));
@@ -1139,6 +1158,13 @@ function ResultContent() {
 
   // 갤러리에서 프레임 삽입
   const handleInsertFrame = useCallback((frameUrl: string) => {
+    // 변환 완료 전이면 userImages에 추가 (나중에 결과에 병합)
+    if (!isComplete || !editedData) {
+      setUserImages((prev) => [...prev, frameUrl]);
+      setGalleryOpen(false);
+      setInsertAfterIdx(null);
+      return;
+    }
     const targetIdx = insertAfterIdx ?? (editedData?.sections.length ?? 1) - 1;
     updateEdited((d) => {
       if (targetIdx >= 0 && targetIdx < d.sections.length) {
@@ -1150,7 +1176,28 @@ function ResultContent() {
     });
     setGalleryOpen(false);
     setInsertAfterIdx(null);
-  }, [insertAfterIdx, editedData, updateEdited]);
+  }, [insertAfterIdx, editedData, updateEdited, isComplete]);
+
+  // 파일 업로드로 사진 추가 (갤러리 대안)
+  const handleSectionFileUpload = useCallback((file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      handleInsertFrame(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  }, [handleInsertFrame]);
+
+  // "+" 버튼 클릭 핸들러: 갤러리 있으면 갤러리, 없으면 파일 업로드
+  const handleAddPhotoClick = useCallback((sectionIdx: number) => {
+    setInsertAfterIdx(sectionIdx);
+    if (galleryUrls.length > 0) {
+      setGalleryOpen(true);
+    } else {
+      sectionFileRef.current?.click();
+    }
+  }, [galleryUrls]);
 
   // 표시용 데이터 (편집본 우선)
   const displayData = editedData ?? resultData;
@@ -1247,6 +1294,86 @@ function ResultContent() {
             <span className="text-[#4F46E5] text-xs font-semibold">TIP</span>
             <p className="text-gray-500 text-sm">{loadingTips[tipIndex]}</p>
           </div>
+
+          {/* 변환 중 사진 업로드 영역 */}
+          {!isVideoMode && !isStudyMode && (
+            <div className="mt-10 w-full max-w-sm">
+              <input
+                ref={loadingFileRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []).filter(f => f.type.startsWith("image/"));
+                  files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      setUserImages(prev => [...prev, reader.result as string]);
+                    };
+                    reader.readAsDataURL(file);
+                  });
+                  e.target.value = "";
+                }}
+              />
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#4F46E5] transition-colors cursor-pointer"
+                onClick={() => loadingFileRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("border-[#4F46E5]", "bg-[#EEF2FF]"); }}
+                onDragLeave={(e) => { e.currentTarget.classList.remove("border-[#4F46E5]", "bg-[#EEF2FF]"); }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.classList.remove("border-[#4F46E5]", "bg-[#EEF2FF]");
+                  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
+                  files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      setUserImages(prev => [...prev, reader.result as string]);
+                    };
+                    reader.readAsDataURL(file);
+                  });
+                }}
+              >
+                <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p className="text-sm font-medium text-gray-600">{t("result.gallery.uploadDuringConversion")}</p>
+                <p className="text-xs text-gray-400 mt-1">{t("result.gallery.uploadHint")}</p>
+              </div>
+              {userImages.length > 0 && (
+                <div className="mt-3 flex gap-2 flex-wrap justify-center">
+                  {userImages.map((img, i) => (
+                    <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200">
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setUserImages(prev => prev.filter((_, idx) => idx !== i));
+                        }}
+                        className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/50 rounded-full flex items-center justify-center"
+                      >
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* 타임라인 열기 버튼 (프레임 조기 도착 시) */}
+              {galleryUrls.length > 0 && (
+                <button
+                  onClick={() => setGalleryOpen(true)}
+                  className="mt-4 flex items-center gap-2 px-5 py-2.5 bg-[#4F46E5] text-white text-sm font-medium rounded-xl hover:bg-[#4338CA] transition-colors animate-fade-in"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                  </svg>
+                  {t("result.gallery.timelineReady")}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       ) : isVideoMode && videoResult ? (
         /* Video Result State */
@@ -2166,17 +2293,15 @@ function ResultContent() {
                       />
                     ))}
 
-                    {/* 섹션 사이 "+" 사진 추가 버튼 (갤러리 프레임이 있을 때만) */}
-                    {galleryUrls.length > 0 && (
-                      <div className="flex justify-center py-2 opacity-0 hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => { setInsertAfterIdx(idx); setGalleryOpen(true); }}
-                          className="px-3 py-1.5 text-xs text-gray-400 border border-dashed border-gray-300 rounded-lg hover:text-[#4F46E5] hover:border-[#4F46E5] transition-colors"
-                        >
-                          {t("result.gallery.addPhoto")}
-                        </button>
-                      </div>
-                    )}
+                    {/* 섹션 사이 "+" 사진 추가 버튼 */}
+                    <div className="flex justify-center py-2 opacity-40 hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleAddPhotoClick(idx)}
+                        className="px-3 py-1.5 text-xs text-gray-400 border border-dashed border-gray-300 rounded-lg hover:text-[#4F46E5] hover:border-[#4F46E5] transition-colors"
+                      >
+                        {t("result.gallery.addPhoto")}
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -2362,18 +2487,23 @@ function ResultContent() {
                     </button>
                   </div>
                   <div className="flex items-center gap-2">
-                    {galleryUrls.length > 0 && (
-                      <button
-                        onClick={() => { setInsertAfterIdx(null); setGalleryOpen(true); }}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-lg transition-all text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-100"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        {t("result.gallery.addPhoto")}
-                      </button>
-                    )}
+                    <button
+                      onClick={() => {
+                        setInsertAfterIdx(null);
+                        if (galleryUrls.length > 0) {
+                          setGalleryOpen(true);
+                        } else {
+                          sectionFileRef.current?.click();
+                        }
+                      }}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-lg transition-all text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {t("result.gallery.addPhoto")}
+                    </button>
                     {displayData?.frameUrls && displayData.frameUrls.length > 0 && (
                       <button
                         onClick={handleDownloadImages}
@@ -2417,49 +2547,32 @@ function ResultContent() {
           </div>
         </div>
       )}
-      {/* 갤러리 드로어 (하단 슬라이드업) */}
+      {/* 섹션 사진 추가용 숨김 파일 입력 */}
+      <input
+        ref={sectionFileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleSectionFileUpload(file);
+          e.target.value = "";
+        }}
+      />
+      {/* 비디오 타임라인 (CapCut 스타일) */}
       {galleryOpen && galleryUrls.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-[60] bg-white border-t border-gray-200 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] rounded-t-2xl max-h-[50vh] flex flex-col">
-          {/* 헤더 */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
-            <h3 className="font-bold text-gray-900">{t("result.gallery.title")}</h3>
-            <button
-              onClick={() => { setGalleryOpen(false); setInsertAfterIdx(null); }}
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          {/* 프레임 그리드 */}
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-              {galleryUrls.map((gUrl, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleInsertFrame(gUrl)}
-                  className="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-[#4F46E5] hover:shadow-md transition-all"
-                >
-                  <img
-                    src={gUrl}
-                    className="w-full aspect-video object-cover"
-                    loading="lazy"
-                    alt={`${i}s`}
-                  />
-                  <span className="absolute bottom-0.5 right-1 text-[10px] text-white bg-black/50 px-1 rounded">
-                    {i}s
-                  </span>
-                  <div className="absolute inset-0 bg-[#4F46E5]/0 group-hover:bg-[#4F46E5]/10 transition-colors flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <VideoTimeline
+          frameUrls={galleryUrls}
+          videoDuration={videoDuration}
+          onSelectFrame={handleInsertFrame}
+          onClose={() => {
+            setGalleryOpen(false);
+            setInsertAfterIdx(null);
+          }}
+          onUploadFromDevice={() => {
+            sectionFileRef.current?.click();
+          }}
+        />
       )}
 
       {/* 요금제 모달 */}

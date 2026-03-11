@@ -330,8 +330,14 @@
     "gallery": {
       "title": "영상에서 사진 선택",
       "addPhoto": "+ 사진 추가",
+      "uploadFromDevice": "내 사진 올리기",
+      "uploadDuringConversion": "블로그에 넣고 싶은 사진이 있나요?",
+      "uploadHint": "클릭 또는 드래그하여 사진 추가",
       "close": "닫기",
-      "timestamp": "{{seconds}}초"
+      "timestamp": "{{seconds}}초",
+      "addToBlog": "블로그에 추가",
+      "scrubHint": "좌우로 드래그하여 원하는 순간을 찾아보세요",
+      "timelineReady": "영상 타임라인에서 사진을 골라보세요"
     }
   },
   "dashboard": {

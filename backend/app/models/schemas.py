@@ -79,6 +79,7 @@ class ConvertResponse(BaseModel):
     study_structure: Optional["StudyStructure"] = None
     frame_urls: List[str] = []
     gallery_frame_urls: List[str] = []
+    video_duration: Optional[float] = None
     error: Optional[str] = None
 
 

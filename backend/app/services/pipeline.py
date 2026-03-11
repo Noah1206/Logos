@@ -16,11 +16,11 @@ from .stt_service import transcribe_audio
 from .vision_analyzer import analyze_frames
 from .blog_writer import write_blog
 
-# progress_callback 타입: (progress: int, message: str) -> None
-ProgressCallback = Callable[[int, str], Awaitable[None]]
+# progress_callback 타입: (progress: int, message: str, data: Optional[dict]) -> None
+ProgressCallback = Callable[[int, str, Optional[dict]], Awaitable[None]]
 
 
-async def _noop_progress(progress: int, message: str) -> None:
+async def _noop_progress(progress: int, message: str, data: Optional[dict] = None) -> None:
     pass
 
 
@@ -41,13 +41,17 @@ async def run_conversion_pipeline(
     emit = progress_callback or _noop_progress
 
     try:
+        # emit wrapper: data 파라미터 지원
+        async def _emit(progress: int, message: str, data: Optional[dict] = None) -> None:
+            await emit(progress, message, data)
+
         # Step 1: 콘텐츠 다운로드
-        await emit(5, "링크를 분석하고 있어요")
+        await _emit(5, "링크를 분석하고 있어요")
         platform, video_id = detect_platform(url)
         is_feed = bool(re.search(r'instagram\.com/p/', url))
         print(f"[Pipeline] 플랫폼 감지: {platform.value}, ID: {video_id}")
 
-        await emit(10, "게시물을 가져오고 있어요" if is_feed else "영상을 다운로드하고 있어요")
+        await _emit(10, "게시물을 가져오고 있어요" if is_feed else "영상을 다운로드하고 있어요")
         print("[Pipeline] 콘텐츠 다운로드 중...")
         content_path, video_info = await download_video(url)
         video_path = content_path  # cleanup용
@@ -56,26 +60,26 @@ async def run_conversion_pipeline(
             print(f"[Pipeline] 제목: {video_info.title}")
         if video_info.description:
             print(f"[Pipeline] 설명: {video_info.description[:100]}...")
-        await emit(30, "이미지를 분석 중이에요" if is_feed else "다운로드 완료! 콘텐츠를 분석 중이에요")
+        await _emit(30, "이미지를 분석 중이에요" if is_feed else "다운로드 완료! 콘텐츠를 분석 중이에요")
 
         dense_frame_paths: list = []
 
         if video_info.content_type == "image":
             # === 이미지 피드 (STT 스킵) ===
-            await emit(35, "이미지를 분석하고 있어요")
+            await _emit(35, "이미지를 분석하고 있어요")
             print("[Pipeline] 이미지 피드 감지 → Vision 분석만 수행")
             transcript = ""
             image_paths = get_downloaded_images(content_path)
             image_paths = await convert_images_to_jpg(image_paths)
             print(f"[Pipeline] 이미지 {len(image_paths)}장 수집")
-            await emit(45, "이미지에서 텍스트와 정보를 추출 중이에요")
+            await _emit(45, "이미지에서 텍스트와 정보를 추출 중이에요")
             frame_analyses, screen_text = await analyze_frames(image_paths)
             frame_paths = image_paths
             print(f"[Pipeline] 화면 분석: {len(frame_analyses)}개, 텍스트: {len(screen_text)}자")
-            await emit(65, "이미지 분석 완료!")
+            await _emit(65, "이미지 분석 완료!")
         else:
             # === 비디오 (기존 그대로) ===
-            await emit(35, "오디오와 프레임을 추출하고 있어요")
+            await _emit(35, "오디오와 프레임을 추출하고 있어요")
             print("[Pipeline] 오디오/프레임 추출 중...")
             audio_path, frame_paths, dense_frame_paths = await asyncio.gather(
                 extract_audio_from_video(content_path),
@@ -84,7 +88,7 @@ async def run_conversion_pipeline(
             )
             print(f"[Pipeline] 오디오: {audio_path}, 프레임: {len(frame_paths)}장, 갤러리: {len(dense_frame_paths)}장")
 
-            await emit(50, "음성을 텍스트로 변환하고 있어요")
+            await _emit(50, "음성을 텍스트로 변환하고 있어요")
             print("[Pipeline] 음성 인식 + 화면 분석 중...")
             transcript, (frame_analyses, screen_text) = await asyncio.gather(
                 transcribe_audio(audio_path),
@@ -92,7 +96,7 @@ async def run_conversion_pipeline(
             )
             print(f"[Pipeline] 음성: {len(transcript)}자, 화면: {len(screen_text)}자")
             print(f"[Pipeline] 프레임 분석: {len(frame_analyses)}개")
-            await emit(65, "음성 인식 + 화면 분석 완료!")
+            await _emit(65, "음성 인식 + 화면 분석 완료!")
 
         if transcript:
             print(f"[Pipeline] 스크립트:\n{transcript[:200]}...")
@@ -111,6 +115,11 @@ async def run_conversion_pipeline(
         if video_info.content_type != "image" and dense_frame_paths:
             gallery_frame_urls = persist_frames(dense_frame_paths, job_id, prefix="gallery")
             print(f"[Pipeline] 갤러리 프레임 {len(gallery_frame_urls)}장 저장 완료")
+            # 프레임 준비 완료 — 조기 전송 (로딩 중 타임라인 접근 가능)
+            await _emit(66, "프레임 준비 완료!", {
+                "gallery_frame_urls": gallery_frame_urls,
+                "video_duration": video_info.duration,
+            })
 
         # Step 3.6: 컨텐츠 충분성 검증
         has_transcript = len(transcript.strip()) >= 15
@@ -137,7 +146,7 @@ async def run_conversion_pipeline(
         print(f"[Pipeline] 블로그용 프레임: {len(frame_desc_list)}개 (quality >= 0.3)")
 
         # Step 4: 블로그 글 생성
-        await emit(70, "SEO 최적화 블로그 글을 작성 중이에요")
+        await _emit(70, "SEO 최적화 블로그 글을 작성 중이에요")
         print("[Pipeline] 블로그 글 생성 중...")
 
         blog_result = await write_blog(
@@ -151,7 +160,7 @@ async def run_conversion_pipeline(
         )
         blog_structure, seo_keywords, blog_content = blog_result
 
-        await emit(95, "블로그 글 작성 완료! 마무리 중이에요")
+        await _emit(95, "블로그 글 작성 완료! 마무리 중이에요")
         print(f"[Pipeline] 블로그 생성 완료: {blog_structure.title}")
         print(f"[Pipeline] 섹션 {len(blog_structure.sections)}개, 해시태그 {len(seo_keywords.hashtags)}개")
 
@@ -173,6 +182,7 @@ async def run_conversion_pipeline(
             blog_structure=blog_structure,
             frame_urls=frame_urls,
             gallery_frame_urls=gallery_frame_urls,
+            video_duration=video_info.duration,
         )
 
     except Exception as e:
@@ -212,7 +222,7 @@ async def run_study_pipeline(
         transcript = ""
 
         if mode == "pdf":
-            await emit(10, "PDF에서 학습 자료를 읽고 있어요")
+            await _emit(10, "PDF에서 학습 자료를 읽고 있어요")
 
             if pdf_text:
                 text = pdf_text
@@ -230,11 +240,11 @@ async def run_study_pipeline(
             await emit(5, "영상 내용을 파악하고 있어요")
             platform, video_id = detect_platform(url)
 
-            await emit(10, "학습할 영상을 가져오고 있어요")
+            await _emit(10, "학습할 영상을 가져오고 있어요")
             content_path, video_info = await download_video(url)
             video_path = content_path
 
-            await emit(30, "영상에서 핵심 내용을 추출하고 있어요")
+            await _emit(30, "영상에서 핵심 내용을 추출하고 있어요")
             audio_path = await extract_audio_from_video(content_path)
 
             await emit(40, "강의 내용을 텍스트로 정리하고 있어요")
@@ -258,10 +268,10 @@ async def run_study_pipeline(
             return StudyResponse(success=False, error=f"지원하지 않는 모드: {mode}")
 
         # 학습 노트 생성
-        await emit(65, "핵심 개념과 연습 문제를 만들고 있어요")
+        await _emit(65, "핵심 개념과 연습 문제를 만들고 있어요")
         study_structure, study_content = await write_study_notes(text)
 
-        await emit(95, "학습 노트가 완성됐어요!")
+        await _emit(95, "학습 노트가 완성됐어요!")
 
         return StudyResponse(
             success=True,

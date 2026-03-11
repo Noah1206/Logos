@@ -58,8 +58,11 @@ async def convert_video_stream(request: ConvertRequest):
     """
     progress_queue: asyncio.Queue = asyncio.Queue()
 
-    async def progress_callback(progress: int, message: str):
-        await progress_queue.put({"progress": progress, "message": message})
+    async def progress_callback(progress: int, message: str, data: dict = None):
+        event = {"progress": progress, "message": message}
+        if data:
+            event.update(data)
+        await progress_queue.put(event)
 
     async def event_generator():
         # 파이프라인을 백그라운드로 실행
@@ -261,8 +264,11 @@ async def study_stream(request: StudyRequest):
     """Study 모드 SSE 스트리밍"""
     progress_queue: asyncio.Queue = asyncio.Queue()
 
-    async def progress_callback(progress: int, message: str):
-        await progress_queue.put({"progress": progress, "message": message})
+    async def progress_callback(progress: int, message: str, data: dict = None):
+        event = {"progress": progress, "message": message}
+        if data:
+            event.update(data)
+        await progress_queue.put(event)
 
     async def event_generator():
         task = asyncio.create_task(
