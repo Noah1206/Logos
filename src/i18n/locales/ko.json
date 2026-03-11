@@ -85,13 +85,33 @@
     "styleEnergetic": "활기",
     "styleInformative": "정보"
   },
-  "steps": {
-    "step1": "STEP 1.",
-    "step1Desc": "관심있는 릴스 찾기",
-    "step2": "STEP 2.",
-    "step2Desc": "영상 링크 복사하기",
-    "step3": "STEP 3.",
-    "step3Desc": "링크 붙여넣기"
+  "features": {
+    "label": "Features",
+    "title": "이렇게 활용하세요",
+    "subtitle": "영상, 피드, PDF — 어떤 콘텐츠든 AI가 가치있는 글로 변환합니다",
+    "tabs": {
+      "blog": "블로그 변환",
+      "study": "학습 노트",
+      "feed": "인스타 피드"
+    },
+    "blog": {
+      "leftTitle": "영상 하나로 블로그 포스팅 완성",
+      "leftDesc": "유튜브 쇼츠, 인스타 릴스 링크만 넣으면 네이버 SEO에 최적화된 블로그 글이 자동 생성됩니다.",
+      "rightTitle": "네이버 블로그 최적화",
+      "rightDesc": "소제목, 이모지, 해시태그까지 — 상위 노출에 최적화된 포맷을 자동으로 만들어줍니다."
+    },
+    "study": {
+      "leftTitle": "영상·PDF를 학습 노트로",
+      "leftDesc": "유튜브 영상이나 PDF를 넣으면 핵심 개념, 상세 요약, 연습 문제가 포함된 학습 노트를 생성합니다.",
+      "rightTitle": "AI 기반 스마트 학습",
+      "rightDesc": "중요도별 개념 분류, 맞춤형 연습 문제로 효율적인 학습을 지원합니다."
+    },
+    "feed": {
+      "leftTitle": "인스타 피드를 블로그 글로",
+      "leftDesc": "인스타 사진 게시물 링크만 넣으면 이미지와 캡션을 분석해 SEO 블로그 글로 변환합니다.",
+      "rightTitle": "SEO 최적화 결과",
+      "rightDesc": "사진 1장부터 캐러셀까지, 텍스트 없는 이미지도 AI가 분석해 검색 최적화 글을 작성합니다."
+    }
   },
   "problem": {
     "sectionLabel": "Problem",

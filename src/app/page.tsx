@@ -21,6 +21,7 @@ export default function Home() {
   const [studyUrl, setStudyUrl] = useState("");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfUploading, setPdfUploading] = useState(false);
+  const [activeFeatureTab, setActiveFeatureTab] = useState<"blog" | "study" | "feed">("blog");
 
   // Onboarding path selector
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -761,45 +762,264 @@ export default function Home() {
             )}
           </div>
 
-          {/* Reels Preview Images - 3 Steps (video-to-blog 모드에서만 표시) */}
-          {mode === "video-to-blog" && (
-            <>
-              <div className="flex justify-center items-center gap-14 mb-10">
-                <div className="flex flex-col items-center animate-fade-in-up" style={{ animationDelay: '0ms' }}>
-                  <p className="text-lg text-gray-600 mb-4 whitespace-nowrap">
-                    <span className="font-semibold text-gray-900">{t("steps.step1")}</span> {t("steps.step1Desc")}
-                  </p>
-                  <img
-                    src="/images/reels-1.png"
-                    alt="관심있는 릴스 찾기"
-                    className="w-60 h-[520px] object-cover rounded-2xl shadow-2xl hover:scale-105 hover:-translate-y-2 transition-all duration-300"
-                  />
+          {/* Feature Showcase */}
+          <div className="mt-20 mb-10">
+            {/* Section Header */}
+            <div className="text-center mb-10">
+              <span className="text-sm font-semibold text-[#4F46E5] tracking-wider uppercase">{t("features.label")}</span>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mt-3 mb-4">{t("features.title")}</h2>
+              <p className="text-sm md:text-base text-gray-500 max-w-xl mx-auto">{t("features.subtitle")}</p>
+            </div>
+
+            {/* Pill Tabs */}
+            <div className="flex justify-center mb-12">
+              <div className="inline-flex bg-gray-100 rounded-full p-1 gap-1">
+                {(["blog", "study", "feed"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveFeatureTab(tab)}
+                    className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                      activeFeatureTab === tab
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    {t(`features.tabs.${tab}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Feature Cards - 2 columns */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+              {/* Left Card - Lime/Green accent mockup */}
+              <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-[#f0fdf4] p-6 min-h-[280px] flex items-center justify-center">
+                  {activeFeatureTab === "blog" && (
+                    <div className="w-full max-w-[320px] space-y-3">
+                      {/* URL Input Mock */}
+                      <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-5 h-5 rounded bg-red-100 flex items-center justify-center">
+                            <svg className="w-3 h-3 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/></svg>
+                          </div>
+                          <span className="text-[11px] text-gray-400 truncate">youtube.com/shorts/xK2d9f...</span>
+                        </div>
+                        <div className="h-1 bg-[#4F46E5] rounded-full w-2/3" />
+                      </div>
+                      {/* Arrow */}
+                      <div className="flex justify-center">
+                        <div className="w-8 h-8 rounded-full bg-[#4F46E5] flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                        </div>
+                      </div>
+                      {/* Blog Output Mock */}
+                      <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <span className="px-1.5 py-0.5 bg-[#EEF2FF] text-[#4F46E5] text-[9px] font-bold rounded">SEO</span>
+                          <span className="px-1.5 py-0.5 bg-green-50 text-green-600 text-[9px] font-bold rounded">Done</span>
+                        </div>
+                        <div className="text-[10px] font-bold text-gray-800 mb-1">[강남 맛집] 웨이팅 없이 즐기는 오마카세</div>
+                        <div className="space-y-1">
+                          <div className="h-1.5 bg-gray-100 rounded-full w-full" />
+                          <div className="h-1.5 bg-gray-100 rounded-full w-4/5" />
+                          <div className="h-1.5 bg-gray-100 rounded-full w-3/5" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {activeFeatureTab === "study" && (
+                    <div className="w-full max-w-[320px] space-y-3">
+                      {/* Study Note Mock */}
+                      <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <span className="px-1.5 py-0.5 bg-purple-50 text-purple-600 text-[9px] font-bold rounded">AI</span>
+                          <span className="text-[10px] font-medium text-gray-700">Executive Summary</span>
+                        </div>
+                        <div className="space-y-1 mb-3">
+                          <div className="h-1.5 bg-gray-100 rounded-full w-full" />
+                          <div className="h-1.5 bg-gray-100 rounded-full w-4/5" />
+                        </div>
+                        <div className="text-[10px] font-medium text-gray-700 mb-1.5">Key Concepts</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          <span className="px-2 py-0.5 bg-red-50 text-red-600 text-[9px] rounded-full">High</span>
+                          <span className="px-2 py-0.5 bg-yellow-50 text-yellow-600 text-[9px] rounded-full">Medium</span>
+                          <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] rounded-full">Low</span>
+                        </div>
+                      </div>
+                      {/* Practice Questions Mock */}
+                      <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+                        <div className="text-[10px] font-medium text-gray-700 mb-1.5">Practice Questions</div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-start gap-1.5">
+                            <span className="text-[9px] text-[#4F46E5] font-bold mt-0.5">Q1</span>
+                            <div className="h-1.5 bg-gray-100 rounded-full w-full mt-1" />
+                          </div>
+                          <div className="flex items-start gap-1.5">
+                            <span className="text-[9px] text-[#4F46E5] font-bold mt-0.5">Q2</span>
+                            <div className="h-1.5 bg-gray-100 rounded-full w-4/5 mt-1" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {activeFeatureTab === "feed" && (
+                    <div className="w-full max-w-[320px] space-y-3">
+                      {/* Instagram Feed Mock */}
+                      <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400" />
+                          <span className="text-[10px] font-medium text-gray-700">@my_business</span>
+                        </div>
+                        <div className="aspect-square bg-gradient-to-br from-pink-50 to-orange-50 rounded-lg flex items-center justify-center mb-2">
+                          <span className="text-3xl">📸</span>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="h-1.5 bg-gray-100 rounded-full w-full" />
+                          <div className="h-1.5 bg-gray-100 rounded-full w-3/5" />
+                        </div>
+                      </div>
+                      {/* Arrow */}
+                      <div className="flex justify-center">
+                        <div className="w-8 h-8 rounded-full bg-[#4F46E5] flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                        </div>
+                      </div>
+                      {/* Blog Output */}
+                      <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <span className="px-1.5 py-0.5 bg-[#EEF2FF] text-[#4F46E5] text-[9px] font-bold rounded">SEO</span>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="h-1.5 bg-gray-100 rounded-full w-full" />
+                          <div className="h-1.5 bg-gray-100 rounded-full w-4/5" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="text-gray-300 text-5xl animate-pulse">→</div>
-                <div className="flex flex-col items-center animate-fade-in-up" style={{ animationDelay: '150ms' }}>
-                  <p className="text-lg text-gray-600 mb-4 whitespace-nowrap">
-                    <span className="font-semibold text-gray-900">{t("steps.step2")}</span> {t("steps.step2Desc")}
-                  </p>
-                  <img
-                    src="/images/reels-2.png"
-                    alt="영상 링크 복사"
-                    className="w-60 h-[520px] object-cover rounded-2xl shadow-2xl hover:scale-105 hover:-translate-y-2 transition-all duration-300"
-                  />
+                <div className="p-5 border-t border-gray-100">
+                  <h3 className="font-bold text-gray-900 text-[15px] mb-1">{t(`features.${activeFeatureTab}.leftTitle`)}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{t(`features.${activeFeatureTab}.leftDesc`)}</p>
                 </div>
               </div>
-              <div className="flex flex-col items-center mb-16 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-                <div className="text-gray-300 text-5xl animate-pulse mb-6">↓</div>
-                <p className="text-lg text-gray-600 mb-4 whitespace-nowrap">
-                  <span className="font-semibold text-[#4F46E5]">{t("steps.step3")}</span> {t("steps.step3Desc")}
-                </p>
-                <img
-                  src="/images/step3-screenshot.png"
-                  alt="LOGOS.ai에서 링크 붙여넣기"
-                  className="w-full max-w-3xl h-auto object-contain rounded-2xl shadow-2xl border border-gray-200 hover:scale-[1.02] transition-all duration-300"
-                />
+
+              {/* Right Card - White background preview */}
+              <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-gray-50 p-6 min-h-[280px] flex items-center justify-center">
+                  {activeFeatureTab === "blog" && (
+                    <div className="w-full max-w-[300px]">
+                      {/* Naver Blog Preview Mini */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div className="text-center pt-3">
+                          <span className="text-[9px] text-[#08a600]">강남맛보기</span>
+                        </div>
+                        <h4 className="text-center text-[12px] font-bold text-gray-900 px-3 pt-1 pb-2 leading-snug">
+                          [강남 맛집 추천] 웨이팅 없이<br />즐기는 프리미엄 오마카세
+                        </h4>
+                        <div className="px-3 pb-2">
+                          <p className="text-[9px] text-gray-600 leading-[1.8] text-center">
+                            안녕하세요 여러분! 😊<br />
+                            오늘은 강남역 근처에서 찾은<br />
+                            <span className="font-semibold text-gray-800">숨겨진 오마카세 맛집</span>을 소개합니다!
+                          </p>
+                        </div>
+                        <div className="px-3 pb-1.5">
+                          <p className="text-[9px] font-bold text-gray-800 mb-1">🍽️ 메뉴 & 가격</p>
+                          <div className="space-y-1">
+                            <div className="h-1 bg-gray-100 rounded-full w-full" />
+                            <div className="h-1 bg-gray-100 rounded-full w-4/5" />
+                          </div>
+                        </div>
+                        <div className="px-3 pb-1.5">
+                          <p className="text-[9px] font-bold text-gray-800 mb-1">📍 위치 & 영업시간</p>
+                          <div className="space-y-1">
+                            <div className="h-1 bg-gray-100 rounded-full w-full" />
+                            <div className="h-1 bg-gray-100 rounded-full w-3/5" />
+                          </div>
+                        </div>
+                        <div className="px-3 pt-1.5 pb-2.5 flex flex-wrap gap-1">
+                          {["#강남맛집", "#오마카세", "#데이트코스"].map((tag) => (
+                            <span key={tag} className="text-[8px] text-[#08a600]">{tag}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {activeFeatureTab === "study" && (
+                    <div className="w-full max-w-[320px] space-y-3">
+                      {/* YouTube to Study Note flow */}
+                      <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/></svg>
+                          <span className="text-[10px] text-gray-500 truncate">30-min lecture video</span>
+                        </div>
+                        <div className="flex justify-center my-1.5">
+                          <svg className="w-4 h-4 text-[#4F46E5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="px-1.5 py-0.5 bg-purple-50 text-purple-600 text-[9px] font-bold rounded">AI</span>
+                          <span className="text-[10px] text-gray-500">5-page study notes</span>
+                        </div>
+                      </div>
+                      {/* PDF to Study Note flow */}
+                      <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          <span className="text-[10px] text-gray-500 truncate">textbook-ch3.pdf</span>
+                        </div>
+                        <div className="flex justify-center my-1.5">
+                          <svg className="w-4 h-4 text-[#4F46E5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="px-1.5 py-0.5 bg-purple-50 text-purple-600 text-[9px] font-bold rounded">AI</span>
+                          <span className="text-[10px] text-gray-500">Concepts + Questions</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {activeFeatureTab === "feed" && (
+                    <div className="w-full max-w-[300px]">
+                      {/* SEO Result Preview */}
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-3">
+                        <div className="flex items-center gap-1.5 mb-3">
+                          <span className="px-1.5 py-0.5 bg-[#EEF2FF] text-[#4F46E5] text-[9px] font-bold rounded">SEO</span>
+                          <span className="px-1.5 py-0.5 bg-green-50 text-green-600 text-[9px] font-bold rounded">98점</span>
+                        </div>
+                        <div className="space-y-2.5">
+                          <div>
+                            <p className="text-[9px] text-gray-400 mb-0.5">Title</p>
+                            <div className="h-1.5 bg-gray-100 rounded-full w-full" />
+                          </div>
+                          <div>
+                            <p className="text-[9px] text-gray-400 mb-0.5">Body</p>
+                            <div className="space-y-1">
+                              <div className="h-1.5 bg-gray-100 rounded-full w-full" />
+                              <div className="h-1.5 bg-gray-100 rounded-full w-4/5" />
+                              <div className="h-1.5 bg-gray-100 rounded-full w-full" />
+                              <div className="h-1.5 bg-gray-100 rounded-full w-3/5" />
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-[9px] text-gray-400 mb-1">Keywords</p>
+                            <div className="flex flex-wrap gap-1">
+                              {["#맛집", "#카페", "#데이트", "#강남"].map((tag) => (
+                                <span key={tag} className="text-[8px] text-[#08a600] bg-green-50 px-1.5 py-0.5 rounded">{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="p-5 border-t border-gray-100">
+                  <h3 className="font-bold text-gray-900 text-[15px] mb-1">{t(`features.${activeFeatureTab}.rightTitle`)}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{t(`features.${activeFeatureTab}.rightDesc`)}</p>
+                </div>
               </div>
-            </>
-          )}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -891,145 +1111,32 @@ export default function Home() {
 
       {/* How It Works Section */}
       <section className="py-20 px-4 bg-white">
-        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-12 lg:gap-20 items-center">
-          {/* Left - Conversion Preview Mock */}
-          <div className="w-full lg:w-[440px] flex-shrink-0">
-            <div className="rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
-              {/* Before: Video Input */}
-              <div className="bg-gray-900 px-5 py-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-2 h-2 rounded-full bg-red-400" />
-                  <div className="w-2 h-2 rounded-full bg-yellow-400" />
-                  <div className="w-2 h-2 rounded-full bg-green-400" />
-                </div>
-                <div className="flex items-center gap-2 bg-gray-800 rounded-lg px-3 py-2.5">
-                  <svg className="w-4 h-4 text-red-400 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/>
-                  </svg>
-                  <span className="text-gray-400 text-sm truncate">youtube.com/shorts/xK2d9f...</span>
-                </div>
-              </div>
-
-              {/* Arrow */}
-              <div className="flex justify-center py-3 bg-gradient-to-b from-gray-900 to-white">
-                <div className="w-10 h-10 rounded-full bg-[#4F46E5] flex items-center justify-center shadow-lg">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* After: Blog Output Preview - Naver Blog Style */}
-              <div className="bg-white px-4 pb-4 pt-2">
-                {/* Service badges */}
-                <div className="flex items-center gap-1.5 mb-2.5">
-                  <span className="px-1.5 py-0.5 bg-[#EEF2FF] text-[#4F46E5] text-[10px] font-bold rounded">SEO</span>
-                  <span className="px-1.5 py-0.5 bg-green-50 text-green-600 text-[10px] font-bold rounded">최적화 완료</span>
-                </div>
-
-                {/* Naver Blog Mini Preview */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-                  {/* Category */}
-                  <div className="text-center pt-3">
-                    <span className="text-[9px] text-[#08a600]">강남맛보기</span>
-                  </div>
-
-                  {/* Title */}
-                  <h4 className="text-center text-[13px] font-bold text-gray-900 px-3 pt-1 pb-2.5 leading-snug">
-                    [강남 맛집 추천] 웨이팅 없이<br />즐기는 프리미엄 오마카세
-                  </h4>
-
-                  {/* Author line */}
-                  <div className="flex items-center justify-between px-3 pb-2.5 border-b border-gray-100">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-4 h-4 rounded-full bg-gray-200" />
-                      <span className="text-[8px] text-gray-600 font-medium">강남구</span>
-                      <span className="text-[8px] text-gray-300">2025. 10. 28. 13:55</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[7px] text-gray-400">URL 복사</span>
-                      <span className="text-[7px] border border-gray-300 rounded px-1.5 py-0.5 text-gray-500">+이웃추가</span>
-                    </div>
-                  </div>
-
-                  {/* Image with orange background */}
-                  <div className="px-3 pt-3">
-                    <div className="bg-gradient-to-br from-orange-300 to-orange-400 rounded-lg p-2.5 relative">
-                      <div className="absolute top-2 left-2 z-10 w-5 h-5 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <div className="bg-white rounded-xl overflow-hidden shadow-sm">
-                        <div className="aspect-[4/3] bg-gradient-to-br from-amber-50 to-orange-50 flex flex-col items-center justify-center">
-                          <span className="text-3xl mb-1">🍣</span>
-                          <span className="text-[8px] text-gray-300">이미지 영역</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Blog content */}
-                  <div className="px-3 pt-3 pb-1">
-                    <p className="text-[10px] text-gray-600 leading-[1.8] text-center">
-                      안녕하세요 여러분! 😊<br />
-                      오늘은 강남역 근처에서 찾은<br />
-                      <span className="font-semibold text-gray-800">숨겨진 오마카세 맛집</span>을 소개합니다!
-                    </p>
-                  </div>
-
-                  {/* Subheading section */}
-                  <div className="px-3 pt-2 pb-1">
-                    <p className="text-[10px] font-bold text-gray-800 mb-1">🍽️ 메뉴 & 가격</p>
-                    <div className="space-y-1.5">
-                      <div className="h-1.5 bg-gray-100 rounded-full w-full" />
-                      <div className="h-1.5 bg-gray-100 rounded-full w-4/5" />
-                    </div>
-                  </div>
-
-                  <div className="px-3 pt-2 pb-1">
-                    <p className="text-[10px] font-bold text-gray-800 mb-1">📍 위치 & 영업시간</p>
-                    <div className="space-y-1.5">
-                      <div className="h-1.5 bg-gray-100 rounded-full w-full" />
-                      <div className="h-1.5 bg-gray-100 rounded-full w-3/5" />
-                    </div>
-                  </div>
-
-                  {/* Hashtags - Naver green style */}
-                  <div className="px-3 pt-2.5 pb-3 flex flex-wrap gap-1.5">
-                    {["#강남맛집", "#오마카세", "#데이트코스", "#강남역맛집"].map((tag) => (
-                      <span key={tag} className="text-[9px] text-[#08a600]">{tag}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right - Value Props */}
-          <div className="flex-1">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-14">
             <p className="text-sm font-semibold text-[#4F46E5] mb-4">{t("howItWorks.whyLogos")}</p>
-            <h2 className="text-3xl md:text-[38px] font-extrabold text-gray-900 leading-[1.25] mb-14 whitespace-pre-line">
+            <h2 className="text-3xl md:text-[38px] font-extrabold text-gray-900 leading-[1.25] whitespace-pre-line">
               {t("howItWorks.title")}
             </h2>
+          </div>
 
-            <div className="space-y-8">
-              {([0, 1, 2, 3, 4] as const).map((idx) => ({
-                num: t(`howItWorks.items.${idx}.num`),
-                title: t(`howItWorks.items.${idx}.title`),
-                desc: t(`howItWorks.items.${idx}.desc`),
-              })).map((item) => (
-                <div key={item.num} className="flex gap-5 group">
-                  <span className="text-2xl font-extrabold text-gray-200 group-hover:text-[#4F46E5] transition-colors mt-0.5 font-[var(--font-poppins)]">
-                    {item.num}
-                  </span>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">{item.title}</h3>
-                    <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
-                  </div>
+          {/* Value Props - full width centered */}
+          <div className="space-y-8 max-w-2xl mx-auto">
+            {([0, 1, 2, 3, 4] as const).map((idx) => ({
+              num: t(`howItWorks.items.${idx}.num`),
+              title: t(`howItWorks.items.${idx}.title`),
+              desc: t(`howItWorks.items.${idx}.desc`),
+            })).map((item) => (
+              <div key={item.num} className="flex gap-5 group">
+                <span className="text-2xl font-extrabold text-gray-200 group-hover:text-[#4F46E5] transition-colors mt-0.5 font-[var(--font-poppins)]">
+                  {item.num}
+                </span>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">{item.title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

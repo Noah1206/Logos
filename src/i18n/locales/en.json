@@ -85,13 +85,33 @@
     "styleEnergetic": "Energy",
     "styleInformative": "Info"
   },
-  "steps": {
-    "step1": "STEP 1.",
-    "step1Desc": "Find an interesting Reel",
-    "step2": "STEP 2.",
-    "step2Desc": "Copy the video link",
-    "step3": "STEP 3.",
-    "step3Desc": "Paste the link"
+  "features": {
+    "label": "Features",
+    "title": "See what you can do",
+    "subtitle": "Videos, feeds, PDFs — AI transforms any content into valuable blog posts",
+    "tabs": {
+      "blog": "Blog Conversion",
+      "study": "Study Notes",
+      "feed": "Instagram Feed"
+    },
+    "blog": {
+      "leftTitle": "One video, one complete blog post",
+      "leftDesc": "Paste a YouTube Shorts or Instagram Reels link and get an SEO-optimized Naver blog post automatically.",
+      "rightTitle": "Naver Blog Optimized",
+      "rightDesc": "Subheadings, emojis, hashtags — auto-generates a format optimized for top search rankings."
+    },
+    "study": {
+      "leftTitle": "Video & PDF to study notes",
+      "leftDesc": "Upload a YouTube video or PDF and get study notes with key concepts, detailed summaries, and practice questions.",
+      "rightTitle": "AI-Powered Smart Learning",
+      "rightDesc": "Concepts sorted by importance with custom practice questions for efficient learning."
+    },
+    "feed": {
+      "leftTitle": "Instagram feed to blog post",
+      "leftDesc": "Paste an Instagram photo post link and AI analyzes images and captions to create an SEO blog post.",
+      "rightTitle": "SEO-Optimized Results",
+      "rightDesc": "Single photos to carousels, even image-only posts — AI analyzes and writes search-optimized content."
+    }
   },
   "problem": {
     "sectionLabel": "Problem",
