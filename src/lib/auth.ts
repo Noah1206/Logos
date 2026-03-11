@@ -5,6 +5,7 @@ import Naver from "next-auth/providers/naver";
 import { prisma } from "./prisma";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   adapter: PrismaAdapter(prisma),
   providers: [
     Kakao({
