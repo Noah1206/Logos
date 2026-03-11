@@ -574,17 +574,24 @@ def _parse_netscape_cookies(cookies_path: str) -> list[dict]:
                 parts = line.split("\t")
                 if len(parts) < 7:
                     continue
-                domain, _, path, secure, expires, name, value = parts[:7]
+                domain, http_only_flag, path, secure, expires, name, value = parts[:7]
                 if "instagram.com" not in domain:
                     continue
-                cookies.append({
+                cookie: dict = {
                     "name": name,
                     "value": value,
-                    "domain": domain.lstrip("."),
+                    "domain": domain if domain.startswith(".") else f".{domain}",
                     "path": path,
                     "secure": secure.upper() == "TRUE",
-                    "httpOnly": False,
-                })
+                    "httpOnly": http_only_flag.upper() == "TRUE",
+                }
+                try:
+                    exp = int(expires)
+                    if exp > 0:
+                        cookie["expires"] = exp
+                except ValueError:
+                    pass
+                cookies.append(cookie)
     except Exception:
         pass
     return cookies
