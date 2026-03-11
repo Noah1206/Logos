@@ -472,7 +472,7 @@ export default function Home() {
                 )}
               </nav>
               <LanguageToggle />
-              {user && (
+              {user ? (
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-600 hidden sm:block">
                     {user.name || user.email?.split("@")[0]}
@@ -487,6 +487,13 @@ export default function Home() {
                     {t("common.logout")}
                   </button>
                 </div>
+              ) : (
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="px-4 py-2 text-sm font-medium text-white bg-[#4F46E5] rounded-full hover:bg-[#4338CA] transition-colors"
+                >
+                  {t("common.login")}
+                </button>
               )}
             </div>
           </div>
