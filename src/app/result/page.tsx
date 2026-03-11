@@ -526,10 +526,11 @@ function ResultContent() {
   };
 
   const requireAuth = (action: () => void) => {
-    if (!user) {
-      setShowLoginModal(true);
-      return;
-    }
+    // 임시 비활성화 — 무료 테스트 기간
+    // if (!user) {
+    //   setShowLoginModal(true);
+    //   return;
+    // }
     action();
   };
 
@@ -967,10 +968,6 @@ function ResultContent() {
                 }
                 setResultData(mapped);
                 setEditedData(JSON.parse(JSON.stringify(mapped)));
-                // 학습 노트 저장
-                if (event.result.study_structure) {
-                  setBlogStudyStructure(event.result.study_structure);
-                }
                 // 갤러리 프레임 URL 설정
                 if (event.result.gallery_frame_urls?.length) {
                   setGalleryUrls(event.result.gallery_frame_urls);

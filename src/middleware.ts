@@ -7,15 +7,15 @@ import { NextRequest, NextResponse } from "next/server";
 const SESSION_COOKIE = "authjs.session-token";
 const SECURE_SESSION_COOKIE = "__Secure-authjs.session-token";
 
-// 인증이 필요한 페이지 경로
-const protectedPages = ["/result", "/dashboard", "/tone", "/study"];
+// 인증이 필요한 페이지 경로 (임시 비활성화 — 무료 테스트 기간)
+const protectedPages = ["/dashboard"];  // "/result", "/tone", "/study" 임시 제거
 
-// 인증이 필요한 API 경로 (webhook은 제외)
+// 인증이 필요한 API 경로 (임시 비활성화 — 무료 테스트 기간)
 const protectedApi = [
-  "/api/convert",
+  // "/api/convert",       // 임시 제거
   "/api/conversions",
   "/api/knowledge",
-  "/api/study",
+  // "/api/study",         // 임시 제거
   "/api/think",
   "/api/generate-video",
   "/api/payment/request",

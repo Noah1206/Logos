@@ -96,10 +96,10 @@ export default function Home() {
   const handleConvert = async () => {
     if (isConverting) return;
 
-    if (!user) {
-      setShowLoginModal(true);
-      return;
-    }
+    // if (!user) {
+    //   setShowLoginModal(true);
+    //   return;
+    // }
 
     if (mode === "study") {
       // Study 모드: PDF 또는 YouTube URL
