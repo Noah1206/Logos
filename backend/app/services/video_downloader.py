@@ -160,8 +160,13 @@ async def _download_instagram_via_playwright(url: str, temp_dir: str, temp_id: s
                     print(f"[Playwright] video segment: {len(body)/1024:.1f}KB (총 {len(video_parts)}개)")
             elif any(x in content_type for x in ["image/jpeg", "image/webp"]):
                 if "scontent" in response.url:
+                    # 프로필/썸네일 사이즈 패턴 제외
+                    skip_patterns = ["/s150x150/", "/s44x44/", "/s32x32/", "/s64x64/", "/s128x128/"]
+                    if any(p in response.url for p in skip_patterns):
+                        return
                     body = await response.body()
-                    if len(body) > best_image["size"]:
+                    # 최소 50KB 이상만 (프로필 사진은 보통 < 20KB)
+                    if len(body) > 51200 and len(body) > best_image["size"]:
                         best_image["data"] = body
                         best_image["size"] = len(body)
         except Exception:
@@ -238,15 +243,22 @@ async def _download_instagram_via_playwright(url: str, temp_dir: str, temp_id: s
 
             await page.wait_for_timeout(2000)
 
-            # DOM에서 게시물 이미지 추출 (캐러셀 포함 - 모든 이미지)
+            # DOM에서 게시물 이미지 추출 (캐러셀 포함 - 프로필/추천 필터링)
             dom_image_urls = await page.evaluate("""
                 () => {
                     const urls = [];
                     const seen = new Set();
+                    const skipSizes = ['/s150x150/', '/s44x44/', '/s32x32/', '/s64x64/', '/s128x128/'];
                     const article = document.querySelector('article');
                     if (!article) return urls;
                     const imgs = article.querySelectorAll('img[srcset], img[src*="scontent"]');
                     for (const img of imgs) {
+                        // 작은 이미지 제외 (프로필 사진 등)
+                        if (img.naturalWidth > 0 && img.naturalWidth < 200) continue;
+                        if (img.naturalHeight > 0 && img.naturalHeight < 200) continue;
+                        // alt 텍스트로 프로필 사진 제외
+                        const alt = (img.alt || '').toLowerCase();
+                        if (alt.includes('profile') || alt.includes('프로필')) continue;
                         let url = null;
                         if (img.srcset) {
                             const parts = img.srcset.split(',');
@@ -254,6 +266,8 @@ async def _download_instagram_via_playwright(url: str, temp_dir: str, temp_id: s
                             if (last) url = last;
                         }
                         if (!url) url = img.src;
+                        // 프로필 썸네일 URL 패턴 제외
+                        if (url && skipSizes.some(s => url.includes(s))) continue;
                         if (url && !seen.has(url) && url.includes('scontent')) {
                             seen.add(url);
                             urls.push(url);
@@ -275,10 +289,15 @@ async def _download_instagram_via_playwright(url: str, temp_dir: str, temp_id: s
                         new_urls = await page.evaluate("""
                             () => {
                                 const urls = [];
+                                const skipSizes = ['/s150x150/', '/s44x44/', '/s32x32/', '/s64x64/', '/s128x128/'];
                                 const article = document.querySelector('article');
                                 if (!article) return urls;
                                 const imgs = article.querySelectorAll('img[srcset], img[src*="scontent"]');
                                 for (const img of imgs) {
+                                    if (img.naturalWidth > 0 && img.naturalWidth < 200) continue;
+                                    if (img.naturalHeight > 0 && img.naturalHeight < 200) continue;
+                                    const alt = (img.alt || '').toLowerCase();
+                                    if (alt.includes('profile') || alt.includes('프로필')) continue;
                                     let url = null;
                                     if (img.srcset) {
                                         const parts = img.srcset.split(',');
@@ -286,6 +305,7 @@ async def _download_instagram_via_playwright(url: str, temp_dir: str, temp_id: s
                                         if (last) url = last;
                                     }
                                     if (!url) url = img.src;
+                                    if (url && skipSizes.some(s => url.includes(s))) continue;
                                     if (url && url.includes('scontent')) urls.push(url);
                                 }
                                 return urls;

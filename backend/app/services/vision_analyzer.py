@@ -12,11 +12,12 @@ from ..core.config import get_settings
 settings = get_settings()
 
 VISION_PROMPT = """이 이미지들은 하나의 짧은 영상(쇼츠/릴스)에서 추출한 프레임입니다.
-각 프레임을 개별적으로 분석해서 JSON으로 응답해주세요.
+각 프레임을 개별적으로 분석하고, 전체 영상 흐름도 요약해서 JSON으로 응답해주세요.
 
 분석 항목 (프레임별):
 1. description: 프레임에 보이는 핵심 내용 한 줄 묘사 (한국어)
-2. screen_text: 화면에 보이는 텍스트 목록 (자막, 캡션, 상호명, 메뉴판, 가격표, 설명 텍스트)
+2. screen_text: 화면에 보이는 모든 텍스트 목록 (자막, 캡션, 상호명, 메뉴판, 가격표, 설명 텍스트, 텍스트 오버레이)
+   ⚠️ 특히 자막/텍스트 오버레이를 꼼꼼히 읽어주세요! 영상의 핵심 내용이 담겨 있습니다.
 3. category: 아래 중 하나 선택
    - food: 음식, 메뉴, 요리
    - exterior: 매장/건물 외관, 간판
@@ -47,7 +48,8 @@ VISION_PROMPT = """이 이미지들은 하나의 짧은 영상(쇼츠/릴스)에
       "category": "food",
       "quality_score": 0.8
     }
-  ]
+  ],
+  "narrative_summary": "전체 프레임을 연결해서 본 영상의 흐름/스토리를 2-3문장으로 요약 (한국어)"
 }
 """
 
@@ -79,7 +81,7 @@ async def analyze_frames(frame_paths: List[str]) -> Tuple[List[FrameAnalysis], s
                 "type": "image_url",
                 "image_url": {
                     "url": f"data:image/jpeg;base64,{b64}",
-                    "detail": "low"  # 비용 절감
+                    "detail": "auto"  # 자막/텍스트 정확도 향상
                 }
             })
         except Exception as e:
@@ -98,7 +100,7 @@ async def analyze_frames(frame_paths: List[str]) -> Tuple[List[FrameAnalysis], s
             }
         ],
         response_format={"type": "json_object"},
-        max_tokens=1500
+        max_tokens=2500
     )
 
     raw = response.choices[0].message.content
@@ -135,6 +137,12 @@ async def analyze_frames(frame_paths: List[str]) -> Tuple[List[FrameAnalysis], s
             parts.append("[화면 텍스트]\n" + "\n".join(f"- {t}" for t in all_texts))
         if all_descriptions:
             parts.append("[영상 내용]\n" + "\n".join(f"- {d}" for d in all_descriptions))
+
+        # narrative_summary: 전체 영상 흐름 요약
+        narrative = data.get("narrative_summary", "")
+        if narrative:
+            parts.append(f"[영상 흐름 요약]\n{narrative}")
+
         combined_text = "\n\n".join(parts)
 
     except (json.JSONDecodeError, KeyError, TypeError) as e:

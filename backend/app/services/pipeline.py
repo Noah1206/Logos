@@ -81,9 +81,29 @@ async def run_conversion_pipeline(
             # === 비디오 (기존 그대로) ===
             await _emit(35, "오디오와 프레임을 추출하고 있어요")
             print("[Pipeline] 오디오/프레임 추출 중...")
+            # 짧은 영상(30초 이하)은 프레임을 더 많이 추출하여 분석 품질 향상
+            max_frames = 6
+            duration = video_info.duration
+            if not duration:
+                # duration이 없으면 ffprobe로 측정
+                try:
+                    probe_proc = await asyncio.create_subprocess_exec(
+                        "ffprobe", "-v", "quiet", "-show_entries",
+                        "format=duration", "-of", "csv=p=0", content_path,
+                        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                    )
+                    stdout, _ = await probe_proc.communicate()
+                    duration = float(stdout.decode().strip())
+                    video_info.duration = duration
+                except Exception:
+                    pass
+            if duration and duration <= 30:
+                max_frames = 10
+                print(f"[Pipeline] 짧은 영상({duration:.0f}초) → max_frames={max_frames}")
+
             audio_path, frame_paths, dense_frame_paths = await asyncio.gather(
                 extract_audio_from_video(content_path),
-                extract_frames(content_path, max_frames=6),
+                extract_frames(content_path, max_frames=max_frames),
                 extract_dense_frames(content_path, interval=1.0),
             )
             print(f"[Pipeline] 오디오: {audio_path}, 프레임: {len(frame_paths)}장, 갤러리: {len(dense_frame_paths)}장")
@@ -133,12 +153,13 @@ async def run_conversion_pipeline(
                 "음성, 화면 텍스트, 영상 설명이 모두 부족합니다."
             )
 
-        # Step 3.7: quality >= 0.3인 프레임만 blog writer에 전달
+        # Step 3.7: quality >= 0.3인 프레임만 blog writer에 전달 (screen_text 포함)
         frame_desc_list = [
             {
                 "frame_index": fa.frame_index,
                 "description": fa.description,
-                "category": fa.category
+                "category": fa.category,
+                "screen_texts": fa.screen_text,
             }
             for fa in frame_analyses
             if fa.quality_score >= 0.3

@@ -109,8 +109,10 @@ BLOG_WRITER_PROMPT = """당신은 대한민국에서 가장 잘 나가는 네이
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ⚠️ 아래 정보를 종합해서 블로그 글을 작성하세요.
-음성이 노래/음악이면 무시하고, 화면 텍스트와 영상 설명을 우선 활용하세요.
-정보가 부족하더라도, 주어진 내용을 바탕으로 상상력을 발휘해서 풍성하게 작성하세요.
+음성 스크립트, 화면 텍스트(자막/오버레이), 프레임 분석을 최우선으로 활용하세요.
+캡션(영상 설명글)은 보조적 참고만 하세요 — 영상 자체 콘텐츠가 핵심입니다.
+음성이 노래/음악이면 무시하고 화면 텍스트와 프레임 분석에 집중하세요.
+정보가 부족하더라도, 주어진 내용을 바탕으로 자연스럽게 살을 붙여 작성하세요.
 
 {sources}
 
@@ -176,7 +178,11 @@ def _build_sources_text(
             cat = fd.get("category", "other")
             desc = fd.get("description", "")
             idx = fd.get("frame_index", 0)
-            lines.append(f"프레임 {idx}: [{cat}] {desc}")
+            screen_texts = fd.get("screen_texts", [])
+            line = f"프레임 {idx}: [{cat}] {desc}"
+            if screen_texts:
+                line += f" | 화면텍스트: {', '.join(screen_texts)}"
+            lines.append(line)
         parts.append(f"【영상 프레임 분석】\n" + "\n".join(lines))
 
     if location:

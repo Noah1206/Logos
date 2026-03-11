@@ -26,6 +26,7 @@ interface ResultData {
   sections: BlogSection[];
   hashtags: string[];
   frameUrls: string[];
+  closingCta: string;
   rawContent?: string;
 }
 
@@ -413,6 +414,7 @@ function mapResponseToResultData(data: any): ResultData {
     sections,
     hashtags,
     frameUrls: data.frame_urls ?? [],
+    closingCta: structure.closing_cta ?? "",
     rawContent: data.blog_content,
   };
 }
@@ -839,6 +841,8 @@ function ResultContent() {
               if (event.error) {
                 setErrorMessage(event.message ?? t("result.conversionFailedShort"));
                 setIsError(true);
+                setProgress(0);
+                setDisplayProgress(0);
                 return;
               }
               if (event.message) setSseMessage(event.message);
@@ -964,6 +968,8 @@ function ResultContent() {
               if (event.error) {
                 setErrorMessage(event.message ?? t("result.conversionFailedShort"));
                 setIsError(true);
+                setProgress(0);
+                setDisplayProgress(0);
                 return;
               }
 
@@ -987,11 +993,30 @@ function ResultContent() {
 
               if (event.result) {
                 const mapped = mapResponseToResultData(event.result);
-                // excludeFrames: 영상 프레임 제거, 사용자 이미지만 사용
+                // userImages를 섹션의 extraImages에 분배
                 if (excludeFrames) {
-                  mapped.frameUrls = [...userImages];
+                  // 프레임 제외 모드: frameUrls 비우고, userImages를 섹션에 골고루 분배
+                  mapped.frameUrls = [];
+                  if (userImages.length > 0) {
+                    userImages.forEach((img, i) => {
+                      const sIdx = i % mapped.sections.length;
+                      if (!mapped.sections[sIdx].extraImages) mapped.sections[sIdx].extraImages = [];
+                      mapped.sections[sIdx].extraImages!.push(img);
+                    });
+                  }
                 } else if (userImages.length > 0) {
-                  mapped.frameUrls = [...mapped.frameUrls, ...userImages];
+                  // frame_index가 없는(-1 또는 null) 섹션에 우선 분배, 남으면 순서대로
+                  const noFrameSections = mapped.sections
+                    .map((s, i) => ({ s, i }))
+                    .filter(({ s }) => s.frame_index == null || s.frame_index < 0);
+                  const targets = noFrameSections.length > 0
+                    ? noFrameSections.map(({ i }) => i)
+                    : mapped.sections.map((_, i) => i);
+                  userImages.forEach((img, i) => {
+                    const sIdx = targets[i % targets.length];
+                    if (!mapped.sections[sIdx].extraImages) mapped.sections[sIdx].extraImages = [];
+                    mapped.sections[sIdx].extraImages!.push(img);
+                  });
                 }
                 setResultData(mapped);
                 setEditedData(JSON.parse(JSON.stringify(mapped)));
@@ -1040,7 +1065,7 @@ function ResultContent() {
     const data = editedData ?? resultData;
     if (!data) return;
 
-    // 프레임 매칭 로직 (렌더링과 동일)
+    // 프레임 매칭 로직 (렌더링과 동일 + 중복 방지)
     const hasFrameMatching = data.sections.some(
       (s) => s.frame_index != null && s.frame_index >= 0
     );
@@ -1050,7 +1075,8 @@ function ResultContent() {
         .filter((fi): fi is number => fi != null && fi >= 0)
     );
     const introIndex = data.frameUrls.findIndex((_, i) => !usedIndices.has(i));
-    const introUrl = introIndex >= 0 ? data.frameUrls[introIndex] : data.frameUrls[0];
+    const introActualIdx = data.frameUrls.length > 0 ? (introIndex >= 0 ? introIndex : 0) : -1;
+    const introUrl = introActualIdx >= 0 ? data.frameUrls[introActualIdx] : undefined;
 
     // HTML 빌드 (이미지 포함)
     const htmlParts: string[] = [];
@@ -1080,14 +1106,17 @@ function ResultContent() {
       htmlParts.push(`<p>${s.content.replace(/\n/g, "<br>")}</p>`);
       textParts.push(s.content, "");
 
-      // 섹션 이미지
+      // 섹션 이미지 (도입부와 중복 방지)
       let frameUrl: string | undefined;
       if (hasFrameMatching) {
-        if (s.frame_index != null && s.frame_index >= 0 && s.frame_index < data.frameUrls.length) {
+        if (s.frame_index != null && s.frame_index >= 0 && s.frame_index < data.frameUrls.length && s.frame_index !== introActualIdx) {
           frameUrl = data.frameUrls[s.frame_index];
         }
       } else {
-        frameUrl = data.frameUrls?.[idx + 1];
+        const fallbackIdx = idx + 1;
+        if (fallbackIdx !== introActualIdx) {
+          frameUrl = data.frameUrls?.[fallbackIdx];
+        }
       }
       if (frameUrl) {
         htmlParts.push(`<p><img src="${frameUrl}" style="max-width:100%;height:auto;" /></p>`);
@@ -1100,6 +1129,12 @@ function ResultContent() {
         }
       }
     });
+
+    // 마무리 CTA
+    if (data.closingCta) {
+      htmlParts.push(`<p>${data.closingCta.replace(/\n/g, "<br>")}</p>`);
+      textParts.push(data.closingCta, "");
+    }
 
     // 해시태그
     htmlParts.push(`<p>${data.hashtags.join(" ")}</p>`);
@@ -1214,6 +1249,33 @@ function ResultContent() {
 
   // 표시용 데이터 (편집본 우선)
   const displayData = editedData ?? resultData;
+
+  // 도입부 이미지 인덱스 (섹션에서 중복 방지용)
+  const introFrameIndex = React.useMemo(() => {
+    if (!displayData?.frameUrls?.length) return -1;
+    const sectionUsed = new Set(
+      displayData.sections
+        .map((s) => s.frame_index)
+        .filter((fi): fi is number => fi != null && fi >= 0)
+    );
+    const idx = displayData.frameUrls.findIndex((_, i) => !sectionUsed.has(i));
+    return idx >= 0 ? idx : 0;
+  }, [displayData?.frameUrls, displayData?.sections]);
+
+  // 글자수 카운트
+  const totalCharCount = React.useMemo(() => {
+    if (!displayData) return 0;
+    let count = 0;
+    count += (displayData.blogTitle ?? "").length;
+    count += (displayData.summary ?? "").length;
+    for (const s of displayData.sections) {
+      count += (s.title ?? "").length;
+      count += (s.content ?? "").length;
+    }
+    count += (displayData.closingCta ?? "").length;
+    count += displayData.hashtags.join(" ").length;
+    return count;
+  }, [displayData]);
 
   const tabs: { key: ReportTab; label: string }[] = [
     { key: "detailed", label: t("result.tabs.blogPost") },
@@ -2158,26 +2220,14 @@ function ResultContent() {
               </div>
 
               {/* 도입부 이미지 */}
-              {displayData?.frameUrls && displayData.frameUrls.length > 0 && (() => {
-                const usedIndices = new Set(
-                  displayData.sections
-                    .map((s) => s.frame_index)
-                    .filter((fi): fi is number => fi != null && fi >= 0)
-                );
-                const introIndex = displayData.frameUrls.findIndex(
-                  (_, i) => !usedIndices.has(i)
-                );
-                const actualIndex = introIndex >= 0 ? introIndex : 0;
-                const introUrl = displayData.frameUrls[actualIndex];
-                return introUrl ? (
-                  <BlogImage
-                    src={introUrl}
-                    alt="영상 프레임"
-                    onReplace={(newSrc) => updateEdited((d) => { d.frameUrls[actualIndex] = newSrc; })}
-                    onDelete={() => updateEdited((d) => { d.frameUrls.splice(actualIndex, 1); })}
-                  />
-                ) : null;
-              })()}
+              {introFrameIndex >= 0 && displayData?.frameUrls[introFrameIndex] && (
+                <BlogImage
+                  src={displayData.frameUrls[introFrameIndex]}
+                  alt="영상 프레임"
+                  onReplace={(newSrc) => updateEdited((d) => { d.frameUrls[introFrameIndex] = newSrc; })}
+                  onDelete={() => updateEdited((d) => { d.frameUrls.splice(introFrameIndex, 1); })}
+                />
+              )}
 
               {/* 목차 (토글) */}
               {showToc && displayData?.toc && (
@@ -2214,12 +2264,16 @@ function ResultContent() {
                   if (
                     section.frame_index != null &&
                     section.frame_index >= 0 &&
-                    section.frame_index < displayData.frameUrls.length
+                    section.frame_index < displayData.frameUrls.length &&
+                    section.frame_index !== introFrameIndex // 도입부 이미지와 중복 방지
                   ) {
                     frameUrl = displayData.frameUrls[section.frame_index];
                   }
                 } else {
-                  frameUrl = displayData.frameUrls?.[idx + 1];
+                  const fallbackIdx = idx + 1;
+                  if (fallbackIdx !== introFrameIndex) { // 도입부 이미지와 중복 방지
+                    frameUrl = displayData.frameUrls?.[fallbackIdx];
+                  }
                 }
 
                 return (
@@ -2477,6 +2531,11 @@ function ResultContent() {
               <div className="max-w-4xl mx-auto px-8 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
+                    {totalCharCount > 0 && (
+                      <span className="text-xs text-gray-400 font-medium tabular-nums mr-1">
+                        {totalCharCount.toLocaleString()}자
+                      </span>
+                    )}
                     <button
                       onClick={handleGoBack}
                       className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
