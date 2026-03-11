@@ -779,6 +779,7 @@ function ResultContent() {
     if (!isStudyMode) return;
 
     let cancelled = false;
+    let saved = false;
 
     const callStudySSE = async () => {
       try {
@@ -848,7 +849,9 @@ function ResultContent() {
                 setProgress(100);
                 updateSession();
 
-                // Save study conversion to DB
+                // Save study conversion to DB (중복 방지)
+                if (saved) { setTimeout(() => setIsComplete(true), 400); return; }
+                saved = true;
                 try {
                   const sourceUrl = url || sessionStorage.getItem("study-url") || sessionStorage.getItem("study-pdf-url") || "";
                   const convBody = {
@@ -921,6 +924,7 @@ function ResultContent() {
     }
 
     let cancelled = false;
+    let saved = false;
 
     const callSSE = async () => {
       try {
@@ -1004,8 +1008,8 @@ function ResultContent() {
                 sessionStorage.setItem(cacheKey, JSON.stringify(mapped));
                 setProgress(100);
                 updateSession();
-                // DB에 변환 결과 저장
-                saveConversion(event.result, mapped);
+                // DB에 변환 결과 저장 (중복 방지)
+                if (!saved) { saved = true; saveConversion(event.result, mapped); }
                 setTimeout(() => setIsComplete(true), 400);
                 return;
               }
