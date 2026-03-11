@@ -1579,7 +1579,7 @@ function ResultContent() {
             </div>
 
             {/* 하단 액션 바 */}
-            <div className={`fixed bottom-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transition-all duration-300 ${sidebarOpen ? "left-60" : "left-0"}`}>
+            <div className="border-t border-gray-200 mt-8">
               <div className="max-w-4xl mx-auto px-8 py-4">
                 <div className="flex items-center justify-between">
                   <button
@@ -1870,7 +1870,7 @@ function ResultContent() {
             </div>
 
             {/* 하단 액션 바 (블로그와 동일) */}
-            <div className={`fixed bottom-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transition-all duration-300 ${sidebarOpen ? "left-60" : "left-0"}`}>
+            <div className="border-t border-gray-200 mt-8">
               <div className="max-w-4xl mx-auto px-8 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -2523,11 +2523,7 @@ function ResultContent() {
             </div>
 
             {/* 하단 액션 바 */}
-            <div
-              className={`fixed bottom-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transition-all duration-300 ${
-                sidebarOpen ? "left-60" : "left-0"
-              }`}
-            >
+            <div className="border-t border-gray-200 mt-8">
               <div className="max-w-4xl mx-auto px-8 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
