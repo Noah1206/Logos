@@ -8,7 +8,7 @@ const SESSION_COOKIE = "authjs.session-token";
 const SECURE_SESSION_COOKIE = "__Secure-authjs.session-token";
 
 // 인증이 필요한 페이지 경로 (임시 비활성화 — 무료 테스트 기간)
-const protectedPages = ["/dashboard"];  // "/result", "/tone", "/study" 임시 제거
+const protectedPages: string[] = [];  // "/result", "/tone", "/study" 임시 제거
 
 // 인증이 필요한 API 경로 (임시 비활성화 — 무료 테스트 기간)
 const protectedApi = [
@@ -83,7 +83,6 @@ export const config = {
   matcher: [
     // 보호된 페이지
     "/result/:path*",
-    "/dashboard/:path*",
     "/tone/:path*",
     "/study/:path*",
     // 보호된 API (auth, webhook, frames 제외)

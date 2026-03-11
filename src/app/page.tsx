@@ -467,9 +467,6 @@ export default function Home() {
             <div className="flex items-center gap-6">
               <nav className="hidden md:flex items-center gap-4">
                 <a href="#pricing" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">{t("nav.pricing")}</a>
-                {user && (
-                  <a href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">{t("nav.dashboard")}</a>
-                )}
               </nav>
               <LanguageToggle />
               {user ? (

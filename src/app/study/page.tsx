@@ -24,6 +24,7 @@ export default function StudyPage() {
   const [topicText, setTopicText] = useState("");
   const [pdfFiles, setPdfFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const MAX_PDF_FILES = 10;
 
@@ -56,8 +57,8 @@ export default function StudyPage() {
         }
         sessionStorage.setItem("study-pdf-name", names.join(", "));
         window.location.href = `/result?mode=study&studyMode=pdf`;
-      } catch {
-        alert(t("study.uploadError"));
+      } catch (err) {
+        setErrorMessage(err instanceof Error ? err.message : t("study.uploadError"));
         setIsProcessing(false);
       }
     } else if (method === "topic") {
@@ -96,11 +97,6 @@ export default function StudyPage() {
                 <span className="text-sm text-[#4F46E5] font-medium">
                   {t("tabs.study")}
                 </span>
-                {user && (
-                  <a href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                    {t("nav.dashboard")}
-                  </a>
-                )}
               </nav>
               <LanguageToggle />
               {user && (
@@ -250,10 +246,10 @@ export default function StudyPage() {
             {sourceType === "pdf" && (
               <div className="space-y-4">
                 <div
-                  className={`bg-white rounded-2xl border-2 border-dashed p-8 text-center cursor-pointer transition-all ${
+                  className={`rounded-2xl border-2 border-dashed p-8 text-center cursor-pointer transition-all ${
                     pdfFiles.length > 0
-                      ? "border-[#4F46E5] bg-indigo-50/50"
-                      : "border-gray-300 hover:border-[#4F46E5]/50 hover:bg-gray-50"
+                      ? "border-gray-700 bg-black"
+                      : "bg-white border-gray-300 hover:border-[#4F46E5]/50 hover:bg-gray-50"
                   }`}
                   onClick={() => !isProcessing && pdfFiles.length < MAX_PDF_FILES && fileInputRef.current?.click()}
                   onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
@@ -291,25 +287,25 @@ export default function StudyPage() {
                   />
                   {pdfFiles.length > 0 ? (
                     <div className="flex flex-col items-center gap-3">
-                      <div className="w-14 h-14 bg-[#4F46E5]/10 rounded-2xl flex items-center justify-center">
-                        <svg className="w-7 h-7 text-[#4F46E5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center">
+                        <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
                       <div className="space-y-1.5 w-full max-w-xs">
                         {pdfFiles.map((file, i) => (
-                          <div key={i} className="flex items-center gap-2 bg-white/80 rounded-lg px-3 py-1.5 border border-gray-100">
-                            <svg className="w-4 h-4 text-[#4F46E5] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <div key={i} className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5 border border-white/10">
+                            <svg className="w-4 h-4 text-white/70 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                             </svg>
-                            <span className="text-xs text-gray-700 truncate flex-1 text-left">{file.name}</span>
-                            <span className="text-[10px] text-gray-400 flex-shrink-0">{(file.size / 1024 / 1024).toFixed(1)}MB</span>
+                            <span className="text-xs text-white/90 truncate flex-1 text-left">{file.name}</span>
+                            <span className="text-[10px] text-white/40 flex-shrink-0">{(file.size / 1024 / 1024).toFixed(1)}MB</span>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setPdfFiles((prev) => prev.filter((_, idx) => idx !== i));
                               }}
-                              className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                              className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors"
                             >
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -318,10 +314,10 @@ export default function StudyPage() {
                           </div>
                         ))}
                       </div>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-white/40">
                         {pdfFiles.length}/{MAX_PDF_FILES}
                         {pdfFiles.length < MAX_PDF_FILES && (
-                          <span className="text-[#4F46E5] ml-1 cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
+                          <span className="text-white/70 ml-1 cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
                             + {t("study.pdfUpload.addMore")}
                           </span>
                         )}
@@ -442,6 +438,31 @@ export default function StudyPage() {
           </div>
         )}
       </div>
+
+      {/* Error Modal */}
+      {errorMessage && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setErrorMessage(null)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full mx-4 p-6 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+              </div>
+              <h3 className="text-base font-semibold text-gray-900">{t("study.uploadError")}</h3>
+            </div>
+            <p className="text-sm text-gray-500 mb-5 pl-[52px]">{errorMessage}</p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setErrorMessage(null)}
+                className="px-5 py-2 bg-[#4F46E5] text-white text-sm font-medium rounded-xl hover:bg-[#4338CA] transition-colors"
+              >
+                {t("common.confirm")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
