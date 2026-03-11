@@ -9,35 +9,34 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    // // 인증 확인 (임시 비활성화 — 무료 테스트 기간)
-    // const session = await auth();
-    // if (!session?.user?.id) {
-    //   return new Response(
-    //     JSON.stringify({ success: false, error: "로그인이 필요합니다." }),
-    //     { status: 401, headers: { "Content-Type": "application/json" } }
-    //   );
-    // }
+    const promoActive = isPromotionActive();
 
-    // const promoActive = isPromotionActive();
+    if (!promoActive) {
+      const session = await auth();
+      if (!session?.user?.id) {
+        return new Response(
+          JSON.stringify({ success: false, error: "로그인이 필요합니다." }),
+          { status: 401, headers: { "Content-Type": "application/json" } }
+        );
+      }
 
-    // if (!promoActive) {
-    //   const user = await prisma.user.findUnique({
-    //     where: { id: session.user.id },
-    //     select: { credits: true },
-    //   });
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { credits: true },
+      });
 
-    //   if (!user || user.credits <= 0) {
-    //     return new Response(
-    //       JSON.stringify({ success: false, error: "크레딧이 부족합니다. 충전 후 이용해주세요." }),
-    //       { status: 403, headers: { "Content-Type": "application/json" } }
-    //     );
-    //   }
+      if (!user || user.credits <= 0) {
+        return new Response(
+          JSON.stringify({ success: false, error: "크레딧이 부족합니다. 충전 후 이용해주세요." }),
+          { status: 403, headers: { "Content-Type": "application/json" } }
+        );
+      }
 
-    //   await prisma.user.update({
-    //     where: { id: session.user.id },
-    //     data: { credits: { decrement: 1 } },
-    //   });
-    // }
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { credits: { decrement: 1 } },
+      });
+    }
 
     const body = await req.json();
 
