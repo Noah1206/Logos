@@ -76,7 +76,7 @@ class ConvertResponse(BaseModel):
     seo_keywords: Optional[SEOKeywords] = None
     blog_content: Optional[str] = None
     blog_structure: Optional[BlogStructure] = None
-    study_structure: Optional[StudyStructure] = None
+    study_structure: Optional["StudyStructure"] = None
     frame_urls: List[str] = []
     gallery_frame_urls: List[str] = []
     error: Optional[str] = None
@@ -146,6 +146,9 @@ class StudyStructure(BaseModel):
     detailed_notes: List[dict]  # [{topic, content}]
     study_questions: List[dict]  # [{question, answer}]
     related_topics: List[str]
+
+
+ConvertResponse.model_rebuild()
 
 
 class StudyResponse(BaseModel):
