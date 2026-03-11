@@ -1,7 +1,8 @@
 FROM python:3.11-slim
 
-# ffmpeg 설치
-RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+# ffmpeg + deno (yt-dlp JS runtime) 설치
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg curl unzip \
+    && curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
