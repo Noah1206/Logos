@@ -155,10 +155,14 @@ def _build_sources_text(
     description: Optional[str],
     video_title: Optional[str],
     location: Optional[str],
-    frame_descriptions: Optional[List[dict]] = None
+    frame_descriptions: Optional[List[dict]] = None,
+    user_context: Optional[str] = None
 ) -> str:
     """입력 소스들을 프롬프트용 텍스트로 조합"""
     parts = []
+
+    if user_context:
+        parts.append(f"【사용자 설명 (가장 중요한 맥락 정보)】\n{user_context}")
 
     if video_title:
         parts.append(f"【영상 제목】\n{video_title}")
@@ -240,7 +244,8 @@ async def write_blog(
     video_title: Optional[str] = None,
     location: Optional[str] = None,
     frame_descriptions: Optional[List[dict]] = None,
-    tone: Optional[str] = None
+    tone: Optional[str] = None,
+    user_context: Optional[str] = None
 ) -> tuple[BlogStructure, SEOKeywords, str]:
     """
     모든 소스를 종합하여 네이버 블로그 글 생성 (단일 GPT 호출)
@@ -251,7 +256,8 @@ async def write_blog(
 
     sources = _build_sources_text(
         transcript, screen_text, description, video_title, location,
-        frame_descriptions=frame_descriptions
+        frame_descriptions=frame_descriptions,
+        user_context=user_context
     )
 
     frame_matching = _build_frame_matching_section(frame_descriptions)

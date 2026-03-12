@@ -28,6 +28,7 @@ async def run_conversion_pipeline(
     url: str,
     location: Optional[str] = None,
     tone: Optional[str] = None,
+    user_context: Optional[str] = None,
     progress_callback: Optional[ProgressCallback] = None,
 ) -> ConvertResponse:
     """
@@ -125,15 +126,15 @@ async def run_conversion_pipeline(
         if video_info.description:
             print(f"[Pipeline] 캡션:\n{video_info.description[:300]}...")
 
-        # Step 3.5: 프레임 이미지 영구 저장
+        # Step 3.5: 프레임 이미지 영구 저장 (동기 I/O → 별도 스레드)
         job_id = str(uuid.uuid4())
         frame_urls = []
         gallery_frame_urls = []
         if frame_paths:
-            frame_urls = persist_frames(frame_paths, job_id, prefix="frame")
+            frame_urls = await asyncio.to_thread(persist_frames, frame_paths, job_id, "frame")
             print(f"[Pipeline] 프레임 {len(frame_urls)}장 저장 완료 (job_id: {job_id})")
         if video_info.content_type != "image" and dense_frame_paths:
-            gallery_frame_urls = persist_frames(dense_frame_paths, job_id, prefix="gallery")
+            gallery_frame_urls = await asyncio.to_thread(persist_frames, dense_frame_paths, job_id, "gallery")
             print(f"[Pipeline] 갤러리 프레임 {len(gallery_frame_urls)}장 저장 완료")
             # 프레임 준비 완료 — 조기 전송 (로딩 중 타임라인 접근 가능)
             await _emit(66, "프레임 준비 완료!", {
@@ -177,7 +178,8 @@ async def run_conversion_pipeline(
             video_title=video_info.title,
             location=location,
             frame_descriptions=frame_desc_list if frame_desc_list else None,
-            tone=tone
+            tone=tone,
+            user_context=user_context
         )
         blog_structure, seo_keywords, blog_content = blog_result
 

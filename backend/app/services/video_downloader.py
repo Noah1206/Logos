@@ -1160,7 +1160,12 @@ async def extract_audio_from_video(video_path: str) -> str:
         stderr=asyncio.subprocess.PIPE
     )
 
-    stdout, stderr = await process.communicate()
+    try:
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=120)
+    except asyncio.TimeoutError:
+        process.kill()
+        await process.communicate()
+        raise Exception("오디오 추출 타임아웃 (120초 초과)")
     stderr_text = stderr.decode() if stderr else ""
 
     if not os.path.exists(audio_path):
@@ -1207,7 +1212,12 @@ async def _get_video_duration(video_path: str) -> float:
         stderr=asyncio.subprocess.PIPE
     )
 
-    stdout, _ = await process.communicate()
+    try:
+        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=15)
+    except asyncio.TimeoutError:
+        process.kill()
+        await process.communicate()
+        return 30.0
     try:
         return float(stdout.decode().strip())
     except (ValueError, AttributeError):
@@ -1255,7 +1265,13 @@ async def extract_frames(video_path: str, max_frames: int = 6) -> List[str]:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
-        await process.communicate()
+        try:
+            await asyncio.wait_for(process.communicate(), timeout=30)
+        except asyncio.TimeoutError:
+            process.kill()
+            await process.communicate()
+            print(f"[Frames] 프레임 {i} 추출 타임아웃, 스킵")
+            continue
 
         if os.path.exists(frame_path):
             frame_paths.append(frame_path)
@@ -1287,7 +1303,12 @@ async def extract_dense_frames(video_path: str, interval: float = 1.0) -> List[s
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )
-    await process.communicate()
+    try:
+        await asyncio.wait_for(process.communicate(), timeout=120)
+    except asyncio.TimeoutError:
+        process.kill()
+        await process.communicate()
+        print("[DenseFrames] 타임아웃 (120초 초과)")
 
     # ffmpeg fps 필터는 1-indexed: dense_001.jpg, dense_002.jpg, ...
     frame_paths = sorted(glob.glob(os.path.join(frame_dir, "dense_*.jpg")))

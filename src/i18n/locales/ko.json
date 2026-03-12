@@ -249,6 +249,12 @@
       "dropzoneHint": "Ctrl+V로 붙여넣기도 가능 · 최대 {{max}}장",
       "selected": "{{selected}}장 선택 / {{total}}장 업로드"
     },
+    "userContext": {
+      "title": "영상 설명 추가",
+      "optional": "(선택)",
+      "desc": "음악만 있는 릴스라면 영상 내용을 간단히 적어주시면 더 좋은 글이 만들어져요",
+      "placeholder": "예: 홍대 새로 오픈한 카페 소개 영상, 신메뉴 라떼가 맛있었음"
+    },
     "frameExtract": {
       "title": "영상에서 사진 추출",
       "desc": "릴스/쇼츠에서 자동으로 캡처한 사진을 블로그에 포함"

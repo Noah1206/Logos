@@ -12,6 +12,7 @@ class ConvertRequest(BaseModel):
     url: str
     location: Optional[str] = None  # 예: "홍대", "강남"
     tone: Optional[str] = None  # "일상" | "자영업자"
+    user_context: Optional[str] = None  # 사용자가 입력한 영상 설명
 
 
 class VideoInfo(BaseModel):

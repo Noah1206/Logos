@@ -249,6 +249,12 @@
       "dropzoneHint": "Ctrl+V to paste · up to {{max}} photos",
       "selected": "{{selected}} selected / {{total}} uploaded"
     },
+    "userContext": {
+      "title": "Add Description",
+      "optional": "(optional)",
+      "desc": "If your reel has only music, briefly describe the content for a better blog post",
+      "placeholder": "e.g., New cafe review in Hongdae, the latte was amazing"
+    },
     "frameExtract": {
       "title": "Extract frames from video",
       "desc": "Auto-captured frames from Reels/Shorts included in blog post"

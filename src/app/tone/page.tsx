@@ -18,6 +18,7 @@ function ToneContent() {
   const [checkedImages, setCheckedImages] = useState<Set<number>>(new Set());
   const [includeFrames, setIncludeFrames] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
+  const [userContext, setUserContext] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
@@ -125,6 +126,11 @@ function ToneContent() {
       sessionStorage.setItem("exclude_frames", "true");
     } else {
       sessionStorage.removeItem("exclude_frames");
+    }
+    if (userContext.trim()) {
+      sessionStorage.setItem("user_context", userContext.trim());
+    } else {
+      sessionStorage.removeItem("user_context");
     }
     router.push(`/result?url=${encodeURIComponent(url)}&tone=${encodeURIComponent(selected)}`);
   };
@@ -295,6 +301,24 @@ function ToneContent() {
                 {t("tone.imageUpload.selected", { selected: checkedImages.size, total: images.length })}
               </p>
             )}
+          </div>
+
+          {/* 영상 설명 추가 */}
+          <div className="mb-10">
+            <h2 className="text-lg font-bold text-gray-900 mb-2">
+              {t("tone.userContext.title")} <span className="text-sm font-normal text-gray-400">{t("tone.userContext.optional")}</span>
+            </h2>
+            <p className="text-sm text-gray-500 mb-4">
+              {t("tone.userContext.desc")}
+            </p>
+            <textarea
+              value={userContext}
+              onChange={(e) => setUserContext(e.target.value)}
+              placeholder={t("tone.userContext.placeholder")}
+              maxLength={500}
+              rows={3}
+              className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/20 resize-none transition-all"
+            />
           </div>
 
           {/* 영상 프레임 포함 토글 */}

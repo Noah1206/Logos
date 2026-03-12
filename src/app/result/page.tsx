@@ -969,10 +969,12 @@ function ResultContent() {
 
     const callSSE = async () => {
       try {
+        const userContext = sessionStorage.getItem("user_context") || "";
+        if (userContext) sessionStorage.removeItem("user_context");
         const res = await fetch("/api/convert/stream", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url, ...(tone && { tone }) }),
+          body: JSON.stringify({ url, ...(tone && { tone }), ...(userContext && { user_context: userContext }) }),
         });
 
         if (!res.ok || !res.body) {
