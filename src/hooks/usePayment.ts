@@ -65,6 +65,7 @@ export function usePayment({ onSuccess, onError }: UsePaymentOptions = {}) {
           merchant_uid: orderData.paymentId,
           name: orderData.orderName,
           amount: orderData.totalAmount,
+          channelKey: orderData.channelKey,
         },
         async (response) => {
           try {
