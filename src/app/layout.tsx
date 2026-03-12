@@ -108,6 +108,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={poppins.variable}>
       <head>
+        <meta name="naver-site-verification" content="d0ed4eea36a855fadaa71837054d71ee6740c9ad" />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-F32JVK9158"
           strategy="afterInteractive"
