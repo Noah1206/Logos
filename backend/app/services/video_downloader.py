@@ -1296,9 +1296,24 @@ async def extract_dense_frames(video_path: str, interval: float = 1.0) -> List[s
 
 
 def persist_frames(frame_paths: List[str], job_id: str, prefix: str = "frame") -> List[str]:
-    """프레임 이미지를 영구 디렉토리로 복사하여 서빙 가능하게 함"""
+    """프레임 이미지를 Supabase Storage에 업로드 (실패 시 로컬 폴백)"""
     import shutil
 
+    # 키프레임은 Supabase Storage에 업로드 시도 (영구 URL)
+    if prefix == "frame":
+        from .storage import upload_frames
+        cloud_urls = upload_frames(frame_paths, job_id, prefix)
+        if cloud_urls:
+            # 로컬에도 복사 (진행 중인 세션의 serve_frame 호환)
+            frames_dir = os.path.join(os.path.abspath(settings.TEMP_DIR), "frames", job_id)
+            os.makedirs(frames_dir, exist_ok=True)
+            for i, frame_path in enumerate(frame_paths):
+                if os.path.exists(frame_path):
+                    filename = f"{prefix}_{i:02d}.jpg"
+                    shutil.copy2(frame_path, os.path.join(frames_dir, filename))
+            return cloud_urls
+
+    # 갤러리 프레임 또는 클라우드 업로드 실패 시 로컬 저장
     frames_dir = os.path.join(os.path.abspath(settings.TEMP_DIR), "frames", job_id)
     os.makedirs(frames_dir, exist_ok=True)
 

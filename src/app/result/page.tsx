@@ -1323,7 +1323,7 @@ function ResultContent() {
 
   const tagChips: string[] = [];
 
-  if (!url && !isVideoMode && !isStudyMode) {
+  if (!url && !id && !isVideoMode && !isStudyMode) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
