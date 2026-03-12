@@ -201,21 +201,21 @@
       "name": "Starter Pack",
       "desc": "Start light with blog marketing",
       "price": "$7.99",
-      "period": "10 posts · ~$0.80 each",
-      "features": ["10 conversion credits", "YouTube + Instagram Reels", "SEO keyword optimization", "Conversion history", "No expiration"]
+      "period": "Monthly",
+      "features": ["Blog conversion 100/month", "AI study notes 50/month", "SEO keyword optimization", "Conversion history forever", "YouTube Shorts support"]
     },
     "pro": {
       "name": "Pro Pack",
-      "desc": "Most popular among business owners",
+      "desc": "The choice of business owners who drive revenue",
       "price": "$21.99",
-      "period": "50 posts · ~$0.44 each",
-      "features": ["50 conversion credits", "YouTube + Instagram Reels", "Advanced SEO + tone customization", "Conversion history", "No expiration + priority support"]
+      "period": "Monthly",
+      "features": ["Unlimited blog conversions", "Unlimited AI study notes", "Advanced SEO + tone customization", "Conversion history forever", "Priority support + early access"]
     },
     "valueProposition": "Blog agency: $300+/month vs LOGOS.ai: ~$0.44-0.80/post — the smartest choice for business owners who need to focus on what they do best.",
     "modalFreeFeatures": ["1 free conversion", "YouTube Shorts support", "Naver blog SEO generation"],
-    "modalStarterFeatures": ["10 conversion credits", "YouTube + Instagram Reels", "SEO keyword optimization", "No expiration"],
-    "modalProDesc": "Most popular plan",
-    "modalProFeatures": ["50 conversion credits", "YouTube + Instagram Reels", "Advanced SEO + tone customization", "No expiration + priority support"]
+    "modalStarterFeatures": ["Blog conversion 100/month", "AI study notes 50/month", "SEO keyword optimization", "Conversion history forever"],
+    "modalProDesc": "The choice of revenue-driven owners",
+    "modalProFeatures": ["Unlimited blog conversions", "Unlimited AI study notes", "Advanced SEO + tone customization", "Priority support + early access"]
   },
   "login": {
     "title": "Log In",
