@@ -1,96 +1,115 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTrial } from "@/hooks/useTrial";
 
-const VISIBLE_DURATION = 5000;
-
-export default function ConversionTrigger({ onUpgrade }: { onUpgrade?: () => void }) {
+export default function ConversionTrigger() {
   const trial = useTrial();
-  const [phase, setPhase] = useState<"hidden" | "visible" | "gone">("hidden");
+  const router = useRouter();
+  const [dismissed, setDismissed] = useState(false);
 
-  const show = useCallback(() => {
-    setPhase("hidden");
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => setPhase("visible"));
-    });
-    const timer = setTimeout(() => setPhase("gone"), VISIBLE_DURATION);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // 페이지 진입 시
-  useEffect(() => {
-    if (!trial || !trial.started) return;
-    return show();
-  }, [trial, show]);
-
-  // 새 변환 감지 (conversionCount 변경)
-  useEffect(() => {
-    if (!trial || !trial.started || !trial.conversionCount) return;
-    return show();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trial?.conversionCount]);
-
-  if (!trial || !trial.started) return null;
+  if (!trial || !trial.started || dismissed) return null;
 
   const { days, conversionCount, active } = trial;
 
-  // 체험 종료 → 상시 노출
+  let emoji: string;
+  let title: string;
+  let desc: string;
+  let accent = "border-gray-200 bg-white";
+  let titleColor = "text-gray-900";
+  let descColor = "text-gray-500";
+  let showPricing = false;
+
   if (!active) {
-    return (
-      <div className="mb-6">
-        <div className="flex items-center justify-between px-4 py-2.5 bg-white border border-gray-200 rounded-lg">
-          <span className="text-[13px] text-gray-900">
-            무료체험 종료 · 총 <strong>{conversionCount}건</strong> 변환
-          </span>
-          {onUpgrade && (
-            <button
-              onClick={onUpgrade}
-              className="text-[13px] text-gray-500 hover:text-gray-900 underline underline-offset-2 transition-colors"
-            >
-              업그레이드
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  let text: string;
-  let showUpgrade = false;
-
-  if (days >= 5) {
-    text = `${conversionCount}건 변환 완료 · 무료체험 ${days}일 남음`;
-  } else if (days >= 3) {
-    text = `${conversionCount}건 활용 중 · 체험 ${days}일 남음`;
-    showUpgrade = true;
+    // ended
+    emoji = "📦";
+    title = "7일 무료체험이 끝났어요";
+    desc = "990원으로 계속하기";
+    accent = "border-red-200 bg-red-50";
+    titleColor = "text-red-800";
+    descColor = "text-red-600";
+    showPricing = true;
+  } else if (days <= 1) {
+    // lastDay
+    emoji = "⏰";
+    title = "오늘 자정에 체험이 끝나요";
+    desc = `지금까지 ${conversionCount}개 변환했어요`;
+    accent = "border-amber-300 bg-amber-50";
+    titleColor = "text-amber-900";
+    descColor = "text-amber-700";
+    showPricing = true;
+  } else if (days <= 2) {
+    // warning
+    emoji = "👍";
+    title = `체험이 ${days}일 뒤 끝나요`;
+    desc = `지금까지 ${conversionCount}개 변환했어요`;
+    accent = "border-amber-200 bg-amber-50/50";
+    titleColor = "text-amber-800";
+    descColor = "text-amber-600";
   } else {
-    text = `${conversionCount}건 변환 · 체험 ${days}일 남음`;
-    showUpgrade = true;
+    // normal
+    emoji = "✨";
+    title = `무료체험 중 · D-${days}`;
+    desc = "오늘도 무제한 사용 가능해요";
   }
-
-  const isVisible = phase === "visible";
 
   return (
-    <div
-      className="mb-6 overflow-hidden transition-all duration-500 ease-out"
-      style={{
-        maxHeight: isVisible ? 60 : 0,
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible ? "translateY(0)" : "translateY(-12px)",
-      }}
-    >
-      <div className="flex items-center justify-between px-4 py-2.5 bg-white border border-gray-200 rounded-lg">
-        <span className="text-[13px] text-gray-900">{text}</span>
-        {showUpgrade && onUpgrade && (
+    <div className="fixed right-4 top-1/2 -translate-y-1/2 z-40 animate-[slideIn_0.4s_ease-out]">
+      <div
+        className={`relative w-[52px] rounded-2xl border ${accent} shadow-sm px-2 py-4 flex flex-col items-center gap-3 cursor-default`}
+      >
+        {/* 닫기 */}
+        <button
+          onClick={() => setDismissed(true)}
+          className="absolute -top-2 -right-2 w-5 h-5 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:border-gray-300 transition-colors shadow-sm"
+        >
+          <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* 이모지 */}
+        <span className="text-lg">{emoji}</span>
+
+        {/* 세로 텍스트 */}
+        <div
+          className="flex flex-col items-center gap-[2px]"
+          style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
+        >
+          <span className={`text-[11px] font-semibold leading-tight ${titleColor}`}>
+            {title}
+          </span>
+          <span className={`text-[10px] leading-tight mt-1 ${descColor}`}>
+            {desc}
+          </span>
+        </div>
+
+        {/* 요금제 버튼 */}
+        {showPricing && (
           <button
-            onClick={onUpgrade}
-            className="text-[13px] text-gray-500 hover:text-gray-900 underline underline-offset-2 transition-colors"
+            onClick={() => router.push("/pricing")}
+            className="w-9 h-9 rounded-xl bg-gray-900 hover:bg-gray-800 flex items-center justify-center transition-colors"
           >
-            업그레이드
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </button>
         )}
       </div>
+
+      <style jsx>{`
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translate(20px, -50%);
+          }
+          to {
+            opacity: 1;
+            transform: translate(0, -50%);
+          }
+        }
+      `}</style>
     </div>
   );
 }
