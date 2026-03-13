@@ -96,14 +96,9 @@ export default function Home() {
   const handleConvert = async () => {
     if (isConverting) return;
 
-    // 비로그인: 1회만 허용, 2회부터 로그인 필요
     if (!user) {
-      const guestUsed = localStorage.getItem("guest_converted");
-      if (guestUsed) {
-        setShowLoginModal(true);
-        return;
-      }
-      localStorage.setItem("guest_converted", "1");
+      setShowLoginModal(true);
+      return;
     }
 
     if (mode === "study") {
