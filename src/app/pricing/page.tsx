@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { usePayment } from "@/hooks/usePayment";
 import { useTranslation } from "@/i18n";
@@ -9,6 +10,8 @@ export default function PricingPage() {
   const { t } = useTranslation();
   const { data: session, update: updateSession } = useSession();
   const user = session?.user;
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginLoading, setLoginLoading] = useState<string | null>(null);
 
   const { purchasePackage, isProcessing } = usePayment({
     onSuccess: (credits) => {
@@ -24,10 +27,15 @@ export default function PricingPage() {
 
   const handlePurchase = (packageId: string) => {
     if (!user) {
-      signIn();
+      setShowLoginModal(true);
       return;
     }
     purchasePackage(packageId);
+  };
+
+  const handleSocialLogin = (provider: "kakao" | "naver") => {
+    setLoginLoading(provider);
+    signIn(provider, { callbackUrl: "/pricing" });
   };
 
   return (
@@ -179,6 +187,71 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowLoginModal(false)}
+          />
+          <div className="relative z-10 bg-white rounded-2xl p-8 w-full max-w-sm mx-4 shadow-xl">
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-7 w-7" />
+              <span className="text-[22px] font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
+            </div>
+
+            <h2 className="text-xl font-bold text-gray-900 text-center mb-2">{t("login.title")}</h2>
+            <p className="text-sm text-gray-500 text-center mb-8">
+              {t("login.subtitle")}
+            </p>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => handleSocialLogin("kakao")}
+                disabled={loginLoading !== null}
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-[#FEE500] text-[#000000] font-medium rounded-lg hover:bg-[#FDD800] transition-colors disabled:opacity-60"
+              >
+                {loginLoading === "kakao" ? (
+                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 3C6.477 3 2 6.463 2 10.714c0 2.758 1.819 5.178 4.545 6.545-.2.745-.727 2.702-.832 3.12-.13.52.19.512.4.373.164-.109 2.612-1.771 3.672-2.489.71.099 1.447.151 2.215.151 5.523 0 10-3.463 10-7.714S17.523 3 12 3z"/>
+                  </svg>
+                )}
+                {loginLoading === "kakao" ? t("common.connecting") : t("login.kakao")}
+              </button>
+
+              <button
+                disabled
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-[#03C75A]/40 text-white/60 font-medium rounded-lg cursor-not-allowed"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z"/>
+                </svg>
+                {t("login.naver")}
+                <span className="text-xs opacity-70">(준비중)</span>
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-400 text-center mt-6">
+              {t("login.terms")}<a href="#" className="underline">{t("login.termsOfService")}</a>{t("login.and")}<a href="#" className="underline">{t("login.privacyPolicy")}</a>{t("login.termsEnd")}
+            </p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
