@@ -22,7 +22,6 @@ export default function ConversionTrigger() {
   let showPricing = false;
 
   if (!active) {
-    // ended
     emoji = "📦";
     title = "7일 무료체험이 끝났어요";
     desc = "990원으로 계속하기";
@@ -31,7 +30,6 @@ export default function ConversionTrigger() {
     descColor = "text-red-600";
     showPricing = true;
   } else if (days <= 1) {
-    // lastDay
     emoji = "⏰";
     title = "오늘 자정에 체험이 끝나요";
     desc = `지금까지 ${conversionCount}개 변환했어요`;
@@ -40,7 +38,6 @@ export default function ConversionTrigger() {
     descColor = "text-amber-700";
     showPricing = true;
   } else if (days <= 2) {
-    // warning
     emoji = "👍";
     title = `체험이 ${days}일 뒤 끝나요`;
     desc = `지금까지 ${conversionCount}개 변환했어요`;
@@ -48,52 +45,46 @@ export default function ConversionTrigger() {
     titleColor = "text-amber-800";
     descColor = "text-amber-600";
   } else {
-    // normal
     emoji = "✨";
     title = `무료체험 중 · D-${days}`;
     desc = "오늘도 무제한 사용 가능해요";
   }
 
   return (
-    <div className="fixed right-4 top-1/2 -translate-y-1/2 z-40 animate-[slideIn_0.4s_ease-out]">
+    <div className="fixed right-5 top-5 z-40 animate-[slideIn_0.4s_ease-out]">
       <div
-        className={`relative w-[52px] rounded-2xl border ${accent} shadow-sm px-2 py-4 flex flex-col items-center gap-3 cursor-default`}
+        className={`relative rounded-2xl border ${accent} shadow-lg px-5 py-5 flex flex-col items-center gap-3 min-w-[180px] max-w-[200px]`}
       >
         {/* 닫기 */}
         <button
           onClick={() => setDismissed(true)}
-          className="absolute -top-2 -right-2 w-5 h-5 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:border-gray-300 transition-colors shadow-sm"
+          className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-gray-300 hover:text-gray-500 transition-colors"
         >
-          <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
         {/* 이모지 */}
-        <span className="text-lg">{emoji}</span>
+        <span className="text-2xl mt-1">{emoji}</span>
 
-        {/* 세로 텍스트 */}
-        <div
-          className="flex flex-col items-center gap-[2px]"
-          style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
-        >
-          <span className={`text-[11px] font-semibold leading-tight ${titleColor}`}>
+        {/* 텍스트 */}
+        <div className="text-center">
+          <p className={`text-[13px] font-semibold leading-snug ${titleColor}`}>
             {title}
-          </span>
-          <span className={`text-[10px] leading-tight mt-1 ${descColor}`}>
+          </p>
+          <p className={`text-[11px] leading-snug mt-1.5 ${descColor}`}>
             {desc}
-          </span>
+          </p>
         </div>
 
         {/* 요금제 버튼 */}
         {showPricing && (
           <button
             onClick={() => router.push("/pricing")}
-            className="w-9 h-9 rounded-xl bg-gray-900 hover:bg-gray-800 flex items-center justify-center transition-colors"
+            className="w-full mt-1 py-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium rounded-lg transition-colors"
           >
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            요금제 보기 →
           </button>
         )}
       </div>
@@ -102,11 +93,11 @@ export default function ConversionTrigger() {
         @keyframes slideIn {
           from {
             opacity: 0;
-            transform: translate(20px, -50%);
+            transform: translateX(20px);
           }
           to {
             opacity: 1;
-            transform: translate(0, -50%);
+            transform: translateX(0);
           }
         }
       `}</style>
