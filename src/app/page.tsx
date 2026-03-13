@@ -498,7 +498,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-24 pb-12 px-4 bg-white">
+      <section className="pt-14 pb-12 px-4 bg-white">
         <div className="max-w-4xl mx-auto text-center">
           {/* 정식 출시 기념 배너 */}
           <div className="relative inline-block mb-8 animate-[bannerPulse_2s_ease-in-out_infinite]">
