@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isPromotionActive } from "@/lib/promotion";
+import { getTrialStatus } from "@/lib/trial";
 
 const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:8000";
 
@@ -15,23 +16,41 @@ export async function POST(req: NextRequest) {
       const session = await auth();
 
       if (session?.user?.id) {
-        // 로그인 유저: 크레딧 차감
         const user = await prisma.user.findUnique({
           where: { id: session.user.id },
-          select: { credits: true },
+          select: { credits: true, freeTrialStartedAt: true },
         });
 
-        if (!user || user.credits <= 0) {
+        if (!user) {
           return new Response(
-            JSON.stringify({ success: false, error: "크레딧이 부족합니다. 충전 후 이용해주세요." }),
+            JSON.stringify({ success: false, error: "사용자를 찾을 수 없습니다." }),
             { status: 403, headers: { "Content-Type": "application/json" } }
           );
         }
 
-        await prisma.user.update({
-          where: { id: session.user.id },
-          data: { credits: { decrement: 1 } },
-        });
+        const trial = getTrialStatus(user.freeTrialStartedAt);
+
+        if (trial.active) {
+          // 무료체험 기간 중: 첫 변환이면 시작일 기록
+          if (!user.freeTrialStartedAt) {
+            await prisma.user.update({
+              where: { id: session.user.id },
+              data: { freeTrialStartedAt: new Date() },
+            });
+          }
+        } else if (user.credits > 0) {
+          // 무료체험 끝남 + 크레딧 있음: 크레딧 차감
+          await prisma.user.update({
+            where: { id: session.user.id },
+            data: { credits: { decrement: 1 } },
+          });
+        } else {
+          // 무료체험 끝남 + 크레딧 없음
+          return new Response(
+            JSON.stringify({ success: false, error: "trial_ended" }),
+            { status: 403, headers: { "Content-Type": "application/json" } }
+          );
+        }
       } else {
         // 게스트: 쿠키로 1회 제한
         const guestUsed = req.cookies.get("guest_used")?.value;

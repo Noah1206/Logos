@@ -6,6 +6,7 @@ import { useSession, signIn } from "next-auth/react";
 import { usePayment } from "@/hooks/usePayment";
 import { useTranslation, useTranslationArray } from "@/i18n";
 import VideoTimeline from "@/components/VideoTimeline";
+import TrialBanner from "@/components/TrialBanner";
 
 type ReportTab = "detailed" | "summary" | "easy" | "script";
 
@@ -1617,6 +1618,8 @@ function ResultContent() {
               )}
             </div>
 
+            <TrialBanner />
+
             {/* 하단 액션 바 */}
             <div className="border-t border-gray-200 mt-8">
               <div className="max-w-4xl mx-auto px-8 py-4">
@@ -1907,6 +1910,8 @@ function ResultContent() {
                 </section>
               )}
             </div>
+
+            <TrialBanner />
 
             {/* 하단 액션 바 (블로그와 동일) */}
             <div className="border-t border-gray-200 mt-8">
@@ -2560,6 +2565,8 @@ function ResultContent() {
 
               </div>{/* /블로그 본문 정렬 wrapper */}
             </div>
+
+            <TrialBanner />
 
             {/* 하단 액션 바 */}
             <div className="border-t border-gray-200 mt-8">
