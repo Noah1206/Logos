@@ -9,32 +9,33 @@ import JsonLd from "@/components/JsonLd";
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "Shorts2Blog",
+  name: "LOGOS.ai",
+  alternateName: "로고스 AI",
   url: "https://logos.builders",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   description:
-    "유튜브 쇼츠·인스타 릴스를 네이버 블로그 SEO 최적화 글로 자동 변환하는 SaaS 서비스.",
+    "AI-powered tool that converts YouTube Shorts and Instagram Reels into SEO-optimized blog posts in seconds. 유튜브 쇼츠·인스타 릴스를 AI로 블로그 글·영상으로 자동 변환.",
   offers: [
     {
       "@type": "Offer",
-      name: "스타터 팩",
+      name: "Starter Pack",
       price: "9900",
       priceCurrency: "KRW",
-      description: "10건 변환",
+      description: "10 conversions / 10건 변환",
     },
     {
       "@type": "Offer",
-      name: "프로 팩",
+      name: "Pro Pack",
       price: "29000",
       priceCurrency: "KRW",
-      description: "50건 변환",
+      description: "50 conversions / 50건 변환",
     },
   ],
-  inLanguage: "ko",
+  inLanguage: ["ko", "en"],
   audience: {
     "@type": "Audience",
-    audienceType: "자영업자, 크리에이터, 1인 마케터",
+    audienceType: "Small business owners, creators, marketers, 자영업자, 크리에이터, 1인 마케터",
   },
 };
 
@@ -48,43 +49,59 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   metadataBase: new URL("https://logos.builders"),
   title: {
-    default: "쇼츠·릴스 → 네이버 블로그 자동 변환 | Shorts2Blog",
-    template: "%s | Shorts2Blog",
+    default: "LOGOS.ai – AI Video to Blog & Blog to Video Converter | 영상↔블로그 자동 변환",
+    template: "%s | LOGOS.ai",
   },
   description:
-    "유튜브 쇼츠·인스타 릴스 링크 하나로 네이버 블로그 SEO 최적화 글을 1분 안에 자동 완성. 블로그 대행 월 100만원 → 건당 990원.",
+    "Convert YouTube Shorts & Instagram Reels into SEO-optimized blog posts in seconds with AI. Turn blog posts into short-form videos. 유튜브 쇼츠·릴스를 블로그 글로, 블로그를 영상으로 AI 자동 변환. 건당 990원.",
   keywords: [
+    // English keywords
+    "AI blog writer",
+    "video to blog converter",
+    "YouTube Shorts to blog",
+    "Instagram Reels to blog",
+    "AI content converter",
+    "blog to video",
+    "short form video to article",
+    "AI SEO blog generator",
+    "content repurposing tool",
+    "video transcription to blog",
+    // Korean keywords
     "쇼츠 블로그 변환",
-    "릴스 네이버 블로그",
-    "블로그 자동화",
+    "릴스 블로그 변환",
     "AI 블로그 글쓰기",
+    "영상 블로그 자동변환",
     "네이버 블로그 SEO",
-    "유튜브 쇼츠 블로그",
+    "블로그 자동화",
     "콘텐츠 자동화",
+    "블로그 영상 변환",
+    "AI 콘텐츠 변환",
+    "유튜브 쇼츠 블로그",
   ],
-  authors: [{ name: "Shorts2Blog" }],
-  creator: "Shorts2Blog",
+  authors: [{ name: "LOGOS.ai" }],
+  creator: "LOGOS.ai",
   openGraph: {
     type: "website",
     locale: "ko_KR",
+    alternateLocale: "en_US",
     url: "https://logos.builders",
-    siteName: "Shorts2Blog",
-    title: "영상 → 블로그 글, 1분이면 끝 | Shorts2Blog",
+    siteName: "LOGOS.ai",
+    title: "LOGOS.ai – AI Video ↔ Blog Converter | 영상↔블로그 AI 변환",
     description:
-      "쇼츠·릴스 링크만 넣으면 네이버 SEO 최적화 블로그 글 자동 완성. 학원장·자영업자·크리에이터를 위한 콘텐츠 자동화 도구.",
+      "Convert Shorts & Reels into blog posts, or turn blogs into videos — all with AI. 쇼츠·릴스를 블로그로, 블로그를 영상으로 자동 변환하는 AI 도구.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Shorts2Blog - 쇼츠·릴스를 네이버 블로그로 자동 변환",
+        alt: "LOGOS.ai – AI-powered Video to Blog & Blog to Video Converter",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "영상 → 블로그 글, 1분이면 끝 | Shorts2Blog",
-    description: "쇼츠·릴스 링크만 넣으면 네이버 SEO 최적화 블로그 글 자동 완성.",
+    title: "LOGOS.ai – AI Video ↔ Blog Converter",
+    description: "Convert Shorts & Reels to blog posts, or blogs to videos — powered by AI. 영상↔블로그 AI 자동 변환.",
     images: ["/og-image.png"],
   },
   robots: {
@@ -106,7 +123,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={poppins.variable}>
+    <html lang="ko" className={poppins.variable}>
       <head>
         <meta name="naver-site-verification" content="d0ed4eea36a855fadaa71837054d71ee6740c9ad" />
         <Script
