@@ -1544,6 +1544,7 @@ function ResultContent() {
                   <p className="text-xs text-gray-400 truncate">{user ? t("common.free") : t("common.loginRequired")}</p>
                 </div>
               </div>
+              <TrialBanner />
             </div>
           </aside>
 
@@ -1617,8 +1618,6 @@ function ResultContent() {
                 </div>
               )}
             </div>
-
-            <TrialBanner />
 
             {/* 하단 액션 바 */}
             <div className="border-t border-gray-200 mt-8">
@@ -1755,13 +1754,7 @@ function ResultContent() {
                   </div>
                 </div>
               </div>
-              {/* 업그레이드 버튼 */}
-              <button
-                onClick={() => setShowPricing(true)}
-                className="w-full mt-3 py-2.5 bg-[#FEF9C3] hover:bg-[#FEF08A] text-gray-900 text-sm font-medium rounded-lg transition-colors"
-              >
-                {t("common.upgrade")}
-              </button>
+              <TrialBanner onUpgrade={() => setShowPricing(true)} />
             </div>
           </aside>
 
@@ -1903,8 +1896,6 @@ function ResultContent() {
                 </section>
               )}
             </div>
-
-            <TrialBanner />
 
             {/* 하단 액션 바 (블로그와 동일) */}
             <div className="border-t border-gray-200 mt-8">
@@ -2058,13 +2049,7 @@ function ResultContent() {
                   </div>
                 </div>
               </div>
-              {/* 업그레이드 버튼 */}
-              <button
-                onClick={() => setShowPricing(true)}
-                className="w-full mt-3 py-2.5 bg-[#FEF9C3] hover:bg-[#FEF08A] text-gray-900 text-sm font-medium rounded-lg transition-colors"
-              >
-                {t("common.upgrade")}
-              </button>
+              <TrialBanner onUpgrade={() => setShowPricing(true)} />
             </div>
           </aside>
 
@@ -2551,8 +2536,6 @@ function ResultContent() {
 
               </div>{/* /블로그 본문 정렬 wrapper */}
             </div>
-
-            <TrialBanner />
 
             {/* 하단 액션 바 */}
             <div className="border-t border-gray-200 mt-8">
