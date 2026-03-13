@@ -97,6 +97,7 @@ model Conversion {
   resultContent String?   @db.Text
   resultJson    Json?
   transcript    String?   @db.Text
+  shareToken    String?   @unique
   creditUsed    Int       @default(1)
   status        String    @default("COMPLETED")
   createdAt     DateTime  @default(now())

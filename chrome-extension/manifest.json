@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "LOGOS.ai - 쇼츠를 블로그로",
+  "version": "1.0.0",
+  "description": "유튜브 쇼츠를 네이버 블로그 SEO 글로 1분 만에 자동 변환",
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://www.youtube.com/shorts/*", "*://m.youtube.com/shorts/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": []
+}

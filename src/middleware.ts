@@ -29,6 +29,7 @@ const publicApi = [
   "/api/payment/webhook",
   "/api/payment/stripe/webhook",
   "/api/frames",
+  "/api/share",
 ];
 
 function hasSessionCookie(req: NextRequest): boolean {

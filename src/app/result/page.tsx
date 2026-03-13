@@ -478,6 +478,7 @@ function ResultContent() {
   const [dots, setDots] = useState("");
   const [activeTab, setActiveTab] = useState<ReportTab>("detailed");
   const [copied, setCopied] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [resultData, setResultData] = useState<ResultData | null>(null);
   const [editedData, setEditedData] = useState<ResultData | null>(null);
@@ -540,6 +541,34 @@ function ResultContent() {
     //   return;
     // }
     action();
+  };
+
+  const handleShareLink = async () => {
+    const conversionId = searchParams.get("id");
+    if (!conversionId) {
+      // id 없으면 현재 URL 복사 (fallback)
+      navigator.clipboard.writeText(window.location.href);
+      alert(t("result.linkCopied"));
+      return;
+    }
+    setShareLoading(true);
+    try {
+      const res = await fetch(`/api/conversions/${conversionId}/share`, { method: "POST" });
+      if (!res.ok) {
+        navigator.clipboard.writeText(window.location.href);
+        alert(t("result.linkCopied"));
+        return;
+      }
+      const { shareToken } = await res.json();
+      const shareUrl = `${window.location.origin}/share/${shareToken}`;
+      await navigator.clipboard.writeText(shareUrl);
+      alert(t("result.linkCopied"));
+    } catch {
+      navigator.clipboard.writeText(window.location.href);
+      alert(t("result.linkCopied"));
+    } finally {
+      setShareLoading(false);
+    }
   };
 
   const blogContentRef = useRef<HTMLDivElement>(null);
@@ -1127,32 +1156,34 @@ function ResultContent() {
     const introActualIdx = data.frameUrls.length > 0 ? (introIndex >= 0 ? introIndex : 0) : -1;
     const introUrl = introActualIdx >= 0 ? data.frameUrls[introActualIdx] : undefined;
 
-    // HTML 빌드 (이미지 포함)
+    // 네이버 블로그 에디터 최적화 HTML 빌드
+    // 네이버는 <h2> 무시 → <b><span style="font-size:16pt;"> 사용
+    // <p> 마진 무시 → <br><br>로 간격 처리
     const htmlParts: string[] = [];
     const textParts: string[] = [];
 
     // 제목
-    htmlParts.push(`<h1>${data.blogTitle}</h1>`);
+    htmlParts.push(`<div style="text-align:left;"><b><span style="font-size:20pt;">${data.blogTitle}</span></b></div><br><br>`);
     textParts.push(data.blogTitle, "");
 
     // 도입부
-    htmlParts.push(`<p>${data.summary.replace(/\n/g, "<br>")}</p>`);
+    htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${data.summary.replace(/\n/g, "<br>")}</span></div><br>`);
     textParts.push(data.summary, "");
 
     // 도입부 이미지
     if (introUrl) {
-      htmlParts.push(`<p><img src="${introUrl}" style="max-width:100%;height:auto;" /></p>`);
+      htmlParts.push(`<div style="text-align:center;"><img src="${introUrl}" width="100%" style="max-width:100%;height:auto;" /></div><br><br>`);
     }
 
     // 본문 섹션
     data.sections.forEach((s, idx) => {
       if (showSubtitle) {
         const title = showEmoji ? `${s.emoji} ${s.title}` : s.title;
-        htmlParts.push(`<h2>${title}</h2>`);
+        htmlParts.push(`<div style="text-align:left;"><b><span style="font-size:16pt;">${title}</span></b></div><br>`);
         textParts.push(title, "");
       }
 
-      htmlParts.push(`<p>${s.content.replace(/\n/g, "<br>")}</p>`);
+      htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${s.content.replace(/\n/g, "<br>")}</span></div><br>`);
       textParts.push(s.content, "");
 
       // 섹션 이미지 (도입부와 중복 방지)
@@ -1168,25 +1199,28 @@ function ResultContent() {
         }
       }
       if (frameUrl) {
-        htmlParts.push(`<p><img src="${frameUrl}" style="max-width:100%;height:auto;" /></p>`);
+        htmlParts.push(`<div style="text-align:center;"><img src="${frameUrl}" width="100%" style="max-width:100%;height:auto;" /></div><br><br>`);
       }
 
       // 사용자가 갤러리에서 추가한 이미지
       if (s.extraImages) {
         for (const imgUrl of s.extraImages) {
-          htmlParts.push(`<p><img src="${imgUrl}" style="max-width:100%;height:auto;" /></p>`);
+          htmlParts.push(`<div style="text-align:center;"><img src="${imgUrl}" width="100%" style="max-width:100%;height:auto;" /></div><br><br>`);
         }
       }
     });
 
     // 마무리 CTA
     if (data.closingCta) {
-      htmlParts.push(`<p>${data.closingCta.replace(/\n/g, "<br>")}</p>`);
+      htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${data.closingCta.replace(/\n/g, "<br>")}</span></div><br><br>`);
       textParts.push(data.closingCta, "");
     }
 
-    // 해시태그
-    htmlParts.push(`<p>${data.hashtags.join(" ")}</p>`);
+    // 해시태그 (파란색 스타일링)
+    const styledHashtags = data.hashtags
+      .map((tag) => `<span style="color:#0068e0;">${tag}</span>`)
+      .join(" ");
+    htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${styledHashtags}</span></div>`);
     textParts.push(data.hashtags.join(" "));
 
     const htmlContent = htmlParts.join("");
@@ -1919,10 +1953,8 @@ function ResultContent() {
                       {t("result.newConvert")}
                     </button>
                     <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(window.location.href);
-                        alert(t("result.linkCopied"));
-                      }}
+                      onClick={handleShareLink}
+                      disabled={shareLoading}
                       className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2570,10 +2602,8 @@ function ResultContent() {
                       {t("result.newConvert")}
                     </button>
                     <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(window.location.href);
-                        alert(t("result.linkCopied"));
-                      }}
+                      onClick={handleShareLink}
+                      disabled={shareLoading}
                       className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

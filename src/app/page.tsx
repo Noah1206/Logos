@@ -35,6 +35,16 @@ export default function Home() {
     }
   }, []);
 
+  // 크롬 확장 등에서 ?url= 쿼리로 진입 시 자동 입력
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const prefillUrl = params.get("url");
+    if (prefillUrl) {
+      setUrl(decodeURIComponent(prefillUrl));
+      setShowOnboarding(false);
+    }
+  }, []);
+
   const { data: session, status, update: updateSession } = useSession();
   const isAuthLoading = status === "loading";
   const user = session?.user;
