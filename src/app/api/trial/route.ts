@@ -9,10 +9,15 @@ export async function GET() {
     return NextResponse.json({ active: false, daysLeft: 0, started: false });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { freeTrialStartedAt: true, credits: true, freeTrialConversionCount: true },
-  });
+  const [user, conversionCount] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { freeTrialStartedAt: true, credits: true },
+    }),
+    prisma.conversion.count({
+      where: { userId: session.user.id },
+    }),
+  ]);
 
   if (!user) {
     return NextResponse.json({ active: false, daysLeft: 0, started: false });
@@ -23,6 +28,6 @@ export async function GET() {
   return NextResponse.json({
     ...trial,
     credits: user.credits,
-    conversionCount: user.freeTrialConversionCount,
+    conversionCount,
   });
 }
