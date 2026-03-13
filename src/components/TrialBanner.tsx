@@ -9,7 +9,7 @@ export default function TrialBanner({ onUpgrade }: { onUpgrade?: () => void }) {
 
   // 체험 중 or 시작 전
   if (trial.active || !trial.started) {
-    const pct = (trial.days / 7) * 100;
+    const pct = (trial.days / 14) * 100;
     const barColor = trial.days >= 5
       ? "bg-[#4F46E5]"
       : trial.days >= 3

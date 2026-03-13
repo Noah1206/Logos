@@ -507,6 +507,25 @@ export default function Home() {
             {mode === "study" && (<>{t("study.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("study.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
           </h1>
 
+          {/* 정식 출시 기념 배너 */}
+          <div className="relative inline-block mb-8 animate-[bannerPulse_2s_ease-in-out_infinite]">
+            <div className="px-7 py-3.5 bg-[#4F46E5] rounded-2xl shadow-lg shadow-indigo-200">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl animate-bounce">🎉</span>
+                <div className="text-left">
+                  <p className="text-white font-bold text-base md:text-lg tracking-tight">정식 출시 기념 · 2주간 무료</p>
+                  <p className="text-indigo-200 text-xs md:text-sm">로그인만 하면 14일간 무제한 사용</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <style jsx>{`
+            @keyframes bannerPulse {
+              0%, 100% { transform: scale(1); }
+              50% { transform: scale(1.03); }
+            }
+          `}</style>
+
           <p className="text-sm md:text-base text-gray-500 max-w-2xl mx-auto mb-12 leading-relaxed whitespace-pre-line">
             {mode === "video-to-blog" && t("hero.videoToBlog.desc")}
             {mode === "feed-to-blog" && t("hero.feedToBlog.desc")}

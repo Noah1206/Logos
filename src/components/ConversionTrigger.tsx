@@ -23,7 +23,7 @@ export default function ConversionTrigger() {
 
   if (!active) {
     emoji = "📦";
-    title = "7일 무료체험이 끝났어요";
+    title = "무료체험이 끝났어요";
     desc = "990원으로 계속하기";
     accent = "border-red-200 bg-red-50";
     titleColor = "text-red-800";

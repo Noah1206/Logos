@@ -1,4 +1,4 @@
-const TRIAL_DAYS = 7;
+const TRIAL_DAYS = 14;
 
 export interface TrialStatus {
   active: boolean;
