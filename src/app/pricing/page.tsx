@@ -2,35 +2,32 @@
 
 import { useState } from "react";
 import { useSession, signIn } from "next-auth/react";
-import { usePayment } from "@/hooks/usePayment";
 import { useTranslation } from "@/i18n";
 import LanguageToggle from "@/components/LanguageToggle";
 
 export default function PricingPage() {
   const { t } = useTranslation();
-  const { data: session, update: updateSession } = useSession();
+  const { data: session } = useSession();
   const user = session?.user;
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginLoading, setLoginLoading] = useState<string | null>(null);
+  const [notifyDone, setNotifyDone] = useState(false);
+  const [notifyLoading, setNotifyLoading] = useState(false);
 
-  const { purchasePackage, isProcessing } = usePayment({
-    onSuccess: (credits) => {
-      alert(t("payment.completed", { credits }));
-      updateSession();
-    },
-    onError: (error) => {
-      if (error !== "cancelled") {
-        alert(t("payment.error", { error }));
-      }
-    },
-  });
-
-  const handlePurchase = (packageId: string) => {
+  const handleNotify = async () => {
     if (!user) {
       setShowLoginModal(true);
       return;
     }
-    purchasePackage(packageId);
+    setNotifyLoading(true);
+    try {
+      await fetch("/api/payment/notify", { method: "POST" });
+      setNotifyDone(true);
+    } catch {
+      alert("알림 신청에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setNotifyLoading(false);
+    }
   };
 
   const handleSocialLogin = (provider: "kakao" | "naver") => {
@@ -67,6 +64,29 @@ export default function PricingPage() {
             <p className="text-sm text-gray-900 font-semibold mt-1">
               {t("pricing.subtitleBold")}
             </p>
+          </div>
+
+          {/* 결제 점검 안내 */}
+          <div className="mb-6 p-5 bg-amber-50 border border-amber-200 rounded-xl text-center">
+            <p className="text-sm font-semibold text-amber-800">
+              결제 시스템 점검 중입니다
+            </p>
+            <p className="text-xs text-amber-600 mt-1.5">
+              빠른 시일 내에 결제가 가능하도록 준비 중이에요. 조금만 기다려주세요!
+            </p>
+            {notifyDone ? (
+              <p className="mt-3 text-xs font-semibold text-green-700">
+                알림 신청 완료! 결제가 가능해지면 알려드릴게요.
+              </p>
+            ) : (
+              <button
+                onClick={handleNotify}
+                disabled={notifyLoading}
+                className="mt-3 px-5 py-2 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50"
+              >
+                {notifyLoading ? "신청 중..." : "결제 가능 시 알림 받기"}
+              </button>
+            )}
           </div>
 
           {/* Pricing Cards */}
@@ -121,13 +141,19 @@ export default function PricingPage() {
               <p className="text-xs text-gray-400 mb-5">
                 {t("pricing.starter.period")}
               </p>
-              <button
-                onClick={() => handlePurchase("starter")}
-                disabled={isProcessing}
-                className="w-full py-2.5 bg-[#4F46E5] text-white font-semibold rounded-lg text-sm hover:bg-[#4338CA] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isProcessing ? t("common.processing") : t("common.purchase")}
-              </button>
+              {notifyDone ? (
+                <div className="w-full py-2.5 bg-green-50 border border-green-200 text-green-700 font-semibold rounded-lg text-sm text-center">
+                  알림 신청 완료
+                </div>
+              ) : (
+                <button
+                  onClick={handleNotify}
+                  disabled={notifyLoading}
+                  className="w-full py-2.5 bg-[#4F46E5] text-white font-semibold rounded-lg text-sm hover:bg-[#4338CA] transition-colors disabled:opacity-50"
+                >
+                  {notifyLoading ? "신청 중..." : "알림 받기"}
+                </button>
+              )}
               <ul className="space-y-2.5 mt-6">
                 {([0, 1, 2, 3, 4] as const).map((idx) => (
                   <li key={idx} className="flex items-start gap-2">
@@ -159,13 +185,19 @@ export default function PricingPage() {
               <p className="text-xs text-gray-400 mb-5">
                 {t("pricing.pro.period")}
               </p>
-              <button
-                onClick={() => handlePurchase("pro")}
-                disabled={isProcessing}
-                className="w-full py-2.5 bg-[#4F46E5] text-white font-semibold rounded-lg text-sm hover:bg-[#4338CA] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isProcessing ? t("common.processing") : t("common.purchase")}
-              </button>
+              {notifyDone ? (
+                <div className="w-full py-2.5 bg-green-50 border border-green-200 text-green-700 font-semibold rounded-lg text-sm text-center">
+                  알림 신청 완료
+                </div>
+              ) : (
+                <button
+                  onClick={handleNotify}
+                  disabled={notifyLoading}
+                  className="w-full py-2.5 bg-[#4F46E5] text-white font-semibold rounded-lg text-sm hover:bg-[#4338CA] transition-colors disabled:opacity-50"
+                >
+                  {notifyLoading ? "신청 중..." : "알림 받기"}
+                </button>
+              )}
               <ul className="space-y-2.5 mt-6">
                 {([0, 1, 2, 3, 4] as const).map((idx) => (
                   <li key={idx} className="flex items-start gap-2">

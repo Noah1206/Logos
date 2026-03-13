@@ -22,6 +22,7 @@ model User {
   credits                  Int       @default(0)
   freeTrialStartedAt       DateTime?
   freeTrialConversionCount Int       @default(0)
+  paymentNotify            Boolean   @default(false)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 }

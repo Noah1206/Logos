@@ -9,7 +9,7 @@ async function getAccessToken(): Promise<string> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      imp_key: process.env.NEXT_PUBLIC_PORTONE_STORE_ID,
+      imp_key: process.env.PORTONE_API_KEY,
       imp_secret: process.env.PORTONE_API_SECRET,
     }),
   });
