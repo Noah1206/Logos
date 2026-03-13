@@ -501,7 +501,7 @@ export default function Home() {
       <section className="pt-14 pb-12 px-4 bg-white">
         <div className="max-w-4xl mx-auto text-center">
           {/* 정식 출시 기념 배너 */}
-          <div className="relative inline-block mb-8 animate-[bannerPulse_2s_ease-in-out_infinite]">
+          <div className="relative inline-block mb-14 animate-[bannerPulse_2s_ease-in-out_infinite]">
             <div className="px-7 py-3.5 bg-[#4F46E5] rounded-2xl shadow-lg shadow-indigo-200">
               <div className="flex items-center gap-3">
                 <span className="text-2xl animate-bounce">🎉</span>
