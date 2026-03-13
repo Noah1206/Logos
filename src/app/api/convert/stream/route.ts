@@ -1,9 +1,11 @@
+import { cookies } from "next/headers";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isPromotionActive } from "@/lib/promotion";
 import { getTrialStatus } from "@/lib/trial";
 
 const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:8000";
+const GUEST_COOKIE = "guest_converted";
 
 export const dynamic = "force-dynamic";
 
@@ -13,14 +15,29 @@ export async function POST(req: Request) {
 
     const session = await auth();
 
+    // 비로그인: 쿠키로 1회 허용
     if (!session?.user?.id) {
-      return new Response(
-        JSON.stringify({ success: false, error: "로그인이 필요합니다." }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      );
+      const cookieStore = await cookies();
+      const guestUsed = cookieStore.get(GUEST_COOKIE);
+
+      if (guestUsed) {
+        return new Response(
+          JSON.stringify({ success: false, error: "login_required" }),
+          { status: 401, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      // 첫 게스트 변환 → 쿠키 설정 (30일 유지)
+      cookieStore.set(GUEST_COOKIE, "1", {
+        maxAge: 60 * 60 * 24 * 30,
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+      });
     }
 
-    if (!promoActive) {
+    // 로그인 유저: 크레딧/체험 체크
+    if (session?.user?.id && !promoActive) {
       const user = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { credits: true, freeTrialStartedAt: true },
@@ -36,7 +53,6 @@ export async function POST(req: Request) {
       const trial = getTrialStatus(user.freeTrialStartedAt);
 
       if (trial.active) {
-        // 무료체험 기간 중: 첫 변환이면 시작일 기록 + 변환 횟수 증가
         await prisma.user.update({
           where: { id: session.user.id },
           data: {
@@ -45,13 +61,11 @@ export async function POST(req: Request) {
           },
         });
       } else if (user.credits > 0) {
-        // 무료체험 끝남 + 크레딧 있음: 크레딧 차감
         await prisma.user.update({
           where: { id: session.user.id },
           data: { credits: { decrement: 1 } },
         });
       } else {
-        // 무료체험 끝남 + 크레딧 없음
         return new Response(
           JSON.stringify({ success: false, error: "trial_ended" }),
           { status: 403, headers: { "Content-Type": "application/json" } }

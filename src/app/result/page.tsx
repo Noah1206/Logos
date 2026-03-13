@@ -815,6 +815,10 @@ function ResultContent() {
 
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
+          if (errData.error === "login_required") {
+            setShowLoginModal(true);
+            return;
+          }
           setErrorMessage(errData.error || t("result.convertError"));
           setIsError(true);
           return;
@@ -981,6 +985,10 @@ function ResultContent() {
 
         if (!res.ok || !res.body) {
           const data = await res.json().catch(() => ({}));
+          if (data.error === "login_required") {
+            setShowLoginModal(true);
+            return;
+          }
           setErrorMessage(data.error ?? t("result.convertError"));
           setIsError(true);
           return;

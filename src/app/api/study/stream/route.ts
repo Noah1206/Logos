@@ -1,9 +1,12 @@
 import { NextRequest } from "next/server";
+import { cookies } from "next/headers";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isPromotionActive } from "@/lib/promotion";
+import { getTrialStatus } from "@/lib/trial";
 
 const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:8000";
+const GUEST_COOKIE = "guest_converted";
 
 export const dynamic = "force-dynamic";
 
@@ -13,29 +16,63 @@ export async function POST(req: NextRequest) {
 
     if (!promoActive) {
       const session = await auth();
+
+      // 비로그인: 쿠키로 1회 허용
       if (!session?.user?.id) {
-        return new Response(
-          JSON.stringify({ success: false, error: "로그인이 필요합니다." }),
-          { status: 401, headers: { "Content-Type": "application/json" } }
-        );
+        const cookieStore = await cookies();
+        const guestUsed = cookieStore.get(GUEST_COOKIE);
+
+        if (guestUsed) {
+          return new Response(
+            JSON.stringify({ success: false, error: "login_required" }),
+            { status: 401, headers: { "Content-Type": "application/json" } }
+          );
+        }
+
+        cookieStore.set(GUEST_COOKIE, "1", {
+          maxAge: 60 * 60 * 24 * 30,
+          path: "/",
+          httpOnly: true,
+          sameSite: "lax",
+        });
       }
 
-      const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { credits: true },
-      });
+      // 로그인 유저: 체험/크레딧 체크
+      if (session?.user?.id) {
+        const user = await prisma.user.findUnique({
+          where: { id: session.user.id },
+          select: { credits: true, freeTrialStartedAt: true },
+        });
 
-      if (!user || user.credits <= 0) {
-        return new Response(
-          JSON.stringify({ success: false, error: "크레딧이 부족합니다. 충전 후 이용해주세요." }),
-          { status: 403, headers: { "Content-Type": "application/json" } }
-        );
+        if (!user) {
+          return new Response(
+            JSON.stringify({ success: false, error: "사용자를 찾을 수 없습니다." }),
+            { status: 403, headers: { "Content-Type": "application/json" } }
+          );
+        }
+
+        const trial = getTrialStatus(user.freeTrialStartedAt);
+
+        if (trial.active) {
+          await prisma.user.update({
+            where: { id: session.user.id },
+            data: {
+              ...(!user.freeTrialStartedAt ? { freeTrialStartedAt: new Date() } : {}),
+              freeTrialConversionCount: { increment: 1 },
+            },
+          });
+        } else if (user.credits > 0) {
+          await prisma.user.update({
+            where: { id: session.user.id },
+            data: { credits: { decrement: 1 } },
+          });
+        } else {
+          return new Response(
+            JSON.stringify({ success: false, error: "trial_ended" }),
+            { status: 403, headers: { "Content-Type": "application/json" } }
+          );
+        }
       }
-
-      await prisma.user.update({
-        where: { id: session.user.id },
-        data: { credits: { decrement: 1 } },
-      });
     }
 
     const body = await req.json();
