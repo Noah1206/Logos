@@ -474,8 +474,8 @@ export default function Home() {
                   <span className="text-sm text-gray-600 hidden sm:block">
                     {user.name || user.email?.split("@")[0]}
                   </span>
-                  <span className={`px-2 py-1 text-xs rounded font-medium ${isPromoActive ? "bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] text-white" : "bg-[#EEF2FF] text-[#4F46E5]"}`}>
-                    {isPromoActive ? t("promo.freeUsing") : t("common.creditsLeft", { count: user.credits })}
+                  <span className="px-2 py-1 text-xs rounded font-medium bg-[#EEF2FF] text-[#4F46E5]">
+                    {t("common.free")}
                   </span>
                   <button
                     onClick={handleLogout}

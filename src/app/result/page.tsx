@@ -1541,7 +1541,7 @@ function ResultContent() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-medium text-gray-900 truncate">{user?.name || t("common.guest")}</span>
-                  <p className="text-xs text-gray-400 truncate">{user ? t("common.creditsLeft", { count: user.credits }) : t("common.loginRequired")}</p>
+                  <p className="text-xs text-gray-400 truncate">{user ? t("common.free") : t("common.loginRequired")}</p>
                 </div>
               </div>
             </div>
@@ -1751,9 +1751,8 @@ function ResultContent() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-medium text-gray-900 truncate">{user?.name || t("common.guest")}</span>
-                    <span className="text-[10px] font-medium text-[#4F46E5] bg-[#EEF2FF] px-1.5 py-0.5 rounded">{user && user.credits > 1 ? t("common.pro") : t("common.free")}</span>
+                    <span className="text-[10px] font-medium text-[#4F46E5] bg-[#EEF2FF] px-1.5 py-0.5 rounded">{t("common.free")}</span>
                   </div>
-                  <p className="text-xs text-gray-400 truncate">{t("result.creditRemaining", { count: user?.credits ?? 0 })}</p>
                 </div>
                 <button className="p-1 hover:bg-gray-100 rounded transition-colors">
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2061,9 +2060,8 @@ function ResultContent() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-medium text-gray-900 truncate">{user?.name || t("common.guest")}</span>
-                    <span className="text-[10px] font-medium text-[#4F46E5] bg-[#EEF2FF] px-1.5 py-0.5 rounded">{user && user.credits > 1 ? t("common.pro") : t("common.free")}</span>
+                    <span className="text-[10px] font-medium text-[#4F46E5] bg-[#EEF2FF] px-1.5 py-0.5 rounded">{t("common.free")}</span>
                   </div>
-                  <p className="text-xs text-gray-400 truncate">{t("result.creditRemaining", { count: user?.credits ?? 0 })}</p>
                 </div>
                 <button className="p-1 hover:bg-gray-100 rounded transition-colors">
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
