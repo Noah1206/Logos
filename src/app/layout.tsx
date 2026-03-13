@@ -49,11 +49,11 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   metadataBase: new URL("https://logos.builders"),
   title: {
-    default: "LOGOS.ai – AI Video to Blog & Blog to Video Converter | 영상↔블로그 자동 변환",
+    default: "LOGOS.ai – 영상↔블로그 AI 자동 변환 | 쇼츠·릴스를 블로그로",
     template: "%s | LOGOS.ai",
   },
   description:
-    "Convert YouTube Shorts & Instagram Reels into SEO-optimized blog posts in seconds with AI. Turn blog posts into short-form videos. 유튜브 쇼츠·릴스를 블로그 글로, 블로그를 영상으로 AI 자동 변환. 건당 990원.",
+    "유튜브 쇼츠·인스타 릴스를 네이버 블로그 SEO 글로 자동 변환. 블로그를 숏폼 영상으로도 변환. AI가 1분 안에 완성, 건당 990원.",
   keywords: [
     // English keywords
     "AI blog writer",
@@ -86,22 +86,22 @@ export const metadata: Metadata = {
     alternateLocale: "en_US",
     url: "https://logos.builders",
     siteName: "LOGOS.ai",
-    title: "LOGOS.ai – AI Video ↔ Blog Converter | 영상↔블로그 AI 변환",
+    title: "LOGOS.ai – 영상↔블로그 AI 자동 변환",
     description:
-      "Convert Shorts & Reels into blog posts, or turn blogs into videos — all with AI. 쇼츠·릴스를 블로그로, 블로그를 영상으로 자동 변환하는 AI 도구.",
+      "쇼츠·릴스를 블로그 글로, 블로그를 영상으로. AI가 1분 안에 자동 변환해드려요.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "LOGOS.ai – AI-powered Video to Blog & Blog to Video Converter",
+        alt: "LOGOS.ai – 영상↔블로그 AI 자동 변환",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "LOGOS.ai – AI Video ↔ Blog Converter",
-    description: "Convert Shorts & Reels to blog posts, or blogs to videos — powered by AI. 영상↔블로그 AI 자동 변환.",
+    title: "LOGOS.ai – 영상↔블로그 AI 자동 변환",
+    description: "쇼츠·릴스를 블로그 글로, 블로그를 영상으로. AI가 1분 안에 자동 변환해드려요.",
     images: ["/og-image.png"],
   },
   robots: {
