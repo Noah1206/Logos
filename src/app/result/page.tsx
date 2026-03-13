@@ -7,6 +7,7 @@ import { usePayment } from "@/hooks/usePayment";
 import { useTranslation, useTranslationArray } from "@/i18n";
 import VideoTimeline from "@/components/VideoTimeline";
 import TrialBanner from "@/components/TrialBanner";
+import ConversionTrigger from "@/components/ConversionTrigger";
 
 type ReportTab = "detailed" | "summary" | "easy" | "script";
 
@@ -1544,7 +1545,7 @@ function ResultContent() {
                   <p className="text-xs text-gray-400 truncate">{user ? t("common.free") : t("common.loginRequired")}</p>
                 </div>
               </div>
-              <TrialBanner />
+              <TrialBanner onUpgrade={() => setShowPricing(true)} />
             </div>
           </aside>
 
@@ -1577,6 +1578,7 @@ function ResultContent() {
 
             {/* 메인 콘텐츠 영역 */}
             <div className="max-w-4xl mx-auto px-8 pt-10 pb-32">
+              <ConversionTrigger onUpgrade={() => setShowPricing(true)} />
               <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-8">
                 {t("result.generatedVideo")}
               </h1>
@@ -1768,6 +1770,7 @@ function ResultContent() {
           {/* ===== 오른쪽 메인 콘텐츠 ===== */}
           <div className={`animate-fade-in flex-1 transition-all duration-300 ${sidebarOpen ? "ml-60" : "ml-0"}`}>
             <div className="max-w-4xl mx-auto px-8 pt-10 pb-32">
+              <ConversionTrigger onUpgrade={() => setShowPricing(true)} />
               {/* 제목 */}
               <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-3">
                 {studyResult.study_structure.title}
@@ -2073,6 +2076,7 @@ function ResultContent() {
           >
             {/* 메인 콘텐츠 영역 */}
             <div className="max-w-4xl mx-auto px-8 pt-10 pb-32">
+              <ConversionTrigger onUpgrade={() => setShowPricing(true)} />
               {/* 큰 제목 (편집 가능) */}
               <EditableText
                 tag="h1"

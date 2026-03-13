@@ -36,13 +36,14 @@ export async function POST(req: Request) {
       const trial = getTrialStatus(user.freeTrialStartedAt);
 
       if (trial.active) {
-        // 무료체험 기간 중: 첫 변환이면 시작일 기록
-        if (!user.freeTrialStartedAt) {
-          await prisma.user.update({
-            where: { id: session.user.id },
-            data: { freeTrialStartedAt: new Date() },
-          });
-        }
+        // 무료체험 기간 중: 첫 변환이면 시작일 기록 + 변환 횟수 증가
+        await prisma.user.update({
+          where: { id: session.user.id },
+          data: {
+            ...(!user.freeTrialStartedAt ? { freeTrialStartedAt: new Date() } : {}),
+            freeTrialConversionCount: { increment: 1 },
+          },
+        });
       } else if (user.credits > 0) {
         // 무료체험 끝남 + 크레딧 있음: 크레딧 차감
         await prisma.user.update({

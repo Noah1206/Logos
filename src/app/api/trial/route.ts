@@ -11,7 +11,7 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { freeTrialStartedAt: true, credits: true },
+    select: { freeTrialStartedAt: true, credits: true, freeTrialConversionCount: true },
   });
 
   if (!user) {
@@ -23,5 +23,6 @@ export async function GET() {
   return NextResponse.json({
     ...trial,
     credits: user.credits,
+    conversionCount: user.freeTrialConversionCount,
   });
 }

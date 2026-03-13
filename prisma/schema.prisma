@@ -19,8 +19,9 @@ model User {
   orders        Order[]
   conversions   Conversion[]
   knowledge     Knowledge[]
-  credits             Int       @default(0)
-  freeTrialStartedAt  DateTime?
+  credits                  Int       @default(0)
+  freeTrialStartedAt       DateTime?
+  freeTrialConversionCount Int       @default(0)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 }

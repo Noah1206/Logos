@@ -8,6 +8,7 @@ interface TrialData {
   daysLeft: number;
   started: boolean;
   credits: number;
+  conversionCount: number;
 }
 
 export function useTrial() {
