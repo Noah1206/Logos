@@ -44,9 +44,9 @@ export default function ConversionTrigger({ onUpgrade }: { onUpgrade?: () => voi
           {onUpgrade && (
             <button
               onClick={onUpgrade}
-              className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors"
+              className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium rounded-lg transition-colors"
             >
-              요금제 보기
+              업그레이드
             </button>
           )}
         </div>
@@ -61,7 +61,7 @@ export default function ConversionTrigger({ onUpgrade }: { onUpgrade?: () => voi
   let bgClass: string;
   let borderClass: string;
   let textClass: string;
-  let button: { label: string; bgClass: string } | null = null;
+  let button = false;
 
   if (days >= 5) {
     emoji = "🎉";
@@ -75,14 +75,14 @@ export default function ConversionTrigger({ onUpgrade }: { onUpgrade?: () => voi
     bgClass = "bg-amber-50";
     borderClass = "border-amber-100";
     textClass = "text-amber-800";
-    button = { label: "요금제 보기", bgClass: "bg-amber-600 hover:bg-amber-700" };
+    button = true;
   } else {
     emoji = "🔥";
     text = `${conversionCount}건 변환 중! 체험이 곧 종료돼요 — ${days}일 남음`;
     bgClass = "bg-red-50";
     borderClass = "border-red-200";
     textClass = "text-red-700";
-    button = { label: "지금 업그레이드", bgClass: "bg-red-600 hover:bg-red-700" };
+    button = true;
   }
 
   return (
@@ -102,9 +102,9 @@ export default function ConversionTrigger({ onUpgrade }: { onUpgrade?: () => voi
         {button && onUpgrade && (
           <button
             onClick={onUpgrade}
-            className={`px-3 py-1.5 ${button.bgClass} text-white text-xs font-semibold rounded-lg transition-colors`}
+            className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium rounded-lg transition-colors"
           >
-            {button.label}
+            업그레이드
           </button>
         )}
       </div>
