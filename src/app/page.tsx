@@ -506,8 +506,8 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <span className="text-2xl animate-bounce">🎉</span>
                 <div className="text-left">
-                  <p className="text-white font-bold text-base md:text-lg tracking-tight">정식 출시 기념 · 2주간 무료</p>
-                  <p className="text-indigo-200 text-xs md:text-sm">로그인만 하면 14일간 무제한 사용</p>
+                  <p className="text-white font-bold text-base md:text-lg tracking-tight">정식 출시 기념 · 7일 무료체험</p>
+                  <p className="text-indigo-200 text-xs md:text-sm">로그인만 하면 7일간 무제한 사용</p>
                 </div>
               </div>
             </div>

@@ -19,7 +19,8 @@ export default function ConversionTrigger() {
   let accent = "border-gray-200 bg-white";
   let titleColor = "text-gray-900";
   let descColor = "text-gray-500";
-  let showPricing = false;
+  let btnStyle = "bg-gray-900 hover:bg-gray-800";
+  let btnText = "요금제 보기 →";
 
   if (!active) {
     emoji = "📦";
@@ -28,7 +29,8 @@ export default function ConversionTrigger() {
     accent = "border-red-200 bg-red-50";
     titleColor = "text-red-800";
     descColor = "text-red-600";
-    showPricing = true;
+    btnStyle = "bg-[#4F46E5] hover:bg-[#4338CA]";
+    btnText = "요금제 선택하기 →";
   } else if (days <= 1) {
     emoji = "⏰";
     title = "오늘 자정에 체험이 끝나요";
@@ -36,7 +38,6 @@ export default function ConversionTrigger() {
     accent = "border-amber-300 bg-amber-50";
     titleColor = "text-amber-900";
     descColor = "text-amber-700";
-    showPricing = true;
   } else if (days <= 2) {
     emoji = "👍";
     title = `체험이 ${days}일 뒤 끝나요`;
@@ -78,15 +79,13 @@ export default function ConversionTrigger() {
           </p>
         </div>
 
-        {/* 요금제 버튼 */}
-        {showPricing && (
-          <button
-            onClick={() => router.push("/pricing")}
-            className="w-full mt-1 py-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium rounded-lg transition-colors"
-          >
-            요금제 보기 →
-          </button>
-        )}
+        {/* 요금제 버튼 - 항상 표시 */}
+        <button
+          onClick={() => router.push("/pricing")}
+          className={`w-full mt-1 py-2 ${btnStyle} text-white text-xs font-medium rounded-lg transition-colors`}
+        >
+          {btnText}
+        </button>
       </div>
 
       <style jsx>{`

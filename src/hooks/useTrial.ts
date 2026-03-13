@@ -25,7 +25,7 @@ export function useTrial() {
 
   if (!trial || !session?.user) return null;
 
-  const days = trial.started ? trial.daysLeft : 14;
+  const days = trial.started ? trial.daysLeft : 7;
 
   return { ...trial, days };
 }

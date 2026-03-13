@@ -9,7 +9,7 @@ export default function TrialBanner({ onUpgrade }: { onUpgrade?: () => void }) {
 
   // 체험 중 or 시작 전
   if (trial.active || !trial.started) {
-    const pct = (trial.days / 14) * 100;
+    const pct = (trial.days / 7) * 100;
     const barColor = trial.days >= 5
       ? "bg-[#4F46E5]"
       : trial.days >= 3
@@ -45,28 +45,24 @@ export default function TrialBanner({ onUpgrade }: { onUpgrade?: () => void }) {
     );
   }
 
-  // 체험 종료 + 크레딧 없음
-  if (trial.credits <= 0) {
-    return (
-      <div className="mt-3">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] text-gray-400">무료체험</span>
-          <span className="text-[11px] font-semibold text-[#DC2626]">종료됨</span>
-        </div>
-        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full rounded-full bg-gray-200" style={{ width: "0%" }} />
-        </div>
-        {onUpgrade && (
-          <button
-            onClick={onUpgrade}
-            className="w-full mt-3 py-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium rounded-lg transition-colors"
-          >
-            요금제 선택하기
-          </button>
-        )}
+  // 체험 종료
+  return (
+    <div className="mt-3">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[11px] text-gray-400">무료체험</span>
+        <span className="text-[11px] font-semibold text-[#DC2626]">종료됨</span>
       </div>
-    );
-  }
-
-  return null;
+      <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-full rounded-full bg-gray-200" style={{ width: "0%" }} />
+      </div>
+      {onUpgrade && (
+        <button
+          onClick={onUpgrade}
+          className="w-full mt-3 py-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-xs font-semibold rounded-lg transition-colors"
+        >
+          요금제 선택하기
+        </button>
+      )}
+    </div>
+  );
 }
