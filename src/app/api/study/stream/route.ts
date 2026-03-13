@@ -40,10 +40,7 @@ export async function POST(req: NextRequest) {
         if (trial.active) {
           await prisma.user.update({
             where: { id: session.user.id },
-            data: {
-              ...(!user.freeTrialStartedAt ? { freeTrialStartedAt: new Date() } : {}),
-              freeTrialConversionCount: { increment: 1 },
-            },
+            data: { freeTrialConversionCount: { increment: 1 } },
           });
         } else if (user.credits > 0) {
           await prisma.user.update({

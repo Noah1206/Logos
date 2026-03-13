@@ -17,6 +17,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientSecret: process.env.NAVER_CLIENT_SECRET!,
     }),
   ],
+  events: {
+    // 신규 가입 시 무료체험 시작
+    async createUser({ user }) {
+      await prisma.user.update({
+        where: { id: user.id! },
+        data: { freeTrialStartedAt: new Date() },
+      });
+    },
+  },
   callbacks: {
     async session({ session, user }) {
       if (session.user) {
