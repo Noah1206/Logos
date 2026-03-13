@@ -500,13 +500,6 @@ export default function Home() {
       {/* Hero Section */}
       <section className="pt-24 pb-12 px-4 bg-white">
         <div className="max-w-4xl mx-auto text-center">
-          {/* 모드별 Hero 타이틀 */}
-          <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-8">
-            {mode === "video-to-blog" && (<>{t("hero.videoToBlog.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("hero.videoToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
-            {mode === "feed-to-blog" && (<>{t("hero.feedToBlog.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("hero.feedToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
-            {mode === "study" && (<>{t("study.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("study.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
-          </h1>
-
           {/* 정식 출시 기념 배너 */}
           <div className="relative inline-block mb-8 animate-[bannerPulse_2s_ease-in-out_infinite]">
             <div className="px-7 py-3.5 bg-[#4F46E5] rounded-2xl shadow-lg shadow-indigo-200">
@@ -526,6 +519,13 @@ export default function Home() {
             }
           `}</style>
 
+          {/* 모드별 Hero 타이틀 */}
+          <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-8">
+            {mode === "video-to-blog" && (<>{t("hero.videoToBlog.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("hero.videoToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
+            {mode === "feed-to-blog" && (<>{t("hero.feedToBlog.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("hero.feedToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
+            {mode === "study" && (<>{t("study.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("study.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
+          </h1>
+
           <p className="text-sm md:text-base text-gray-500 max-w-2xl mx-auto mb-12 leading-relaxed whitespace-pre-line">
             {mode === "video-to-blog" && t("hero.videoToBlog.desc")}
             {mode === "feed-to-blog" && t("hero.feedToBlog.desc")}
@@ -533,17 +533,6 @@ export default function Home() {
           </p>
 
           {/* CTA Button */}
-          <button
-            onClick={() => {
-              const heroInput = document.querySelector<HTMLInputElement>('#hero-url-input') || document.querySelector<HTMLTextAreaElement>('#hero-blog-input');
-              if (heroInput) heroInput.focus();
-              else window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="px-10 py-4 text-base font-medium text-white bg-[#4F46E5] rounded-full hover:bg-[#4338CA] hover:scale-[0.98] active:scale-95 transition-all mb-16"
-          >
-            {t("common.startFree")}
-          </button>
-
           {/* Convert Section */}
           <div className="max-w-2xl mx-auto mb-20">
             {/* 모드 선택 탭 */}
