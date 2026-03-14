@@ -49,6 +49,25 @@ export default function Home() {
   const isAuthLoading = status === "loading";
   const user = session?.user;
 
+  // 로그인 유저 + 변환 기록 있으면 최근 결과 페이지로 리다이렉트
+  useEffect(() => {
+    if (status !== "authenticated" || !user) return;
+    // ?url= 쿼리로 진입한 경우는 리다이렉트 하지 않음
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("url")) return;
+
+    fetch("/api/conversions?limit=1")
+      .then((res) => res.json())
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const latest = data[0];
+          const mode = latest.mode === "study" ? "&mode=study" : "";
+          window.location.href = `/result?id=${latest.id}${mode}`;
+        }
+      })
+      .catch(() => {});
+  }, [status, user]);
+
   const { purchasePackage, isProcessing } = usePayment({
     onSuccess: (credits) => {
       alert(t("payment.completed", { credits }));
