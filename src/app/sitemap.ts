@@ -28,17 +28,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
         },
       },
     },
-    {
-      url: `${baseUrl}/tools/seo-check`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.7,
-      alternates: {
-        languages: {
-          ko: `${baseUrl}/tools/seo-check`,
-          en: `${baseUrl}/tools/seo-check`,
-        },
-      },
-    },
   ];
 }
