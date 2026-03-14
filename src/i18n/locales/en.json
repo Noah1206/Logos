@@ -320,6 +320,7 @@
     "align": "Align",
     "size": "Size",
     "weight": "Weight",
+    "seoCheck": "SEO Score Check",
     "editHint": "Click any text to edit directly",
     "tabs": {
       "blogPost": "Blog Post",

@@ -320,6 +320,7 @@
     "align": "정렬",
     "size": "크기",
     "weight": "굵기",
+    "seoCheck": "SEO 점수 체크",
     "editHint": "텍스트를 클릭하면 직접 수정할 수 있어요",
     "tabs": {
       "blogPost": "블로그 글",

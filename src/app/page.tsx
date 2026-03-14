@@ -1325,11 +1325,32 @@ export default function Home() {
 
             {/* Terms */}
             <p className="text-xs text-gray-400 text-center mt-6">
-              {t("login.terms")}<a href="#" className="underline">{t("login.termsOfService")}</a>{t("login.and")}<a href="#" className="underline">{t("login.privacyPolicy")}</a>{t("login.termsEnd")}
+              {t("login.terms")}<a href="/terms" target="_blank" className="underline">{t("login.termsOfService")}</a>{t("login.and")}<a href="/terms/privacy-optional" target="_blank" className="underline">{t("login.privacyPolicy")}</a>{t("login.termsEnd")}
             </p>
           </div>
         </div>
       )}
+      {/* Footer */}
+      <footer className="w-full border-t border-gray-100 mt-20 py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
+            <div className="flex items-center gap-2">
+              <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-4 w-4" />
+              <span className="font-semibold text-gray-500">LOGOS.ai</span>
+              <span>© {new Date().getFullYear()} 스터풀</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <a href="/terms" className="hover:text-gray-600 transition-colors">이용약관</a>
+              <a href="/terms/privacy-optional" className="hover:text-gray-600 transition-colors">개인정보처리방침</a>
+              <a href="/terms/marketing" className="hover:text-gray-600 transition-colors">마케팅 수신 동의</a>
+            </div>
+          </div>
+          <div className="mt-4 text-center sm:text-left text-xs text-gray-300">
+            <p>스터풀 | 대표: 조현웅 | 사업자등록번호: 508-14-52353</p>
+            <p>경상남도 양산시 동면 금오16길 122, 513동 2202호 | 055-389-6223</p>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
