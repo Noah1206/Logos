@@ -52,9 +52,9 @@ export default function Home() {
   // 로그인 유저 + 변환 기록 있으면 최근 결과 페이지로 리다이렉트
   useEffect(() => {
     if (status !== "authenticated" || !user) return;
-    // ?url= 쿼리로 진입한 경우는 리다이렉트 하지 않음
     const params = new URLSearchParams(window.location.search);
-    if (params.get("url")) return;
+    // ?url= 또는 ?new 쿼리가 있으면 리다이렉트 하지 않음
+    if (params.get("url") || params.has("new")) return;
 
     fetch("/api/conversions?limit=1")
       .then((res) => res.json())

@@ -1135,7 +1135,7 @@ function ResultContent() {
 
   const handleGoBack = () => {
     requireAuth(() => {
-      window.location.href = "/";
+      window.location.href = "/?new";
     });
   };
 

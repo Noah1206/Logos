@@ -871,8 +871,16 @@ async def download_video(url: str) -> Tuple[str, VideoInfo]:
         stderr_text = ""
 
         # 1단계: Playwright + Stealth (쿠키 없이 작동, 가장 안정적)
+        # 90초 타임아웃 — 초과 시 다음 단계로 폴백
         print("[Download] Instagram 1단계: Playwright+Stealth 시도...")
-        pw_result = await _download_instagram_via_playwright(url, temp_dir, temp_id)
+        try:
+            pw_result = await asyncio.wait_for(
+                _download_instagram_via_playwright(url, temp_dir, temp_id),
+                timeout=90
+            )
+        except asyncio.TimeoutError:
+            print("[Download] Instagram 1단계: Playwright 90초 타임아웃, 다음 단계로...")
+            pw_result = None
         if pw_result:
             pw_path = pw_result["path"]
             # Playwright에서 캡션/제목을 추출했으면 yt-dlp 메타데이터 불필요
