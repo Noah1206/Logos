@@ -37,7 +37,7 @@ export default function PrivacyOptionalPage() {
                   수집 항목
                 </td>
                 <td className="border border-gray-300 px-4 py-3">
-                  이메일 주소, 이름(닉네임), 서비스 이용 기록, 관심 분야
+                  이메일 주소, 이름(닉네임)
                 </td>
               </tr>
               <tr>
@@ -45,8 +45,7 @@ export default function PrivacyOptionalPage() {
                   수집 목적
                 </td>
                 <td className="border border-gray-300 px-4 py-3">
-                  신규 기능 안내, 이벤트·프로모션 정보 제공, 할인 쿠폰 발송,
-                  맞춤형 서비스 추천, 서비스 개선을 위한 통계 분석
+                  신규 기능 안내, 이벤트·프로모션 정보 제공, 할인 쿠폰 발송
                 </td>
               </tr>
               <tr>
