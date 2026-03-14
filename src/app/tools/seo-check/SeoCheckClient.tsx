@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import LanguageToggle from "@/components/LanguageToggle";
 
 interface CheckItem {
@@ -241,8 +241,56 @@ function analyzeSeo(text: string): CheckItem[] {
   return results;
 }
 
+interface HistoryItem {
+  id: string;
+  title: string | null;
+  mode: string;
+  createdAt: string;
+  resultJson: ResultJson | null;
+}
+
 export default function SeoCheckClient() {
   const [text, setText] = useState("");
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // 변환 히스토리 로드
+  useEffect(() => {
+    fetch("/api/conversions?limit=20")
+      .then((res) => {
+        if (!res.ok) return null;
+        return res.json();
+      })
+      .then((json) => {
+        if (json?.data) {
+          // 블로그 모드만 필터
+          const blogItems = json.data.filter((c: HistoryItem) => c.mode !== "study");
+          setHistory(blogItems);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const loadFromHistory = (item: HistoryItem) => {
+    const json = item.resultJson;
+    if (!json) return;
+
+    // resultJson에서 텍스트 재구성
+    const parts: string[] = [];
+    if (json.blogTitle) parts.push(json.blogTitle, "");
+    if (json.summary) parts.push(json.summary, "");
+    json.sections?.forEach((s) => {
+      if (s.title) parts.push(`## ${s.emoji} ${s.title}`);
+      if (s.content) parts.push(s.content, "");
+    });
+    if (json.closingCta) parts.push(json.closingCta, "");
+    if (json.hashtags?.length) parts.push(json.hashtags.join(" "));
+
+    setText(parts.join("\n"));
+    setSelectedId(item.id);
+    setHistoryOpen(false);
+  };
 
   const results = useMemo(() => {
     if (text.trim().length < 10) return null;
@@ -288,19 +336,55 @@ export default function SeoCheckClient() {
           </p>
         </div>
 
+        {/* 히스토리 선택 */}
+        {history.length > 0 && (
+          <div className="mb-6">
+            <button
+              onClick={() => setHistoryOpen(!historyOpen)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              내 변환 기록에서 불러오기
+              <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${historyOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {historyOpen && (
+              <div className="mt-2 bg-white border border-gray-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
+                {history.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => loadFromHistory(item)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${selectedId === item.id ? "bg-gray-50" : ""}`}
+                  >
+                    <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-800 truncate">{item.title || "제목 없음"}</p>
+                      <p className="text-xs text-gray-400">{new Date(item.createdAt).toLocaleDateString("ko-KR")}</p>
+                    </div>
+                    {selectedId === item.id && (
+                      <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* 입력 영역 */}
           <div>
             <textarea
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => { setText(e.target.value); setSelectedId(null); }}
               placeholder="블로그 글 내용을 붙여넣으세요..."
               className="w-full h-[500px] p-5 bg-white border border-gray-200 rounded-2xl text-sm text-gray-800 leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             />
             <div className="flex items-center justify-between mt-2 px-1">
               <span className="text-xs text-gray-400">{text.length.toLocaleString()}자</span>
               {text.length > 0 && (
-                <button onClick={() => setText("")} className="text-xs text-gray-400 hover:text-gray-600">
+                <button onClick={() => { setText(""); setSelectedId(null); }} className="text-xs text-gray-400 hover:text-gray-600">
                   초기화
                 </button>
               )}
