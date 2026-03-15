@@ -5,6 +5,7 @@ import {
   ReactFlow,
   Background,
   Controls,
+  MiniMap,
   useNodesState,
   useEdgesState,
   type Node,
@@ -13,6 +14,7 @@ import {
 import dagre from "@dagrejs/dagre";
 import "@xyflow/react/dist/style.css";
 import { useTranslation } from "@/i18n";
+import StudyStatsCard from "./StudyStatsCard";
 
 interface GraphData {
   nodes: Array<{
@@ -28,19 +30,36 @@ interface GraphData {
   }>;
 }
 
+interface GraphStats {
+  totalConcepts: number;
+  totalConnections: number;
+  totalStudies: number;
+}
+
 interface KnowledgeGraphViewProps {
   onClose: () => void;
 }
 
 const TOPIC_COLORS: Record<string, string> = {
-  food: "#F87171",
-  fitness: "#34D399",
-  beauty: "#F472B6",
-  education: "#60A5FA",
-  tech: "#A78BFA",
-  business: "#FBBF24",
-  lifestyle: "#FB923C",
-  other: "#9CA3AF",
+  food: "#EF4444",
+  fitness: "#10B981",
+  beauty: "#EC4899",
+  education: "#3B82F6",
+  tech: "#8B5CF6",
+  business: "#F59E0B",
+  lifestyle: "#F97316",
+  other: "#6B7280",
+};
+
+const TOPIC_BG: Record<string, string> = {
+  food: "bg-red-50 text-red-700 border-red-200",
+  fitness: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  beauty: "bg-pink-50 text-pink-700 border-pink-200",
+  education: "bg-blue-50 text-blue-700 border-blue-200",
+  tech: "bg-violet-50 text-violet-700 border-violet-200",
+  business: "bg-amber-50 text-amber-700 border-amber-200",
+  lifestyle: "bg-orange-50 text-orange-700 border-orange-200",
+  other: "bg-gray-50 text-gray-600 border-gray-200",
 };
 
 function applyDagreLayout(nodes: Node[], edges: Edge[]) {
@@ -67,14 +86,16 @@ function applyDagreLayout(nodes: Node[], edges: Edge[]) {
 export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps) {
   const { t } = useTranslation();
   const [graphData, setGraphData] = useState<GraphData | null>(null);
+  const [graphStats, setGraphStats] = useState<GraphStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [topicFilter, setTopicFilter] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/knowledge/graph")
       .then((r) => r.json())
-      .then((data) => {
-        setGraphData(data.data);
+      .then((res) => {
+        setGraphData(res.data);
+        setGraphStats(res.stats);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -97,21 +118,21 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
     const styledNodes: Node[] = filteredNodes.map((n) => {
       const primaryTopic = n.data.topics[0] || "other";
       const color = TOPIC_COLORS[primaryTopic] || TOPIC_COLORS.other;
-      const size = Math.max(10, Math.min(18, 10 + n.data.count * 2));
+      const size = Math.max(12, Math.min(16, 12 + n.data.count));
 
       return {
         id: n.id,
         data: { label: n.data.label },
         position: n.position,
         style: {
-          background: "#1A1A2E",
-          color: "#fff",
+          background: "#fff",
+          color: "#111827",
           border: `2px solid ${color}`,
           borderRadius: "12px",
-          padding: "6px 12px",
+          padding: "8px 14px",
           fontSize: `${size}px`,
           fontWeight: n.data.count > 1 ? 700 : 500,
-          boxShadow: `0 0 ${n.data.count * 4}px ${color}40`,
+          boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
         },
       };
     });
@@ -123,9 +144,9 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
         source: e.source,
         target: e.target,
         style: {
-          stroke: e.data?.type === "prerequisite" ? "#F87171" :
-                  e.data?.type === "extends" ? "#60A5FA" : "#4B5563",
-          strokeWidth: 1.5,
+          stroke: e.data?.type === "prerequisite" ? "#EF4444" :
+                  e.data?.type === "extends" ? "#3B82F6" : "#D1D5DB",
+          strokeWidth: e.data?.type === "related" ? 1 : 2,
           strokeDasharray: e.data?.type === "related" ? "5 5" : undefined,
         },
         type: "smoothstep",
@@ -140,7 +161,6 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
   const [nodes, setNodes, onNodesChange] = useNodesState(flowNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
 
-  // Sync when flowNodes/flowEdges change
   useEffect(() => {
     setNodes(flowNodes);
     setEdges(flowEdges);
@@ -151,37 +171,49 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#0D0D1A] flex flex-col">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
-        <div className="flex items-center gap-3">
-          <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
-          <h2 className="text-lg font-bold text-white">{t("study.graph.title")}</h2>
-          {graphData && (
-            <span className="text-sm text-gray-500 ml-2">
-              {flowNodes.length} {t("study.stats.concepts")} · {flowEdges.length} {t("study.stats.connections")}
-            </span>
-          )}
-        </div>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-32">
+      {/* 헤더 — 뒤로가기 + 제목 */}
+      <div className="flex items-center gap-3 mb-2">
         <button
           onClick={onClose}
-          className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+          className="p-1.5 -ml-1.5 hover:bg-gray-100 rounded-lg transition-colors"
         >
-          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
+        <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+          {t("study.graph.title")}
+        </h1>
       </div>
+
+      {/* 통계 서브텍스트 */}
+      <div className="flex items-center gap-3 mb-8 text-sm text-gray-400 ml-8">
+        {graphStats && (
+          <>
+            <span>{graphStats.totalStudies} {t("study.stats.studies")}</span>
+            <span>·</span>
+            <span>{graphStats.totalConcepts} {t("study.stats.concepts")}</span>
+            <span>·</span>
+            <span>{graphStats.totalConnections} {t("study.stats.connections")}</span>
+          </>
+        )}
+      </div>
+
+      {/* 학습 통계 카드 */}
+      {graphStats && (
+        <StudyStatsCard stats={graphStats} />
+      )}
 
       {/* 토픽 필터 */}
       {topics.length > 0 && (
-        <div className="flex items-center gap-2 px-6 py-3 border-b border-gray-800 overflow-x-auto">
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
           <button
             onClick={() => setTopicFilter(null)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors flex-shrink-0 ${
-              !topicFilter ? "bg-white text-gray-900" : "bg-gray-800 text-gray-400 hover:text-white"
+            className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors flex-shrink-0 ${
+              !topicFilter
+                ? "bg-gray-900 text-white border-gray-900"
+                : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
             }`}
           >
             {t("study.graph.all")}
@@ -190,12 +222,11 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
             <button
               key={topic}
               onClick={() => setTopicFilter(topic === topicFilter ? null : topic)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors flex-shrink-0 ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors flex-shrink-0 ${
                 topicFilter === topic
-                  ? "text-white"
-                  : "bg-gray-800 text-gray-400 hover:text-white"
+                  ? TOPIC_BG[topic] || TOPIC_BG.other
+                  : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
               }`}
-              style={topicFilter === topic ? { background: TOPIC_COLORS[topic] || TOPIC_COLORS.other } : {}}
             >
               {topic}
             </button>
@@ -203,53 +234,65 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
         </div>
       )}
 
-      {/* 그래프 */}
-      <div className="flex-1">
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full" />
-          </div>
-        ) : flowNodes.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <svg className="w-16 h-16 text-gray-700 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-              </svg>
-              <p className="text-gray-500 text-lg">{t("study.graph.empty")}</p>
-              <p className="text-gray-600 text-sm mt-2">{t("study.graph.emptyDesc")}</p>
+      {/* 그래프 영역 */}
+      <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white">
+        <div className="h-[500px]">
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full mx-auto mb-3" />
+                <p className="text-sm text-gray-400">{t("common.processing")}</p>
+              </div>
             </div>
-          </div>
-        ) : (
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onInit={onInit as any}
-            fitView
-            minZoom={0.2}
-            maxZoom={3}
-            attributionPosition="bottom-left"
-          >
-            <Background color="#1F2937" gap={30} />
-            <Controls
-              showInteractive={false}
-              style={{ background: "#1A1A2E", border: "1px solid #374151", borderRadius: "8px" }}
-            />
-          </ReactFlow>
-        )}
+          ) : flowNodes.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                </div>
+                <p className="text-gray-900 font-medium">{t("study.graph.empty")}</p>
+                <p className="text-gray-400 text-sm mt-1">{t("study.graph.emptyDesc")}</p>
+              </div>
+            </div>
+          ) : (
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onInit={onInit as any}
+              fitView
+              minZoom={0.2}
+              maxZoom={3}
+              attributionPosition="bottom-left"
+            >
+              <Background color="#F3F4F6" gap={20} />
+              <Controls showInteractive={false} />
+              <MiniMap
+                style={{ background: "#F9FAFB", borderRadius: "8px", border: "1px solid #E5E7EB" }}
+                nodeColor={(node) => {
+                  const border = (node.style?.border as string) || "";
+                  const match = border.match(/#[0-9A-Fa-f]{6}/);
+                  return match ? match[0] : "#D1D5DB";
+                }}
+              />
+            </ReactFlow>
+          )}
+        </div>
       </div>
 
       {/* 범례 */}
-      <div className="flex items-center gap-4 px-6 py-3 border-t border-gray-800 text-xs text-gray-500">
+      <div className="flex items-center gap-5 mt-4 text-xs text-gray-400">
         <span className="flex items-center gap-1.5">
-          <span className="w-4 h-0.5 bg-gray-500 rounded" style={{ borderTop: "2px dashed #4B5563" }} /> related
+          <span className="w-5 border-t-2 border-dashed border-gray-300" /> {t("study.graph.legend.related")}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-4 h-0.5 bg-red-400 rounded" /> prerequisite
+          <span className="w-5 border-t-2 border-red-400" /> {t("study.graph.legend.prerequisite")}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-4 h-0.5 bg-blue-400 rounded" /> extends
+          <span className="w-5 border-t-2 border-blue-400" /> {t("study.graph.legend.extends")}
         </span>
       </div>
     </div>

@@ -504,7 +504,12 @@
       "title": "지식 그래프",
       "all": "전체",
       "empty": "아직 지식 그래프가 비어있어요",
-      "emptyDesc": "학습 노트를 2개 이상 생성하면 개념 연결이 표시됩니다"
+      "emptyDesc": "학습 노트를 2개 이상 생성하면 개념 연결이 표시됩니다",
+      "legend": {
+        "related": "관련",
+        "prerequisite": "선행 개념",
+        "extends": "확장"
+      }
     },
     "stats": {
       "title": "학습 통계",

@@ -2043,72 +2043,77 @@ function ResultContent() {
                 </div>
               </div>
             )}
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-32">
+            {showKnowledgeGraph ? (
+              <KnowledgeGraphView onClose={() => setShowKnowledgeGraph(false)} />
+            ) : (
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-32">
+                {/* 제목 */}
+                <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-3">
+                  {studyResult.study_structure.title}
+                </h1>
+                <div className="flex items-center gap-3 mb-10 text-sm text-gray-400">
+                  <span className="flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    {new Date().toLocaleDateString()}
+                  </span>
+                  {studyResult.study_structure.key_concepts?.length > 0 && (
+                    <span>{studyResult.study_structure.key_concepts.length} concepts</span>
+                  )}
+                  {studyResult.study_structure.study_questions?.length > 0 && (
+                    <span>{studyResult.study_structure.study_questions.length} questions</span>
+                  )}
+                </div>
 
-              {/* 제목 */}
-              <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-3">
-                {studyResult.study_structure.title}
-              </h1>
-              <div className="flex items-center gap-3 mb-10 text-sm text-gray-400">
-                <span className="flex items-center gap-1">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  {new Date().toLocaleDateString()}
-                </span>
-                {studyResult.study_structure.key_concepts?.length > 0 && (
-                  <span>{studyResult.study_structure.key_concepts.length} concepts</span>
-                )}
-                {studyResult.study_structure.study_questions?.length > 0 && (
-                  <span>{studyResult.study_structure.study_questions.length} questions</span>
-                )}
+                <StudyResultView
+                  studyResult={studyResult}
+                  sourceUrl={url || undefined}
+                />
               </div>
+            )}
 
-              <StudyResultView
-                studyResult={studyResult}
-                sourceUrl={url || undefined}
-              />
-            </div>
-
-            {/* 하단 액션 바 (블로그와 동일) */}
-            <div className="border-t border-gray-200 mt-8">
-              <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <button onClick={handleGoBack} className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                      {t("result.newConvert")}
-                    </button>
+            {/* 하단 액션 바 (블로그와 동일) — 지식 그래프 모드에서는 숨김 */}
+            {!showKnowledgeGraph && (
+              <div className="border-t border-gray-200 mt-8">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <button onClick={handleGoBack} className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                        {t("result.newConvert")}
+                      </button>
+                      <button
+                        onClick={handleShareLink}
+                        disabled={shareLoading}
+                        className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        {t("result.copyLink")}
+                      </button>
+                    </div>
                     <button
-                      onClick={handleShareLink}
-                      disabled={shareLoading}
-                      className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+                      onClick={async () => {
+                        if (studyResult?.study_content) {
+                          await navigator.clipboard.writeText(studyResult.study_content);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }
+                      }}
+                      className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all text-sm font-medium ${
+                        copied ? "bg-green-500 text-white" : "bg-gray-900 hover:bg-gray-800 text-white"
+                      }`}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                      </svg>
-                      {t("result.copyLink")}
+                      {copied ? (
+                        <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>{t("result.copied")}</>
+                      ) : (
+                        <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>{t("result.copyContent")}</>
+                      )}
                     </button>
                   </div>
-                  <button
-                    onClick={async () => {
-                      if (studyResult?.study_content) {
-                        await navigator.clipboard.writeText(studyResult.study_content);
-                        setCopied(true);
-                        setTimeout(() => setCopied(false), 2000);
-                      }
-                    }}
-                    className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all text-sm font-medium ${
-                      copied ? "bg-green-500 text-white" : "bg-gray-900 hover:bg-gray-800 text-white"
-                    }`}
-                  >
-                    {copied ? (
-                      <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>{t("result.copied")}</>
-                    ) : (
-                      <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>{t("result.copyContent")}</>
-                    )}
-                  </button>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       ) : (
@@ -2938,10 +2943,6 @@ function ResultContent() {
         </div>
       )}
 
-      {/* 지식 그래프 풀스크린 모달 */}
-      {showKnowledgeGraph && (
-        <KnowledgeGraphView onClose={() => setShowKnowledgeGraph(false)} />
-      )}
     </main>
   );
 }

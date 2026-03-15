@@ -504,7 +504,12 @@
       "title": "Knowledge Graph",
       "all": "All",
       "empty": "Your knowledge graph is empty",
-      "emptyDesc": "Create 2+ study notes to see concept connections"
+      "emptyDesc": "Create 2+ study notes to see concept connections",
+      "legend": {
+        "related": "Related",
+        "prerequisite": "Prerequisite",
+        "extends": "Extends"
+      }
     },
     "stats": {
       "title": "Study Stats",
