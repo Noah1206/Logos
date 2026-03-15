@@ -536,14 +536,26 @@ function ResultContent() {
     try {
       const res = await fetch(`/api/conversions/${id}`, { method: "DELETE" });
       if (!res.ok) return;
-      setSidebarHistory((prev) => ({
-        blog: prev.blog.filter((c: any) => c.id !== id),
-        study: prev.study.filter((c: any) => c.id !== id),
-      }));
-      // 현재 보고 있는 변환이 삭제된 경우 메인으로 이동
+
+      const updated = {
+        blog: sidebarHistory.blog.filter((c: any) => c.id !== id),
+        study: sidebarHistory.study.filter((c: any) => c.id !== id),
+      };
+      setSidebarHistory(updated);
+
+      // 현재 보고 있는 변환이 삭제된 경우 → 다음 최신 항목으로 이동
       const params = new URLSearchParams(window.location.search);
       if (params.get("id") === id) {
-        window.location.href = "/";
+        const all = [...updated.blog, ...updated.study].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        if (all.length > 0) {
+          const next = all[0];
+          const mode = next.mode === "study" ? "&mode=study" : "";
+          window.location.href = `/result?id=${next.id}${mode}`;
+        } else {
+          window.location.href = "/?new";
+        }
       }
     } catch {}
   };
