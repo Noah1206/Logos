@@ -14,7 +14,6 @@ import {
   type Edge,
   type NodeProps,
 } from "@xyflow/react";
-import dagre from "@dagrejs/dagre";
 import "@xyflow/react/dist/style.css";
 import { useTranslation } from "@/i18n";
 import StudyStatsCard from "./StudyStatsCard";
@@ -102,9 +101,11 @@ const ConceptCardNode = memo(({ data }: NodeProps) => {
         cursor: "grab",
       }}
     >
-      {/* Handles */}
-      <Handle type="target" position={Position.Top} style={{ background: "#555", width: 6, height: 6, border: "none" }} />
-      <Handle type="source" position={Position.Bottom} style={{ background: "#555", width: 6, height: 6, border: "none" }} />
+      {/* Handles — all sides for radial layout */}
+      <Handle type="target" position={Position.Top} style={{ background: "transparent", width: 8, height: 8, border: "none" }} />
+      <Handle type="target" position={Position.Left} id="left-t" style={{ background: "transparent", width: 8, height: 8, border: "none" }} />
+      <Handle type="source" position={Position.Bottom} style={{ background: "transparent", width: 8, height: 8, border: "none" }} />
+      <Handle type="source" position={Position.Right} id="right-s" style={{ background: "transparent", width: 8, height: 8, border: "none" }} />
 
       {/* Title */}
       <div style={{ fontSize: 14, fontWeight: 700, color: "#e5e5e5", lineHeight: 1.3, marginBottom: 4 }}>
@@ -194,28 +195,94 @@ ConceptCardNode.displayName = "ConceptCardNode";
 
 const nodeTypes = { conceptCard: ConceptCardNode };
 
-/* ─── Layout ─── */
+/* ─── Layout: Radial from center ─── */
 
-function applyDagreLayout(nodes: Node[], edges: Edge[]) {
-  const g = new dagre.graphlib.Graph();
-  g.setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: "TB", nodesep: 60, ranksep: 100 });
+function applyRadialLayout(nodes: Node[], edges: Edge[]) {
+  if (nodes.length === 0) return [];
 
-  nodes.forEach((node) => {
-    g.setNode(node.id, { width: CARD_W + 40, height: 120 });
-  });
+  // Build adjacency map
+  const adj = new Map<string, Set<string>>();
+  for (const n of nodes) adj.set(n.id, new Set());
+  for (const e of edges) {
+    adj.get(e.source)?.add(e.target);
+    adj.get(e.target)?.add(e.source);
+  }
 
-  edges.forEach((edge) => {
-    g.setEdge(edge.source, edge.target);
-  });
+  // Find root: most connections, or first node
+  let root = nodes[0].id;
+  let maxConn = 0;
+  for (const [id, neighbors] of adj) {
+    if (neighbors.size > maxConn) {
+      maxConn = neighbors.size;
+      root = id;
+    }
+  }
 
-  dagre.layout(g);
+  // BFS to assign layers
+  const layers = new Map<string, number>();
+  const queue: string[] = [root];
+  layers.set(root, 0);
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    const layer = layers.get(current)!;
+    for (const neighbor of adj.get(current) || []) {
+      if (!layers.has(neighbor)) {
+        layers.set(neighbor, layer + 1);
+        queue.push(neighbor);
+      }
+    }
+  }
 
+  // Assign unconnected nodes to outer layers
+  let maxLayer = 0;
+  for (const l of layers.values()) if (l > maxLayer) maxLayer = l;
+  for (const n of nodes) {
+    if (!layers.has(n.id)) {
+      maxLayer++;
+      layers.set(n.id, maxLayer);
+    }
+  }
+
+  // Group by layer
+  const layerGroups = new Map<number, string[]>();
+  for (const [id, layer] of layers) {
+    if (!layerGroups.has(layer)) layerGroups.set(layer, []);
+    layerGroups.get(layer)!.push(id);
+  }
+
+  // Position: center is (0,0), each layer is a ring
+  const RING_GAP = 320;
+  const positions = new Map<string, { x: number; y: number }>();
+
+  for (const [layer, ids] of layerGroups) {
+    if (layer === 0) {
+      // Root at center
+      positions.set(ids[0], { x: 0, y: 0 });
+      continue;
+    }
+
+    const radius = layer * RING_GAP;
+    const count = ids.length;
+    // Spread evenly around circle with slight randomness for organic feel
+    const angleStep = (2 * Math.PI) / Math.max(count, 1);
+    const offsetAngle = layer * 0.4; // rotate each layer for visual variety
+
+    for (let i = 0; i < count; i++) {
+      const angle = offsetAngle + i * angleStep;
+      positions.set(ids[i], {
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius,
+      });
+    }
+  }
+
+  // Apply positions centered
+  const halfW = CARD_W / 2;
   return nodes.map((node) => {
-    const pos = g.node(node.id);
+    const pos = positions.get(node.id) || { x: 0, y: 0 };
     return {
       ...node,
-      position: { x: pos.x - (CARD_W + 40) / 2, y: pos.y - 60 },
+      position: { x: pos.x - halfW, y: pos.y - 50 },
     };
   });
 }
@@ -294,7 +361,7 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
       });
 
     const layoutNodes =
-      styledNodes.length > 0 ? applyDagreLayout(styledNodes, styledEdges) : [];
+      styledNodes.length > 0 ? applyRadialLayout(styledNodes, styledEdges) : [];
 
     return { flowNodes: layoutNodes, flowEdges: styledEdges, topics: Array.from(allTopics) };
   }, [graphData, topicFilter]);
