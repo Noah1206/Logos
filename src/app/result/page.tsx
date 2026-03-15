@@ -469,7 +469,13 @@ function ResultContent() {
 
   const [progress, setProgress] = useState(0); // 백엔드 목표값
   const [displayProgress, setDisplayProgress] = useState(0); // 화면 표시값 (점진 증가)
-  const [isComplete, setIsComplete] = useState(false);
+  const [isComplete, setIsComplete] = useState(() => {
+    // ID 기반 로드(히스토리 클릭, 새로고침)면 로딩 화면 스킵
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).has("id");
+    }
+    return false;
+  });
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [sseMessage, setSseMessage] = useState("");
