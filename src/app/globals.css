@@ -67,3 +67,24 @@
 .animate-slide-up {
   animation: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Obsidian-dark React Flow controls */
+.react-flow__controls button {
+  background: #2a2a2a !important;
+  border: 1px solid #3a3a3a !important;
+  fill: #999 !important;
+  color: #999 !important;
+}
+.react-flow__controls button:hover {
+  background: #353535 !important;
+  fill: #ccc !important;
+}
+.react-flow__controls {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+}
+.react-flow__attribution {
+  background: transparent !important;
+}
+.react-flow__attribution a {
+  color: #444 !important;
+}

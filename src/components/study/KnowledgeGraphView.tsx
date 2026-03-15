@@ -40,35 +40,36 @@ interface KnowledgeGraphViewProps {
   onClose: () => void;
 }
 
-const TOPIC_COLORS: Record<string, string> = {
-  food: "#EF4444",
-  fitness: "#10B981",
-  beauty: "#EC4899",
-  education: "#3B82F6",
-  tech: "#8B5CF6",
-  business: "#F59E0B",
-  lifestyle: "#F97316",
-  other: "#6B7280",
+// Obsidian-inspired palette
+const NODE_COLORS: Record<string, { bg: string; glow: string; text: string }> = {
+  food: { bg: "#EF4444", glow: "rgba(239,68,68,0.35)", text: "#FCA5A5" },
+  fitness: { bg: "#10B981", glow: "rgba(16,185,129,0.35)", text: "#6EE7B7" },
+  beauty: { bg: "#EC4899", glow: "rgba(236,72,153,0.35)", text: "#F9A8D4" },
+  education: { bg: "#3B82F6", glow: "rgba(59,130,246,0.35)", text: "#93C5FD" },
+  tech: { bg: "#8B5CF6", glow: "rgba(139,92,246,0.35)", text: "#C4B5FD" },
+  business: { bg: "#F59E0B", glow: "rgba(245,158,11,0.35)", text: "#FCD34D" },
+  lifestyle: { bg: "#F97316", glow: "rgba(249,115,22,0.35)", text: "#FDBA74" },
+  other: { bg: "#7f6df2", glow: "rgba(127,109,242,0.35)", text: "#C4B5FD" },
 };
 
-const TOPIC_BG: Record<string, string> = {
-  food: "bg-red-50 text-red-700 border-red-200",
-  fitness: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  beauty: "bg-pink-50 text-pink-700 border-pink-200",
-  education: "bg-blue-50 text-blue-700 border-blue-200",
-  tech: "bg-violet-50 text-violet-700 border-violet-200",
-  business: "bg-amber-50 text-amber-700 border-amber-200",
-  lifestyle: "bg-orange-50 text-orange-700 border-orange-200",
-  other: "bg-gray-50 text-gray-600 border-gray-200",
+const FILTER_COLORS: Record<string, string> = {
+  food: "bg-red-500/20 text-red-300 border-red-500/30",
+  fitness: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+  beauty: "bg-pink-500/20 text-pink-300 border-pink-500/30",
+  education: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+  tech: "bg-violet-500/20 text-violet-300 border-violet-500/30",
+  business: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+  lifestyle: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+  other: "bg-gray-500/20 text-gray-300 border-gray-500/30",
 };
 
 function applyDagreLayout(nodes: Node[], edges: Edge[]) {
   const g = new dagre.graphlib.Graph();
   g.setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: "LR", nodesep: 80, ranksep: 120 });
+  g.setGraph({ rankdir: "TB", nodesep: 100, ranksep: 140 });
 
   nodes.forEach((node) => {
-    g.setNode(node.id, { width: 160, height: 50 });
+    g.setNode(node.id, { width: 140, height: 40 });
   });
 
   edges.forEach((edge) => {
@@ -79,7 +80,7 @@ function applyDagreLayout(nodes: Node[], edges: Edge[]) {
 
   return nodes.map((node) => {
     const pos = g.node(node.id);
-    return { ...node, position: { x: pos.x - 80, y: pos.y - 25 } };
+    return { ...node, position: { x: pos.x - 70, y: pos.y - 20 } };
   });
 }
 
@@ -115,28 +116,31 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
     }
     const nodeIds = new Set(filteredNodes.map((n) => n.id));
 
+    // Obsidian-style glowing nodes on dark background
     const styledNodes: Node[] = filteredNodes.map((n) => {
       const primaryTopic = n.data.topics[0] || "other";
-      const color = TOPIC_COLORS[primaryTopic] || TOPIC_COLORS.other;
-      const size = Math.max(12, Math.min(16, 12 + n.data.count));
+      const palette = NODE_COLORS[primaryTopic] || NODE_COLORS.other;
+      const baseSize = Math.max(13, Math.min(16, 12 + n.data.count));
 
       return {
         id: n.id,
         data: { label: n.data.label },
         position: n.position,
         style: {
-          background: "#fff",
-          color: "#111827",
-          border: `2px solid ${color}`,
-          borderRadius: "12px",
-          padding: "8px 14px",
-          fontSize: `${size}px`,
-          fontWeight: n.data.count > 1 ? 700 : 500,
-          boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+          background: `rgba(30,30,30,0.9)`,
+          color: palette.text,
+          border: `1.5px solid ${palette.bg}`,
+          borderRadius: "20px",
+          padding: "6px 16px",
+          fontSize: `${baseSize}px`,
+          fontWeight: n.data.count > 1 ? 600 : 400,
+          boxShadow: `0 0 12px ${palette.glow}, 0 0 4px ${palette.glow}`,
+          letterSpacing: "0.01em",
         },
       };
     });
 
+    // Subtle glowing edges
     const styledEdges: Edge[] = graphData.edges
       .filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target))
       .map((e) => ({
@@ -144,10 +148,12 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
         source: e.source,
         target: e.target,
         style: {
-          stroke: e.data?.type === "prerequisite" ? "#EF4444" :
-                  e.data?.type === "extends" ? "#3B82F6" : "#D1D5DB",
-          strokeWidth: e.data?.type === "related" ? 1 : 2,
-          strokeDasharray: e.data?.type === "related" ? "5 5" : undefined,
+          stroke:
+            e.data?.type === "prerequisite" ? "#EF4444" :
+            e.data?.type === "extends" ? "#3B82F6" : "#484849",
+          strokeWidth: e.data?.type === "related" ? 1 : 1.5,
+          strokeDasharray: e.data?.type === "related" ? "4 4" : undefined,
+          opacity: 0.7,
         },
         type: "smoothstep",
         animated: e.data?.type === "prerequisite",
@@ -172,8 +178,8 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-32">
-      {/* 헤더 — 뒤로가기 + 제목 */}
-      <div className="flex items-center gap-3 mb-2">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-1">
         <button
           onClick={onClose}
           className="p-1.5 -ml-1.5 hover:bg-gray-100 rounded-lg transition-colors"
@@ -182,37 +188,29 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
           {t("study.graph.title")}
         </h1>
       </div>
 
-      {/* 통계 서브텍스트 */}
-      <div className="flex items-center gap-3 mb-8 text-sm text-gray-400 ml-8">
-        {graphStats && (
-          <>
-            <span>{graphStats.totalStudies} {t("study.stats.studies")}</span>
-            <span>·</span>
-            <span>{graphStats.totalConcepts} {t("study.stats.concepts")}</span>
-            <span>·</span>
-            <span>{graphStats.totalConnections} {t("study.stats.connections")}</span>
-          </>
-        )}
-      </div>
-
-      {/* 학습 통계 카드 */}
+      {/* Sub-stats */}
       {graphStats && (
-        <StudyStatsCard stats={graphStats} />
+        <p className="text-sm text-gray-400 ml-8 mb-8">
+          {graphStats.totalStudies} {t("study.stats.studies")} · {graphStats.totalConcepts} {t("study.stats.concepts")} · {graphStats.totalConnections} {t("study.stats.connections")}
+        </p>
       )}
 
-      {/* 토픽 필터 */}
+      {/* Stats Cards — Lilys.ai style */}
+      {graphStats && <StudyStatsCard stats={graphStats} />}
+
+      {/* Topic Filter — floating over dark area */}
       {topics.length > 0 && (
-        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+        <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
           <button
             onClick={() => setTopicFilter(null)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors flex-shrink-0 ${
+            className={`px-3.5 py-1.5 text-xs font-medium rounded-full border transition-all flex-shrink-0 ${
               !topicFilter
-                ? "bg-gray-900 text-white border-gray-900"
+                ? "bg-gray-900 text-white border-gray-900 shadow-sm"
                 : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
             }`}
           >
@@ -222,9 +220,9 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
             <button
               key={topic}
               onClick={() => setTopicFilter(topic === topicFilter ? null : topic)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors flex-shrink-0 ${
+              className={`px-3.5 py-1.5 text-xs font-medium rounded-full border transition-all flex-shrink-0 ${
                 topicFilter === topic
-                  ? TOPIC_BG[topic] || TOPIC_BG.other
+                  ? FILTER_COLORS[topic] || FILTER_COLORS.other
                   : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
               }`}
             >
@@ -234,26 +232,27 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
         </div>
       )}
 
-      {/* 그래프 영역 */}
-      <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white">
-        <div className="h-[500px]">
+      {/* Graph Canvas — Obsidian dark style */}
+      <div className="rounded-2xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.12)] border border-gray-200/60">
+        <div className="h-[560px] relative">
           {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full mx-auto mb-3" />
-                <p className="text-sm text-gray-400">{t("common.processing")}</p>
+            <div className="flex items-center justify-center h-full bg-[#1e1e1e]">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-violet-400 animate-pulse" style={{ animationDelay: "0s" }} />
+                <div className="w-2.5 h-2.5 rounded-full bg-violet-400 animate-pulse" style={{ animationDelay: "0.33s" }} />
+                <div className="w-2.5 h-2.5 rounded-full bg-violet-400 animate-pulse" style={{ animationDelay: "0.66s" }} />
               </div>
             </div>
           ) : flowNodes.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center h-full bg-[#1e1e1e]">
               <div className="text-center">
-                <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-16 h-16 rounded-full bg-[#2a2a2a] border border-[#3a3a3a] flex items-center justify-center mx-auto mb-5">
+                  <svg className="w-7 h-7 text-[#666]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
                 </div>
-                <p className="text-gray-900 font-medium">{t("study.graph.empty")}</p>
-                <p className="text-gray-400 text-sm mt-1">{t("study.graph.emptyDesc")}</p>
+                <p className="text-[#ccc] font-medium text-[15px]">{t("study.graph.empty")}</p>
+                <p className="text-[#666] text-sm mt-2 max-w-[260px] leading-relaxed">{t("study.graph.emptyDesc")}</p>
               </div>
             </div>
           ) : (
@@ -267,15 +266,30 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
               minZoom={0.2}
               maxZoom={3}
               attributionPosition="bottom-left"
+              style={{ background: "#1e1e1e" }}
             >
-              <Background color="#F3F4F6" gap={20} />
-              <Controls showInteractive={false} />
+              <Background color="#2a2a2a" gap={24} size={1} />
+              <Controls
+                showInteractive={false}
+                style={{
+                  background: "#2a2a2a",
+                  borderRadius: "10px",
+                  border: "1px solid #3a3a3a",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                }}
+              />
               <MiniMap
-                style={{ background: "#F9FAFB", borderRadius: "8px", border: "1px solid #E5E7EB" }}
+                style={{
+                  background: "#252525",
+                  borderRadius: "10px",
+                  border: "1px solid #3a3a3a",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                }}
+                maskColor="rgba(0,0,0,0.6)"
                 nodeColor={(node) => {
                   const border = (node.style?.border as string) || "";
                   const match = border.match(/#[0-9A-Fa-f]{6}/);
-                  return match ? match[0] : "#D1D5DB";
+                  return match ? match[0] : "#7f6df2";
                 }}
               />
             </ReactFlow>
@@ -283,16 +297,19 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
         </div>
       </div>
 
-      {/* 범례 */}
-      <div className="flex items-center gap-5 mt-4 text-xs text-gray-400">
-        <span className="flex items-center gap-1.5">
-          <span className="w-5 border-t-2 border-dashed border-gray-300" /> {t("study.graph.legend.related")}
+      {/* Legend — minimal */}
+      <div className="flex items-center gap-6 mt-5 text-xs text-gray-400">
+        <span className="flex items-center gap-2">
+          <span className="w-5 h-0 border-t border-dashed border-gray-400" />
+          {t("study.graph.legend.related")}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-5 border-t-2 border-red-400" /> {t("study.graph.legend.prerequisite")}
+        <span className="flex items-center gap-2">
+          <span className="w-5 h-0 border-t-[1.5px] border-red-400" />
+          {t("study.graph.legend.prerequisite")}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-5 border-t-2 border-blue-400" /> {t("study.graph.legend.extends")}
+        <span className="flex items-center gap-2">
+          <span className="w-5 h-0 border-t-[1.5px] border-blue-400" />
+          {t("study.graph.legend.extends")}
         </span>
       </div>
     </div>
