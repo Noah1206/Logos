@@ -1181,103 +1181,154 @@ function ResultContent() {
     });
   };
 
+  // 이미지 URL → base64 data URI 변환
+  const toDataUri = async (url: string): Promise<string> => {
+    try {
+      // 이미 data URI면 그대로 반환
+      if (url.startsWith("data:")) return url;
+      const res = await fetch(url);
+      const blob = await res.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => resolve(url); // 실패 시 원본 URL 유지
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return url;
+    }
+  };
+
+  const [isCopying, setIsCopying] = useState(false);
+
   const handleCopyContent = async () => {
     const data = editedData ?? resultData;
     if (!data) return;
 
-    // 프레임 매칭 로직 (렌더링과 동일 + 중복 방지)
-    const hasFrameMatching = data.sections.some(
-      (s) => s.frame_index != null && s.frame_index >= 0
-    );
-    const usedIndices = new Set(
-      data.sections
-        .map((s) => s.frame_index)
-        .filter((fi): fi is number => fi != null && fi >= 0)
-    );
-    const introIndex = data.frameUrls.findIndex((_, i) => !usedIndices.has(i));
-    const introActualIdx = data.frameUrls.length > 0 ? (introIndex >= 0 ? introIndex : 0) : -1;
-    const introUrl = introActualIdx >= 0 ? data.frameUrls[introActualIdx] : undefined;
-
-    // 네이버 블로그 에디터 최적화 HTML 빌드
-    // 네이버는 <h2> 무시 → <b><span style="font-size:16pt;"> 사용
-    // <p> 마진 무시 → <br><br>로 간격 처리
-    const htmlParts: string[] = [];
-    const textParts: string[] = [];
-
-    // 제목
-    htmlParts.push(`<div style="text-align:left;"><b><span style="font-size:20pt;">${data.blogTitle}</span></b></div><br><br>`);
-    textParts.push(data.blogTitle, "");
-
-    // 도입부
-    htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${data.summary.replace(/\n/g, "<br>")}</span></div><br>`);
-    textParts.push(data.summary, "");
-
-    // 도입부 이미지
-    if (introUrl) {
-      htmlParts.push(`<div style="text-align:center;"><img src="${introUrl}" width="100%" style="max-width:100%;height:auto;" /></div><br><br>`);
-    }
-
-    // 본문 섹션
-    data.sections.forEach((s, idx) => {
-      if (showSubtitle) {
-        const title = showEmoji ? `${s.emoji} ${s.title}` : s.title;
-        htmlParts.push(`<div style="text-align:left;"><b><span style="font-size:16pt;">${title}</span></b></div><br>`);
-        textParts.push(title, "");
-      }
-
-      htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${s.content.replace(/\n/g, "<br>")}</span></div><br>`);
-      textParts.push(s.content, "");
-
-      // 섹션 이미지 (도입부와 중복 방지)
-      let frameUrl: string | undefined;
-      if (hasFrameMatching) {
-        if (s.frame_index != null && s.frame_index >= 0 && s.frame_index < data.frameUrls.length && s.frame_index !== introActualIdx) {
-          frameUrl = data.frameUrls[s.frame_index];
-        }
-      } else {
-        const fallbackIdx = idx + 1;
-        if (fallbackIdx !== introActualIdx) {
-          frameUrl = data.frameUrls?.[fallbackIdx];
-        }
-      }
-      if (frameUrl) {
-        htmlParts.push(`<div style="text-align:center;"><img src="${frameUrl}" width="100%" style="max-width:100%;height:auto;" /></div><br><br>`);
-      }
-
-      // 사용자가 갤러리에서 추가한 이미지
-      if (s.extraImages) {
-        for (const imgUrl of s.extraImages) {
-          htmlParts.push(`<div style="text-align:center;"><img src="${imgUrl}" width="100%" style="max-width:100%;height:auto;" /></div><br><br>`);
-        }
-      }
-    });
-
-    // 마무리 CTA
-    if (data.closingCta) {
-      htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${data.closingCta.replace(/\n/g, "<br>")}</span></div><br><br>`);
-      textParts.push(data.closingCta, "");
-    }
-
-    // 해시태그 (파란색 스타일링)
-    const styledHashtags = data.hashtags
-      .map((tag) => `<span style="color:#0068e0;">${tag}</span>`)
-      .join(" ");
-    htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${styledHashtags}</span></div>`);
-    textParts.push(data.hashtags.join(" "));
-
-    const htmlContent = htmlParts.join("");
-    const textContent = textParts.join("\n");
+    setIsCopying(true);
 
     try {
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          "text/html": new Blob([htmlContent], { type: "text/html" }),
-          "text/plain": new Blob([textContent], { type: "text/plain" }),
-        }),
-      ]);
-    } catch {
-      // 폴백: text만 복사
-      await navigator.clipboard.writeText(textContent);
+      // 프레임 매칭 로직 (렌더링과 동일 + 중복 방지)
+      const hasFrameMatching = data.sections.some(
+        (s) => s.frame_index != null && s.frame_index >= 0
+      );
+      const usedIndices = new Set(
+        data.sections
+          .map((s) => s.frame_index)
+          .filter((fi): fi is number => fi != null && fi >= 0)
+      );
+      const introIndex = data.frameUrls.findIndex((_, i) => !usedIndices.has(i));
+      const introActualIdx = data.frameUrls.length > 0 ? (introIndex >= 0 ? introIndex : 0) : -1;
+      const introUrl = introActualIdx >= 0 ? data.frameUrls[introActualIdx] : undefined;
+
+      // 모든 이미지 URL 수집 → 병렬 base64 변환
+      const imageUrls: string[] = [];
+      if (introUrl) imageUrls.push(introUrl);
+      data.sections.forEach((s, idx) => {
+        let frameUrl: string | undefined;
+        if (hasFrameMatching) {
+          if (s.frame_index != null && s.frame_index >= 0 && s.frame_index < data.frameUrls.length && s.frame_index !== introActualIdx) {
+            frameUrl = data.frameUrls[s.frame_index];
+          }
+        } else {
+          const fallbackIdx = idx + 1;
+          if (fallbackIdx !== introActualIdx) {
+            frameUrl = data.frameUrls?.[fallbackIdx];
+          }
+        }
+        if (frameUrl) imageUrls.push(frameUrl);
+        if (s.extraImages) imageUrls.push(...s.extraImages);
+      });
+
+      // 병렬로 모든 이미지를 base64 변환
+      const dataUriMap = new Map<string, string>();
+      const results = await Promise.all(imageUrls.map(async (url) => ({ url, dataUri: await toDataUri(url) })));
+      results.forEach(({ url, dataUri }) => dataUriMap.set(url, dataUri));
+
+      const imgTag = (url: string) =>
+        `<div style="text-align:center;"><img src="${dataUriMap.get(url) ?? url}" width="100%" style="max-width:100%;height:auto;" /></div><br><br>`;
+
+      // 네이버 블로그 에디터 최적화 HTML 빌드
+      const htmlParts: string[] = [];
+      const textParts: string[] = [];
+
+      // 제목
+      htmlParts.push(`<div style="text-align:left;"><b><span style="font-size:20pt;">${data.blogTitle}</span></b></div><br><br>`);
+      textParts.push(data.blogTitle, "");
+
+      // 도입부
+      htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${data.summary.replace(/\n/g, "<br>")}</span></div><br>`);
+      textParts.push(data.summary, "");
+
+      // 도입부 이미지
+      if (introUrl) {
+        htmlParts.push(imgTag(introUrl));
+      }
+
+      // 본문 섹션
+      data.sections.forEach((s, idx) => {
+        if (showSubtitle) {
+          const title = showEmoji ? `${s.emoji} ${s.title}` : s.title;
+          htmlParts.push(`<div style="text-align:left;"><b><span style="font-size:16pt;">${title}</span></b></div><br>`);
+          textParts.push(title, "");
+        }
+
+        htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${s.content.replace(/\n/g, "<br>")}</span></div><br>`);
+        textParts.push(s.content, "");
+
+        // 섹션 이미지
+        let frameUrl: string | undefined;
+        if (hasFrameMatching) {
+          if (s.frame_index != null && s.frame_index >= 0 && s.frame_index < data.frameUrls.length && s.frame_index !== introActualIdx) {
+            frameUrl = data.frameUrls[s.frame_index];
+          }
+        } else {
+          const fallbackIdx = idx + 1;
+          if (fallbackIdx !== introActualIdx) {
+            frameUrl = data.frameUrls?.[fallbackIdx];
+          }
+        }
+        if (frameUrl) {
+          htmlParts.push(imgTag(frameUrl));
+        }
+
+        // 사용자가 갤러리에서 추가한 이미지
+        if (s.extraImages) {
+          for (const imgUrl of s.extraImages) {
+            htmlParts.push(imgTag(imgUrl));
+          }
+        }
+      });
+
+      // 마무리 CTA
+      if (data.closingCta) {
+        htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${data.closingCta.replace(/\n/g, "<br>")}</span></div><br><br>`);
+        textParts.push(data.closingCta, "");
+      }
+
+      // 해시태그 (파란색 스타일링)
+      const styledHashtags = data.hashtags
+        .map((tag) => `<span style="color:#0068e0;">${tag}</span>`)
+        .join(" ");
+      htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${styledHashtags}</span></div>`);
+      textParts.push(data.hashtags.join(" "));
+
+      const htmlContent = htmlParts.join("");
+      const textContent = textParts.join("\n");
+
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/html": new Blob([htmlContent], { type: "text/html" }),
+            "text/plain": new Blob([textContent], { type: "text/plain" }),
+          }),
+        ]);
+      } catch {
+        // 폴백: text만 복사
+        await navigator.clipboard.writeText(textContent);
+      }
+    } finally {
+      setIsCopying(false);
     }
 
     setCopied(true);
@@ -2745,10 +2796,13 @@ function ResultContent() {
                     )}
                     <button
                       onClick={handleCopyContent}
-                      className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all text-sm font-medium ${
+                      disabled={isCopying}
+                      className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all text-sm font-medium disabled:cursor-wait ${
                         copied
                           ? "bg-green-500 text-white"
-                          : "bg-gray-900 hover:bg-gray-800 text-white"
+                          : isCopying
+                            ? "bg-gray-700 text-white"
+                            : "bg-gray-900 hover:bg-gray-800 text-white"
                       }`}
                     >
                       {copied ? (
@@ -2757,6 +2811,11 @@ function ResultContent() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                           {t("result.copied")}
+                        </>
+                      ) : isCopying ? (
+                        <>
+                          <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                          이미지 포함 복사 중...
                         </>
                       ) : (
                         <>
