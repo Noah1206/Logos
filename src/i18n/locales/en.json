@@ -497,8 +497,7 @@
       "downloadMd": "Download .md",
       "downloadMdDesc": "Save as markdown file",
       "notion": "Paste to Notion",
-      "notionDesc": "Copy in markdown format",
-      "preview": "Preview"
+      "notionDesc": "Copy in markdown format"
     },
     "graph": {
       "title": "Knowledge Graph",

@@ -105,14 +105,6 @@ export default function StudyExportPanel({ studyContent, title }: StudyExportPan
           </div>
         </button>
       </div>
-
-      {/* 미리보기 */}
-      <div className="mt-6 bg-gray-50 rounded-2xl border border-gray-200 p-6 max-h-80 overflow-y-auto">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t("study.export.preview")}</p>
-        </div>
-        <pre className="text-xs text-gray-600 font-mono whitespace-pre-wrap leading-relaxed">{studyContent}</pre>
-      </div>
     </div>
   );
 }

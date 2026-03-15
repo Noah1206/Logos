@@ -497,8 +497,7 @@
       "downloadMd": ".md 다운로드",
       "downloadMdDesc": "마크다운 파일로 저장",
       "notion": "노션에 붙여넣기",
-      "notionDesc": "마크다운 형식으로 복사",
-      "preview": "미리보기"
+      "notionDesc": "마크다운 형식으로 복사"
     },
     "graph": {
       "title": "지식 그래프",
