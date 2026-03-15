@@ -531,6 +531,23 @@ function ResultContent() {
     if (user) refreshSidebarHistory();
   }, [user, refreshSidebarHistory]);
 
+  const handleDeleteConversion = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const res = await fetch(`/api/conversions/${id}`, { method: "DELETE" });
+      if (!res.ok) return;
+      setSidebarHistory((prev) => ({
+        blog: prev.blog.filter((c: any) => c.id !== id),
+        study: prev.study.filter((c: any) => c.id !== id),
+      }));
+      // 현재 보고 있는 변환이 삭제된 경우 메인으로 이동
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("id") === id) {
+        window.location.href = "/";
+      }
+    } catch {}
+  };
+
   const handleSocialLogin = (provider: string) => {
     setLoginLoading(provider);
     signIn(provider, { callbackUrl: window.location.href });
@@ -1741,10 +1758,15 @@ function ResultContent() {
                 {blogSectionOpen && (
                   <div className="mt-0.5 space-y-0.5">
                     {sidebarHistory.blog.map((c: any) => (
-                      <button key={c.id} onClick={() => window.location.href = `/result?id=${c.id}`} className="w-full flex items-center gap-2.5 px-3 py-2 pl-9 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left">
-                        <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        <span className="truncate">{c.title || "Untitled"}</span>
-                      </button>
+                      <div key={c.id} className="group/item flex items-center gap-0.5 pl-9 pr-1 hover:bg-gray-100 rounded-lg transition-colors">
+                        <button onClick={() => window.location.href = `/result?id=${c.id}`} className="flex-1 flex items-center gap-2.5 py-2 text-sm text-gray-600 text-left min-w-0">
+                          <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          <span className="truncate">{c.title || "Untitled"}</span>
+                        </button>
+                        <button onClick={(e) => handleDeleteConversion(c.id, e)} className="flex-shrink-0 p-1.5 rounded-md opacity-0 group-hover/item:opacity-100 hover:bg-gray-200 transition-all" title="삭제">
+                          <svg className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -1763,24 +1785,19 @@ function ResultContent() {
                 {studySectionOpen && (
                   <div className="mt-0.5 space-y-0.5">
                     {sidebarHistory.study.map((c: any) => (
-                      <button key={c.id} onClick={() => window.location.href = `/result?id=${c.id}&mode=study`} className="w-full flex items-center gap-2.5 px-3 py-2 pl-9 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left">
-                        <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        <span className="truncate">{c.title || "Untitled"}</span>
-                      </button>
+                      <div key={c.id} className="group/item flex items-center gap-0.5 pl-9 pr-1 hover:bg-gray-100 rounded-lg transition-colors">
+                        <button onClick={() => window.location.href = `/result?id=${c.id}&mode=study`} className="flex-1 flex items-center gap-2.5 py-2 text-sm text-gray-600 text-left min-w-0">
+                          <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          <span className="truncate">{c.title || "Untitled"}</span>
+                        </button>
+                        <button onClick={(e) => handleDeleteConversion(c.id, e)} className="flex-shrink-0 p-1.5 rounded-md opacity-0 group-hover/item:opacity-100 hover:bg-gray-200 transition-all" title="삭제">
+                          <svg className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* 하단 영역 */}
-            <div className="flex-shrink-0 border-t border-gray-100 px-3 py-3 space-y-1">
-              <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {t("common.help")}
-              </button>
             </div>
 
             {/* 유저 프로필 */}
@@ -2036,10 +2053,15 @@ function ResultContent() {
                 </div>
                 <div className="space-y-0.5">
                   {sidebarHistory.blog.map((c: any) => (
-                    <button key={c.id} onClick={() => window.location.href = `/result?id=${c.id}`} className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left group">
-                      <svg className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                      <span className="truncate">{c.title || "Untitled"}</span>
-                    </button>
+                    <div key={c.id} className="group/item flex items-center gap-0.5 px-1 hover:bg-gray-100 rounded-lg transition-colors">
+                      <button onClick={() => window.location.href = `/result?id=${c.id}`} className="flex-1 flex items-center gap-2 px-2 py-1.5 text-sm text-gray-600 text-left min-w-0">
+                        <svg className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover/item:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        <span className="truncate">{c.title || "Untitled"}</span>
+                      </button>
+                      <button onClick={(e) => handleDeleteConversion(c.id, e)} className="flex-shrink-0 p-1.5 rounded-md opacity-0 group-hover/item:opacity-100 hover:bg-gray-200 transition-all" title="삭제">
+                        <svg className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    </div>
                   ))}
                   {sidebarHistory.blog.length === 0 && !displayData && (
                     <p className="px-3 py-1.5 text-xs text-gray-300">{t("result.conversionHistory")}</p>
@@ -2055,26 +2077,21 @@ function ResultContent() {
                 </div>
                 <div className="space-y-0.5">
                   {sidebarHistory.study.map((c: any) => (
-                    <button key={c.id} onClick={() => window.location.href = `/result?id=${c.id}&mode=study`} className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-left group">
-                      <svg className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                      <span className="truncate">{c.title || "Untitled"}</span>
-                    </button>
+                    <div key={c.id} className="group/item flex items-center gap-0.5 px-1 hover:bg-gray-100 rounded-lg transition-colors">
+                      <button onClick={() => window.location.href = `/result?id=${c.id}&mode=study`} className="flex-1 flex items-center gap-2 px-2 py-1.5 text-sm text-gray-600 text-left min-w-0">
+                        <svg className="w-4 h-4 text-gray-300 flex-shrink-0 group-hover/item:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        <span className="truncate">{c.title || "Untitled"}</span>
+                      </button>
+                      <button onClick={(e) => handleDeleteConversion(c.id, e)} className="flex-shrink-0 p-1.5 rounded-md opacity-0 group-hover/item:opacity-100 hover:bg-gray-200 transition-all" title="삭제">
+                        <svg className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    </div>
                   ))}
                   {sidebarHistory.study.length === 0 && (
                     <p className="px-3 py-1.5 text-xs text-gray-300">{t("result.conversionHistory")}</p>
                   )}
                 </div>
               </div>
-            </div>
-
-            {/* 하단 영역 */}
-            <div className="flex-shrink-0 border-t border-gray-100 px-3 py-3 space-y-1">
-              <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {t("common.help")}
-              </button>
             </div>
 
             {/* 유저 프로필 */}
