@@ -469,8 +469,9 @@ function ResultContent() {
 
   const [progress, setProgress] = useState(0); // 백엔드 목표값
   const [displayProgress, setDisplayProgress] = useState(0); // 화면 표시값 (점진 증가)
-  const [isComplete, setIsComplete] = useState(() => {
-    // ID 기반 로드(히스토리 클릭, 새로고침)면 로딩 화면 스킵
+  const [isComplete, setIsComplete] = useState(false);
+  // ID 기반 로드 시 로딩 화면 대신 빈 화면 표시
+  const [isLoadingById, setIsLoadingById] = useState(() => {
     if (typeof window !== "undefined") {
       return new URLSearchParams(window.location.search).has("id");
     }
@@ -1004,10 +1005,12 @@ function ResultContent() {
             setEditedData(JSON.parse(JSON.stringify(stored)));
           }
           setProgress(100);
+          setIsLoadingById(false);
           setTimeout(() => setIsComplete(true), 200);
         }
       } catch (e) {
         console.error("[ID Load] error:", e);
+        setIsLoadingById(false);
         setErrorMessage(t("result.serverError"));
         setIsError(true);
       }
@@ -1446,7 +1449,16 @@ function ResultContent() {
     <main className="min-h-screen bg-white">
       {/* <ConversionTrigger /> 유료화 시 복원 */}
       {!isComplete ? (
-        /* Loading State */
+        isLoadingById ? (
+          /* ID 기반 로드 중 - 빈 화면 (로딩 애니메이션 없음) */
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="flex items-center gap-2">
+              <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-8 w-8" />
+              <span className="text-xl font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
+            </div>
+          </div>
+        ) : (
+        /* Loading State - 변환 중일 때만 */
         <div className="flex flex-col items-center justify-center min-h-screen px-6">
           <div className="flex items-center gap-3 mb-10 animate-pulse" style={{ animationDuration: "2.5s" }}>
             <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-10 w-10" />
@@ -1571,6 +1583,7 @@ function ResultContent() {
             </div>
           )}
         </div>
+        )
       ) : isVideoMode && videoResult ? (
         /* Video Result State */
         <div className="flex min-h-screen">
