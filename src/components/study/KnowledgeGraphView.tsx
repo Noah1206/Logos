@@ -195,88 +195,117 @@ ConceptCardNode.displayName = "ConceptCardNode";
 
 const nodeTypes = { conceptCard: ConceptCardNode };
 
-/* ─── Layout: Radial from center ─── */
+/* ─── Layout: Tree branching from center root ─── */
 
 function applyRadialLayout(nodes: Node[], edges: Edge[]) {
   if (nodes.length === 0) return [];
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 
-  // Build adjacency map
-  const adj = new Map<string, Set<string>>();
-  for (const n of nodes) adj.set(n.id, new Set());
+  // Build directed adjacency (source → targets)
+  const children = new Map<string, string[]>();
+  const hasParent = new Set<string>();
+  for (const n of nodes) children.set(n.id, []);
+
   for (const e of edges) {
-    adj.get(e.source)?.add(e.target);
-    adj.get(e.target)?.add(e.source);
-  }
-
-  // Find root: most connections, or first node
-  let root = nodes[0].id;
-  let maxConn = 0;
-  for (const [id, neighbors] of adj) {
-    if (neighbors.size > maxConn) {
-      maxConn = neighbors.size;
-      root = id;
+    if (nodeMap.has(e.source) && nodeMap.has(e.target)) {
+      children.get(e.source)!.push(e.target);
+      hasParent.add(e.target);
     }
   }
 
-  // BFS to assign layers
-  const layers = new Map<string, number>();
+  // Root = node with most outgoing edges that has no parent, or fallback to most connections
+  const roots = nodes.filter((n) => !hasParent.has(n.id));
+  let root: string;
+  if (roots.length > 0) {
+    root = roots.reduce((best, n) =>
+      (children.get(n.id)?.length || 0) > (children.get(best.id)?.length || 0) ? n : best
+    ).id;
+  } else {
+    // Cycle: pick the one with most children
+    root = nodes.reduce((best, n) =>
+      (children.get(n.id)?.length || 0) > (children.get(best.id)?.length || 0) ? n : best
+    ).id;
+  }
+
+  // BFS tree from root
+  const depth = new Map<string, number>();
+  const parentOf = new Map<string, string>();
+  const treeChildren = new Map<string, string[]>();
   const queue: string[] = [root];
-  layers.set(root, 0);
+  depth.set(root, 0);
+  treeChildren.set(root, []);
+
   while (queue.length > 0) {
-    const current = queue.shift()!;
-    const layer = layers.get(current)!;
-    for (const neighbor of adj.get(current) || []) {
-      if (!layers.has(neighbor)) {
-        layers.set(neighbor, layer + 1);
+    const cur = queue.shift()!;
+    for (const child of children.get(cur) || []) {
+      if (!depth.has(child)) {
+        depth.set(child, depth.get(cur)! + 1);
+        parentOf.set(child, cur);
+        treeChildren.set(child, []);
+        treeChildren.get(cur)!.push(child);
+        queue.push(child);
+      }
+    }
+    // Also check reverse edges (target → source) for bidirectional discovery
+    for (const e of edges) {
+      const neighbor = e.source === cur ? e.target : e.target === cur ? e.source : null;
+      if (neighbor && nodeMap.has(neighbor) && !depth.has(neighbor)) {
+        depth.set(neighbor, depth.get(cur)! + 1);
+        parentOf.set(neighbor, cur);
+        treeChildren.set(neighbor, []);
+        treeChildren.get(cur)!.push(neighbor);
         queue.push(neighbor);
       }
     }
   }
 
-  // Assign unconnected nodes to outer layers
-  let maxLayer = 0;
-  for (const l of layers.values()) if (l > maxLayer) maxLayer = l;
-  for (const n of nodes) {
-    if (!layers.has(n.id)) {
-      maxLayer++;
-      layers.set(n.id, maxLayer);
-    }
+  // Orphan nodes (no edges): cluster them in a ring around root
+  const orphans = nodes.filter((n) => !depth.has(n.id));
+  for (const o of orphans) {
+    depth.set(o.id, 1);
+    treeChildren.set(o.id, []);
+    treeChildren.get(root)?.push(o.id);
   }
 
-  // Group by layer
-  const layerGroups = new Map<number, string[]>();
-  for (const [id, layer] of layers) {
-    if (!layerGroups.has(layer)) layerGroups.set(layer, []);
-    layerGroups.get(layer)!.push(id);
+  // Count subtree leaves for angular allocation
+  function countLeaves(id: string): number {
+    const kids = treeChildren.get(id) || [];
+    if (kids.length === 0) return 1;
+    return kids.reduce((sum, k) => sum + countLeaves(k), 0);
   }
 
-  // Position: center is (0,0), each layer is a ring
-  const RING_GAP = 320;
+  // Position nodes: root at center, children spread in angular sectors
   const positions = new Map<string, { x: number; y: number }>();
+  const RING_GAP = 350;
 
-  for (const [layer, ids] of layerGroups) {
-    if (layer === 0) {
-      // Root at center
-      positions.set(ids[0], { x: 0, y: 0 });
-      continue;
-    }
-
-    const radius = layer * RING_GAP;
-    const count = ids.length;
-    // Spread evenly around circle with slight randomness for organic feel
-    const angleStep = (2 * Math.PI) / Math.max(count, 1);
-    const offsetAngle = layer * 0.4; // rotate each layer for visual variety
-
-    for (let i = 0; i < count; i++) {
-      const angle = offsetAngle + i * angleStep;
-      positions.set(ids[i], {
-        x: Math.cos(angle) * radius,
-        y: Math.sin(angle) * radius,
+  function positionSubtree(id: string, d: number, angleStart: number, angleEnd: number) {
+    if (d === 0) {
+      positions.set(id, { x: 0, y: 0 });
+    } else {
+      const angleMid = (angleStart + angleEnd) / 2;
+      const r = d * RING_GAP;
+      positions.set(id, {
+        x: Math.cos(angleMid) * r,
+        y: Math.sin(angleMid) * r,
       });
     }
+
+    const kids = treeChildren.get(id) || [];
+    if (kids.length === 0) return;
+
+    const totalLeaves = kids.reduce((s, k) => s + countLeaves(k), 0);
+    let curAngle = angleStart;
+
+    for (const kid of kids) {
+      const leafCount = countLeaves(kid);
+      const share = (leafCount / totalLeaves) * (angleEnd - angleStart);
+      positionSubtree(kid, d + 1, curAngle, curAngle + share);
+      curAngle += share;
+    }
   }
 
-  // Apply positions centered
+  positionSubtree(root, 0, 0, 2 * Math.PI);
+
   const halfW = CARD_W / 2;
   return nodes.map((node) => {
     const pos = positions.get(node.id) || { x: 0, y: 0 };
