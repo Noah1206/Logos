@@ -1600,7 +1600,7 @@ function ResultContent() {
           <p className="text-[#4F46E5] text-sm font-medium mb-6">
             {Math.min(Math.round(displayProgress), 100)}%
           </p>
-          <div className="w-72 h-2 bg-gray-200 rounded-full overflow-hidden relative">
+          <div className="w-60 sm:w-72 h-2 bg-gray-200 rounded-full overflow-hidden relative">
             <div
               className="h-full bg-gradient-to-r from-[#4F46E5] to-[#818CF8] rounded-full transition-all duration-500 ease-out relative"
               style={{ width: `${Math.min(displayProgress, 100)}%` }}
@@ -1716,7 +1716,7 @@ function ResultContent() {
           {/* ===== 왼쪽 사이드바 (공유 템플릿) ===== */}
           <aside
             className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 flex flex-col z-50 transition-all duration-300 overflow-hidden ${
-              sidebarOpen ? "w-60" : "w-0"
+              sidebarOpen ? "w-[85vw] sm:w-60" : "w-0"
             }`}
           >
             <div className="flex-shrink-0 flex items-center justify-between px-4 pt-5 pb-3">
@@ -1780,7 +1780,7 @@ function ResultContent() {
           <div className={`animate-fade-in flex-1 transition-all duration-300 ${sidebarOpen ? "ml-60" : "ml-0"}`}>
             {/* 소스 바 */}
             <div className="bg-gray-50 border-b border-gray-200">
-              <div className="max-w-4xl mx-auto px-8 py-3 flex items-center gap-2">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-3 flex items-center gap-2">
                 <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 bg-[#4F46E5]">
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -1796,7 +1796,7 @@ function ResultContent() {
             </div>
 
             {/* 메인 콘텐츠 영역 */}
-            <div className="max-w-4xl mx-auto px-8 pt-10 pb-32">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-32">
 
               <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-8">
                 {t("result.generatedVideo")}
@@ -1842,7 +1842,7 @@ function ResultContent() {
 
             {/* 하단 액션 바 */}
             <div className="border-t border-gray-200 mt-8">
-              <div className="max-w-4xl mx-auto px-8 py-4">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-4">
                 <div className="flex items-center justify-between">
                   <button
                     onClick={handleGoBack}
@@ -1874,7 +1874,7 @@ function ResultContent() {
           {/* ===== 왼쪽 사이드바 (블로그와 완전 동일) ===== */}
           <aside
             className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 flex flex-col z-50 transition-all duration-300 overflow-hidden ${
-              sidebarOpen ? "w-60" : "w-0"
+              sidebarOpen ? "w-[85vw] sm:w-60" : "w-0"
             }`}
           >
             {/* 로고 + 토글 */}
@@ -1988,7 +1988,7 @@ function ResultContent() {
 
           {/* ===== 오른쪽 메인 콘텐츠 ===== */}
           <div className={`animate-fade-in flex-1 transition-all duration-300 ${sidebarOpen ? "ml-60" : "ml-0"}`}>
-            <div className="max-w-4xl mx-auto px-8 pt-10 pb-32">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-32">
 
               {/* 제목 */}
               <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-3">
@@ -2121,7 +2121,7 @@ function ResultContent() {
 
             {/* 하단 액션 바 (블로그와 동일) */}
             <div className="border-t border-gray-200 mt-8">
-              <div className="max-w-4xl mx-auto px-8 py-4">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <button onClick={handleGoBack} className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm">
@@ -2168,7 +2168,7 @@ function ResultContent() {
           {/* ===== 왼쪽 사이드바 ===== */}
           <aside
             className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 flex flex-col z-50 transition-all duration-300 overflow-hidden ${
-              sidebarOpen ? "w-60" : "w-0"
+              sidebarOpen ? "w-[85vw] sm:w-60" : "w-0"
             }`}
           >
             {/* 로고 + 토글 */}
@@ -2292,7 +2292,7 @@ function ResultContent() {
             }`}
           >
             {/* 메인 콘텐츠 영역 */}
-            <div className="max-w-4xl mx-auto px-8 pt-10 pb-32">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-32">
 
               {/* 큰 제목 (편집 가능) */}
               <EditableText
@@ -2793,17 +2793,17 @@ function ResultContent() {
 
             {/* 하단 액션 바 */}
             <div className="border-t border-gray-200 mt-8">
-              <div className="max-w-4xl mx-auto px-8 py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
                     {totalCharCount > 0 && (
-                      <span className="text-xs text-gray-400 font-medium tabular-nums mr-1">
+                      <span className="text-xs text-gray-400 font-medium tabular-nums mr-1 flex-shrink-0">
                         {totalCharCount.toLocaleString()}자
                       </span>
                     )}
                     <button
                       onClick={handleGoBack}
-                      className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+                      className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-xs sm:text-sm flex-shrink-0"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -2813,7 +2813,7 @@ function ResultContent() {
                     <button
                       onClick={handleShareLink}
                       disabled={shareLoading}
-                      className="flex items-center gap-2 px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+                      className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-xs sm:text-sm flex-shrink-0"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
@@ -2821,7 +2821,7 @@ function ResultContent() {
                       {t("result.copyLink")}
                     </button>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 overflow-x-auto">
                     <button
                       onClick={() => {
                         setInsertAfterIdx(null);
@@ -2831,21 +2831,22 @@ function ResultContent() {
                           sectionFileRef.current?.click();
                         }
                       }}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-lg transition-all text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-100"
+                      className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 rounded-lg transition-all text-xs sm:text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-100 flex-shrink-0"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      {t("result.gallery.addPhoto")}
+                      <span className="hidden sm:inline">{t("result.gallery.addPhoto")}</span>
+                      <span className="sm:hidden">사진</span>
                     </button>
                     {displayData?.frameUrls && displayData.frameUrls.length > 0 && (
                       <button
                         onClick={handleDownloadImages}
                         disabled={downloading}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-lg transition-all text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 rounded-lg transition-all text-xs sm:text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 flex-shrink-0"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         {downloading ? t("result.downloading") : t("result.downloadImages")}
@@ -2853,7 +2854,7 @@ function ResultContent() {
                     )}
                     <button
                       onClick={handleCopyContent}
-                      className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all text-sm font-medium ${
+                      className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 rounded-lg transition-all text-xs sm:text-sm font-medium flex-shrink-0 ${
                         copied
                           ? "bg-green-500 text-white"
                           : "bg-gray-900 hover:bg-gray-800 text-white"

@@ -721,7 +721,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center">
           {/* 모드별 Hero 타이틀 */}
           <div className="hero-title-wow">
-          <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-8">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-8">
             {mode === "video-to-blog" && (<>{t("hero.videoToBlog.title1")}<br /><span className="relative inline-block hero-highlight-sweep"><span className="relative z-10">{t("hero.videoToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
             {mode === "feed-to-blog" && (<>{t("hero.feedToBlog.title1")}<br /><span className="relative inline-block hero-highlight-sweep"><span className="relative z-10">{t("hero.feedToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
             {mode === "study" && (<>{t("study.title1")}<br /><span className="relative inline-block hero-highlight-sweep"><span className="relative z-10">{t("study.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
@@ -1273,7 +1273,7 @@ export default function Home() {
               };
               return item;
             }).map((item, i) => (
-              <div key={i} className="min-w-[260px] max-w-[280px] flex-shrink-0 p-5 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
+              <div key={i} className="min-w-[220px] sm:min-w-[260px] max-w-[280px] flex-shrink-0 p-5 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
                 <span className="text-3xl block mb-3">{item.emoji}</span>
                 <h3 className="font-bold text-gray-900 text-[15px] mb-2 leading-snug">{item.quote}</h3>
                 <p className="text-sm text-gray-500 mb-3 leading-relaxed">{item.desc}</p>
@@ -1309,7 +1309,7 @@ export default function Home() {
               };
               return item;
             }).map((item, i) => (
-              <div key={i} className="min-w-[260px] max-w-[280px] flex-shrink-0 p-5 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
+              <div key={i} className="min-w-[220px] sm:min-w-[260px] max-w-[280px] flex-shrink-0 p-5 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
                 <span className="text-3xl block mb-3">{item.emoji}</span>
                 <h3 className="font-bold text-gray-900 text-[15px] mb-2 leading-snug">{item.quote}</h3>
                 <p className="text-sm text-gray-500 mb-3 leading-relaxed">{item.desc}</p>
@@ -1333,7 +1333,7 @@ export default function Home() {
           {/* Header */}
           <div ref={setAnimRef("howit-header")} data-anim-id="howit-header" className={`text-center mb-14 anim-element ${visible.has("howit-header") ? "anim-visible" : ""}`}>
             <p className="text-sm font-semibold text-[#4F46E5] mb-4">{t("howItWorks.whyLogos")}</p>
-            <h2 className="text-3xl md:text-[38px] font-extrabold text-gray-900 leading-[1.25] whitespace-pre-line">
+            <h2 className="text-2xl sm:text-3xl md:text-[38px] font-extrabold text-gray-900 leading-[1.25] whitespace-pre-line">
               {t("howItWorks.title")}
             </h2>
           </div>
