@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 // import { usePayment } from "@/hooks/usePayment"; // 유료화 시 복원
 import { PROMOTION } from "@/lib/promotion";
@@ -25,6 +25,38 @@ export default function Home() {
 
   // Onboarding path selector
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Scroll-triggered animation
+  const animatedRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const [visible, setVisible] = useState<Set<string>>(new Set());
+
+  const setAnimRef = useCallback((id: string) => (el: HTMLDivElement | null) => {
+    if (el) animatedRefs.current.set(id, el);
+    else animatedRefs.current.delete(id);
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute("data-anim-id");
+            if (id) setVisible((prev) => new Set(prev).add(id));
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+    );
+    animatedRefs.current.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [showOnboarding]);
+
+  const anim = (id: string, delay = 0) => ({
+    ref: setAnimRef(id),
+    "data-anim-id": id,
+    style: { transitionDelay: `${delay}ms` } as React.CSSProperties,
+    className: `anim-element ${visible.has(id) ? "anim-visible" : ""}`,
+  });
   const [onboardingPhase, setOnboardingPhase] = useState<"idle" | "selected" | "exiting">("idle");
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [langSweep, setLangSweep] = useState<"idle" | "ko" | "en">("idle");
@@ -171,6 +203,44 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white">
+      <style jsx global>{`
+        .anim-element {
+          opacity: 0;
+          transform: translateY(32px);
+          transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .anim-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .anim-scale {
+          opacity: 0;
+          transform: scale(0.92);
+          transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .anim-scale.anim-visible {
+          opacity: 1;
+          transform: scale(1);
+        }
+        .anim-left {
+          opacity: 0;
+          transform: translateX(-40px);
+          transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .anim-left.anim-visible {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        .anim-right {
+          opacity: 0;
+          transform: translateX(40px);
+          transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .anim-right.anim-visible {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      `}</style>
       {/* ===== Onboarding Path Selector Overlay ===== */}
       {showOnboarding && (
         <div
@@ -531,40 +601,26 @@ export default function Home() {
       {/* Hero Section */}
       <section className="pt-14 pb-12 px-4 bg-white">
         <div className="max-w-4xl mx-auto text-center">
-          {/* 정식 출시 기념 배너 */}
-          <div className="relative inline-block mb-14 animate-[bannerPulse_2s_ease-in-out_infinite]">
-            <div className="px-7 py-3.5 bg-[#4F46E5] rounded-2xl shadow-lg shadow-indigo-200">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl animate-bounce">🎉</span>
-                <div className="text-left">
-                  <p className="text-white font-bold text-base md:text-lg tracking-tight">오픈 기념 · 무제한 무료</p>
-                  <p className="text-indigo-200 text-xs md:text-sm">로그인만 하면 모든 기능 무제한 이용</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <style jsx>{`
-            @keyframes bannerPulse {
-              0%, 100% { transform: scale(1); }
-              50% { transform: scale(1.03); }
-            }
-          `}</style>
-
           {/* 모드별 Hero 타이틀 */}
+          <div {...anim("hero-title")} >
           <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-8">
             {mode === "video-to-blog" && (<>{t("hero.videoToBlog.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("hero.videoToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
             {mode === "feed-to-blog" && (<>{t("hero.feedToBlog.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("hero.feedToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
             {mode === "study" && (<>{t("study.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("study.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
           </h1>
+          </div>
 
+          <div {...anim("hero-desc", 150)}>
           <p className="text-sm md:text-base text-gray-500 max-w-2xl mx-auto mb-12 leading-relaxed whitespace-pre-line">
             {mode === "video-to-blog" && t("hero.videoToBlog.desc")}
             {mode === "feed-to-blog" && t("hero.feedToBlog.desc")}
             {mode === "study" && t("study.desc")}
           </p>
+          </div>
 
           {/* CTA Button */}
           {/* Convert Section */}
+          <div {...anim("hero-convert", 300)} >
           <div className="max-w-2xl mx-auto mb-20">
             {/* 모드 선택 탭 */}
             <div className="flex justify-center gap-2 mb-6">
@@ -804,11 +860,12 @@ export default function Home() {
               </>
             )}
           </div>
+          </div>
 
           {/* Feature Showcase */}
           <div className="mt-20 mb-10">
             {/* Section Header */}
-            <div className="text-center mb-10">
+            <div {...anim("features-header")} className={`text-center mb-10 anim-element ${visible.has("features-header") ? "anim-visible" : ""}`} ref={setAnimRef("features-header")} data-anim-id="features-header">
               <span className="text-sm font-semibold text-[#4F46E5] tracking-wider uppercase">{t("features.label")}</span>
               <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mt-3 mb-4">{t("features.title")}</h2>
               <p className="text-sm md:text-base text-gray-500 max-w-xl mx-auto">{t("features.subtitle")}</p>
@@ -836,7 +893,7 @@ export default function Home() {
             {/* Feature Cards - 2 columns */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
               {/* Left Card - Lime/Green accent mockup */}
-              <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+              <div ref={setAnimRef("feature-left")} data-anim-id="feature-left" style={{ transitionDelay: "100ms" }} className={`rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow anim-left ${visible.has("feature-left") ? "anim-visible" : ""}`}>
                 <div className="bg-[#f0fdf4] p-6 min-h-[280px] flex items-center justify-center">
                   {activeFeatureTab === "blog" && (
                     <div className="w-full max-w-[320px] space-y-3">
@@ -948,7 +1005,7 @@ export default function Home() {
               </div>
 
               {/* Right Card - White background preview */}
-              <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+              <div ref={setAnimRef("feature-right")} data-anim-id="feature-right" style={{ transitionDelay: "250ms" }} className={`rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow anim-right ${visible.has("feature-right") ? "anim-visible" : ""}`}>
                 <div className="bg-gray-50 p-6 min-h-[280px] flex items-center justify-center">
                   {activeFeatureTab === "blog" && (
                     <div className="w-full max-w-[300px]">
@@ -1070,7 +1127,7 @@ export default function Home() {
       <section className="py-20 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12">
+          <div ref={setAnimRef("problem-header")} data-anim-id="problem-header" className={`text-center mb-12 anim-element ${visible.has("problem-header") ? "anim-visible" : ""}`}>
             <span className="text-sm font-semibold text-[#E5704F] tracking-wider uppercase">{t("problem.sectionLabel")}</span>
             <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mt-3 mb-4">{t("problem.title")}</h2>
             <p className="text-sm md:text-base text-gray-500 max-w-xl mx-auto">
@@ -1079,12 +1136,12 @@ export default function Home() {
           </div>
 
           {/* Category 1 */}
-          <div className="flex justify-center mb-6">
+          <div ref={setAnimRef("problem-cat1")} data-anim-id="problem-cat1" className={`flex justify-center mb-6 anim-element ${visible.has("problem-cat1") ? "anim-visible" : ""}`}>
             <span className="px-4 py-1.5 bg-[#f0fdf4] text-[#16a34a] text-sm font-medium rounded-full border border-[#bbf7d0]">
               {t("problem.cat1")}
             </span>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-6 mb-12 scrollbar-hide">
+          <div ref={setAnimRef("problem-cards1")} data-anim-id="problem-cards1" style={{ transitionDelay: "150ms" }} className={`flex gap-4 overflow-x-auto pb-6 mb-12 scrollbar-hide anim-element ${visible.has("problem-cards1") ? "anim-visible" : ""}`}>
             {([0, 1, 2, 3] as const).map((idx) => {
               const item = {
                 emoji: t(`problem.items1.${idx}.emoji`),
@@ -1115,12 +1172,12 @@ export default function Home() {
           </div>
 
           {/* Category 2 */}
-          <div className="flex justify-center mb-6">
+          <div ref={setAnimRef("problem-cat2")} data-anim-id="problem-cat2" className={`flex justify-center mb-6 anim-element ${visible.has("problem-cat2") ? "anim-visible" : ""}`}>
             <span className="px-4 py-1.5 bg-[#f0fdf4] text-[#16a34a] text-sm font-medium rounded-full border border-[#bbf7d0]">
               {t("problem.cat2")}
             </span>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide">
+          <div ref={setAnimRef("problem-cards2")} data-anim-id="problem-cards2" style={{ transitionDelay: "150ms" }} className={`flex gap-4 overflow-x-auto pb-6 scrollbar-hide anim-element ${visible.has("problem-cards2") ? "anim-visible" : ""}`}>
             {([0, 1, 2, 3] as const).map((idx) => {
               const item = {
                 emoji: t(`problem.items2.${idx}.emoji`),
@@ -1156,7 +1213,7 @@ export default function Home() {
       <section className="py-20 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-14">
+          <div ref={setAnimRef("howit-header")} data-anim-id="howit-header" className={`text-center mb-14 anim-element ${visible.has("howit-header") ? "anim-visible" : ""}`}>
             <p className="text-sm font-semibold text-[#4F46E5] mb-4">{t("howItWorks.whyLogos")}</p>
             <h2 className="text-3xl md:text-[38px] font-extrabold text-gray-900 leading-[1.25] whitespace-pre-line">
               {t("howItWorks.title")}
@@ -1169,8 +1226,8 @@ export default function Home() {
               num: t(`howItWorks.items.${idx}.num`),
               title: t(`howItWorks.items.${idx}.title`),
               desc: t(`howItWorks.items.${idx}.desc`),
-            })).map((item) => (
-              <div key={item.num} className="flex gap-5 group">
+            })).map((item, i) => (
+              <div key={item.num} ref={setAnimRef(`howit-${i}`)} data-anim-id={`howit-${i}`} style={{ transitionDelay: `${i * 120}ms` }} className={`flex gap-5 group anim-element ${visible.has(`howit-${i}`) ? "anim-visible" : ""}`}>
                 <span className="text-2xl font-extrabold text-gray-200 group-hover:text-[#4F46E5] transition-colors mt-0.5 font-[var(--font-poppins)]">
                   {item.num}
                 </span>
@@ -1187,13 +1244,15 @@ export default function Home() {
       {/* Pricing Section - 현재 무료 */}
       <section id="pricing" className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-xl font-bold text-gray-900 mb-3">{t("pricing.title")}</h2>
-          <p className="text-sm text-gray-500 mb-10">
-            {t("pricing.subtitle")}
-          </p>
+          <div ref={setAnimRef("pricing-header")} data-anim-id="pricing-header" className={`anim-element ${visible.has("pricing-header") ? "anim-visible" : ""}`}>
+            <h2 className="text-xl font-bold text-gray-900 mb-3">{t("pricing.title")}</h2>
+            <p className="text-sm text-gray-500 mb-10">
+              {t("pricing.subtitle")}
+            </p>
+          </div>
 
           {/* 무료 이용 안내 */}
-          <div className="border border-gray-200 rounded-2xl overflow-hidden">
+          <div ref={setAnimRef("pricing-card")} data-anim-id="pricing-card" style={{ transitionDelay: "150ms" }} className={`border border-gray-200 rounded-2xl overflow-hidden anim-scale ${visible.has("pricing-card") ? "anim-visible" : ""}`}>
             <div className="p-8 md:p-12 text-center">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-green-50 border border-green-200 rounded-full mb-6">
                 <span className="text-green-600 text-sm font-semibold">{t("pricing.freeBadge")}</span>
@@ -1221,7 +1280,7 @@ export default function Home() {
           </div>
 
           {/* 가치 제안 문구 */}
-          <div className="mt-8 p-5 bg-[#f9fafb] rounded-xl border border-gray-100">
+          <div ref={setAnimRef("pricing-value")} data-anim-id="pricing-value" style={{ transitionDelay: "300ms" }} className={`mt-8 p-5 bg-[#f9fafb] rounded-xl border border-gray-100 anim-element ${visible.has("pricing-value") ? "anim-visible" : ""}`}>
             <p className="text-sm text-gray-600 leading-relaxed text-center">
               {t("pricing.valueProposition")}
             </p>
