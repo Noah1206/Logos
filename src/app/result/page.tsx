@@ -99,16 +99,50 @@ function EditableText({
 }
 
 // 이미지 로딩 + 교체/삭제/크기 조절 컴포넌트
-function BlogImage({ src, alt, onReplace, onDelete }: {
+function BlogImage({ src, alt, onReplace, onDelete, imageLabel }: {
   src: string; alt: string;
   onReplace?: (newSrc: string) => void;
   onDelete?: () => void;
+  imageLabel?: string;
 }) {
   const { t } = useTranslation();
   const [loaded, setLoaded] = useState(false);
   const [hovering, setHovering] = useState(false);
   const [scale, setScale] = useState(100); // 퍼센트
+  const [imgCopied, setImgCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleCopyImage = async () => {
+    try {
+      const res = await fetch(src);
+      const blob = await res.blob();
+      // PNG로 변환 (canvas 활용)
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      const loadPromise = new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = reject;
+      });
+      img.src = URL.createObjectURL(blob);
+      await loadPromise;
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(img.src);
+      const pngBlob = await new Promise<Blob>((resolve) =>
+        canvas.toBlob((b) => resolve(b!), "image/png")
+      );
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": pngBlob }),
+      ]);
+      setImgCopied(true);
+      setTimeout(() => setImgCopied(false), 1500);
+    } catch (err) {
+      console.error("Image copy failed:", err);
+    }
+  };
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith("image/") || !onReplace) return;
@@ -163,6 +197,37 @@ function BlogImage({ src, alt, onReplace, onDelete }: {
           onClick={() => onReplace && fileRef.current?.click()}
         />
       </div>
+
+      {/* 이미지 라벨 + 복사 버튼 */}
+      {imageLabel && loaded && (
+        <div className="absolute top-2 left-2 z-10">
+          <button
+            onClick={(e) => { e.stopPropagation(); handleCopyImage(); }}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shadow text-xs font-medium transition-all ${
+              imgCopied
+                ? "bg-green-500 text-white"
+                : "bg-white/95 hover:bg-white text-gray-700 hover:text-gray-900"
+            }`}
+            title="이미지 복사 (네이버에 붙여넣기)"
+          >
+            {imgCopied ? (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                복사됨
+              </>
+            ) : (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                {imageLabel}
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* 툴바 (hover 시) */}
       {hovering && loaded && (
@@ -1186,9 +1251,25 @@ function ResultContent() {
     const data = editedData ?? resultData;
     if (!data) return;
 
-    // 네이버 블로그: <img src=""> 로 삽입된 이미지는 "숨김 이미지"로 처리되어
-    // 검색 반영 안됨 + 편집 제한 → 이미지 제외, 텍스트만 복사
-    // 이미지는 "이미지 다운로드" 버튼으로 받아서 네이버 에디터에서 직접 업로드
+    // 네이버 블로그: <img src=""> → "숨김 이미지" (검색 반영 X)
+    // 이미지 위치에 플레이스홀더 삽입 → 유저가 개별 이미지 복사 후 붙여넣기
+
+    let imgNum = 0;
+    const hasFrameMatching = data.sections.some(
+      (s) => s.frame_index != null && s.frame_index >= 0
+    );
+    const usedIndices = new Set(
+      data.sections.map((s) => s.frame_index).filter((fi): fi is number => fi != null && fi >= 0)
+    );
+    const introIdx = data.frameUrls.findIndex((_, i) => !usedIndices.has(i));
+    const introActualIdx = data.frameUrls.length > 0 ? (introIdx >= 0 ? introIdx : 0) : -1;
+    const hasIntro = introActualIdx >= 0 && !!data.frameUrls[introActualIdx];
+
+    const imgPlaceholder = (num: number) => {
+      const html = `<div style="text-align:center;padding:16px 0;"><span style="font-size:11pt;color:#999;">📷 [이미지 ${num} 붙여넣기]</span></div><br>`;
+      const text = `📷 [이미지 ${num} 붙여넣기]`;
+      return { html, text };
+    };
 
     const htmlParts: string[] = [];
     const textParts: string[] = [];
@@ -1198,19 +1279,52 @@ function ResultContent() {
     textParts.push(data.blogTitle, "");
 
     // 도입부
-    htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${data.summary.replace(/\n/g, "<br>")}</span></div><br><br>`);
+    htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${data.summary.replace(/\n/g, "<br>")}</span></div><br>`);
     textParts.push(data.summary, "");
 
+    // 도입부 이미지 플레이스홀더
+    if (hasIntro) {
+      imgNum++;
+      const p = imgPlaceholder(imgNum);
+      htmlParts.push(p.html);
+      textParts.push(p.text, "");
+    }
+
     // 본문 섹션
-    data.sections.forEach((s) => {
+    data.sections.forEach((s, idx) => {
       if (showSubtitle) {
         const title = showEmoji ? `${s.emoji} ${s.title}` : s.title;
         htmlParts.push(`<div style="text-align:left;"><b><span style="font-size:16pt;">${title}</span></b></div><br>`);
         textParts.push(title, "");
       }
 
-      htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${s.content.replace(/\n/g, "<br>")}</span></div><br><br>`);
+      htmlParts.push(`<div style="text-align:left;"><span style="font-size:11pt;">${s.content.replace(/\n/g, "<br>")}</span></div><br>`);
       textParts.push(s.content, "");
+
+      // 섹션 이미지 플레이스홀더
+      let hasFrame = false;
+      if (hasFrameMatching) {
+        hasFrame = s.frame_index != null && s.frame_index >= 0 && s.frame_index < data.frameUrls.length && s.frame_index !== introActualIdx;
+      } else {
+        const fi = idx + 1;
+        hasFrame = fi !== introActualIdx && !!data.frameUrls?.[fi];
+      }
+      if (hasFrame) {
+        imgNum++;
+        const p = imgPlaceholder(imgNum);
+        htmlParts.push(p.html);
+        textParts.push(p.text, "");
+      }
+
+      // 추가 이미지 플레이스홀더
+      if (s.extraImages) {
+        for (let i = 0; i < s.extraImages.length; i++) {
+          imgNum++;
+          const p = imgPlaceholder(imgNum);
+          htmlParts.push(p.html);
+          textParts.push(p.text, "");
+        }
+      }
     });
 
     // 마무리 CTA
@@ -1365,6 +1479,37 @@ function ResultContent() {
     const idx = displayData.frameUrls.findIndex((_, i) => !sectionUsed.has(i));
     return idx >= 0 ? idx : 0;
   }, [displayData?.frameUrls, displayData?.sections]);
+
+  // 이미지 번호 매핑 (복사 라벨용)
+  const imageNumbers = React.useMemo(() => {
+    if (!displayData) return { intro: 0, sections: [] as number[], extras: [] as number[][] };
+    let counter = 0;
+    const hasIntro = introFrameIndex >= 0 && displayData.frameUrls?.[introFrameIndex];
+    const intro = hasIntro ? ++counter : 0;
+    const hasFrameMatching = displayData.sections.some(
+      (s) => s.frame_index != null && s.frame_index >= 0
+    );
+    const sections: number[] = [];
+    const extras: number[][] = [];
+    displayData.sections.forEach((s, idx) => {
+      let hasFrame = false;
+      if (hasFrameMatching) {
+        hasFrame = s.frame_index != null && s.frame_index >= 0 && s.frame_index < displayData.frameUrls.length && s.frame_index !== introFrameIndex;
+      } else {
+        const fi = idx + 1;
+        hasFrame = fi !== introFrameIndex && !!displayData.frameUrls?.[fi];
+      }
+      sections.push(hasFrame ? ++counter : 0);
+      const extraNums: number[] = [];
+      if (s.extraImages) {
+        for (let i = 0; i < s.extraImages.length; i++) {
+          extraNums.push(++counter);
+        }
+      }
+      extras.push(extraNums);
+    });
+    return { intro, sections, extras };
+  }, [displayData, introFrameIndex]);
 
   // 글자수 카운트
   const totalCharCount = React.useMemo(() => {
@@ -2315,6 +2460,7 @@ function ResultContent() {
                 <BlogImage
                   src={displayData.frameUrls[introFrameIndex]}
                   alt="영상 프레임"
+                  imageLabel={`이미지 ${imageNumbers.intro} 복사`}
                   onReplace={(newSrc) => updateEdited((d) => { d.frameUrls[introFrameIndex] = newSrc; })}
                   onDelete={() => updateEdited((d) => { d.frameUrls.splice(introFrameIndex, 1); })}
                 />
@@ -2406,6 +2552,7 @@ function ResultContent() {
                         <BlogImage
                           src={frameUrl}
                           alt={`프레임 - ${section.title}`}
+                          imageLabel={imageNumbers.sections[idx] ? `이미지 ${imageNumbers.sections[idx]} 복사` : undefined}
                           onReplace={(newSrc) => {
                             if (frameIdx >= 0) {
                               updateEdited((d) => { d.frameUrls[frameIdx] = newSrc; });
@@ -2436,6 +2583,7 @@ function ResultContent() {
                         key={`extra-${idx}-${imgIdx}`}
                         src={imgUrl}
                         alt={`추가 이미지 ${imgIdx + 1}`}
+                        imageLabel={imageNumbers.extras[idx]?.[imgIdx] ? `이미지 ${imageNumbers.extras[idx][imgIdx]} 복사` : undefined}
                         onReplace={(newSrc) => {
                           updateEdited((d) => {
                             if (d.sections[idx].extraImages) {
