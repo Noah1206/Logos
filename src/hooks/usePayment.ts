@@ -1,3 +1,7 @@
+// 유료화 시 복원 - 포트원 결제 훅
+// 현재 무료 전환으로 전체 주석 처리
+
+/*
 "use client";
 
 import { useState } from "react";
@@ -110,3 +114,4 @@ export function usePayment({ onSuccess, onError }: UsePaymentOptions = {}) {
 
   return { purchasePackage, isProcessing };
 }
+*/

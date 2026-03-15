@@ -11,28 +11,10 @@ export default function PricingPage() {
   const user = session?.user;
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginLoading, setLoginLoading] = useState<string | null>(null);
-  const [notifyDone, setNotifyDone] = useState(false);
-  const [notifyLoading, setNotifyLoading] = useState(false);
-
-  const handleNotify = async () => {
-    if (!user) {
-      setShowLoginModal(true);
-      return;
-    }
-    setNotifyLoading(true);
-    try {
-      await fetch("/api/payment/notify", { method: "POST" });
-      setNotifyDone(true);
-    } catch {
-      alert("알림 신청에 실패했습니다. 다시 시도해주세요.");
-    } finally {
-      setNotifyLoading(false);
-    }
-  };
 
   const handleSocialLogin = (provider: "kakao" | "naver") => {
     setLoginLoading(provider);
-    signIn(provider, { callbackUrl: "/pricing" });
+    signIn(provider, { callbackUrl: "/" });
   };
 
   return (
@@ -50,170 +32,56 @@ export default function PricingPage() {
         </div>
       </header>
 
-      {/* Pricing Content */}
-      <section className="py-12 md:py-16 px-4">
-        <div className="max-w-4xl mx-auto">
+      {/* Pricing Content - 무료 안내 */}
+      <section className="py-12 md:py-20 px-4">
+        <div className="max-w-2xl mx-auto text-center">
           {/* Title */}
-          <div className="text-center mb-10">
-            <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">
-              {t("pricing.title")}
-            </h1>
-            <p className="text-sm text-gray-500 max-w-xl mx-auto">
-              {t("pricing.subtitle")}
-            </p>
-            <p className="text-sm text-gray-900 font-semibold mt-1">
-              {t("pricing.subtitleBold")}
-            </p>
-          </div>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3">
+            {t("pricing.title")}
+          </h1>
+          <p className="text-sm text-gray-500 max-w-xl mx-auto mb-10">
+            {t("pricing.subtitle")}
+          </p>
 
-          {/* 결제 점검 안내 */}
-          <div className="mb-6 p-5 bg-amber-50 border border-amber-200 rounded-xl text-center">
-            <p className="text-sm font-semibold text-amber-800">
-              결제 시스템 점검 중입니다
-            </p>
-            <p className="text-xs text-amber-600 mt-1.5">
-              빠른 시일 내에 결제가 가능하도록 준비 중이에요. 조금만 기다려주세요!
-            </p>
-            {notifyDone ? (
-              <p className="mt-3 text-xs font-semibold text-green-700">
-                알림 신청 완료! 결제가 가능해지면 알려드릴게요.
-              </p>
-            ) : (
-              <button
-                onClick={handleNotify}
-                disabled={notifyLoading}
-                className="mt-3 px-5 py-2 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50"
-              >
-                {notifyLoading ? "신청 중..." : "결제 가능 시 알림 받기"}
-              </button>
-            )}
-          </div>
-
-          {/* Pricing Cards */}
-          <div className="grid md:grid-cols-3 gap-0 border border-gray-200 rounded-2xl overflow-hidden shadow-lg">
-            {/* Free */}
-            <div className="p-5 md:p-6 border-b md:border-b-0 md:border-r border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900 mb-1">
-                {t("pricing.free.name")}
-              </h3>
-              <p className="text-xs text-gray-400 mb-4">
-                {t("pricing.free.desc")}
-              </p>
-              <div className="mb-1">
-                <span className="text-3xl md:text-4xl font-bold text-gray-900">
-                  {t("pricing.free.price")}
-                </span>
+          {/* 무료 이용 카드 */}
+          <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-lg">
+            <div className="p-8 md:p-12">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-green-50 border border-green-200 rounded-full mb-6">
+                <span className="text-green-600 text-sm font-semibold">{t("pricing.freeBadge")}</span>
               </div>
-              <p className="text-xs text-gray-400 mb-5">
-                {t("pricing.free.period")}
-              </p>
-              <a
-                href="/"
-                className="block w-full py-2.5 bg-gray-900 text-white font-semibold rounded-lg text-center text-sm hover:bg-gray-800 transition-colors"
-              >
-                {t("common.startNow")}
-              </a>
-              <ul className="space-y-2.5 mt-6">
-                {([0, 1, 2, 3] as const).map((idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-gray-400 mt-0.5 text-sm">✓</span>
-                    <span className="text-xs text-gray-600">
-                      {t(`pricing.free.features.${idx}`)}
-                    </span>
+              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">{t("pricing.freeTitle")}</h3>
+              <p className="text-sm text-gray-500 max-w-md mx-auto mb-8">{t("pricing.freeDesc")}</p>
+
+              <ul className="inline-flex flex-col items-start gap-3 mb-8">
+                {([0, 1, 2, 3, 4] as const).map((idx) => (
+                  <li key={idx} className="flex items-center gap-2">
+                    <span className="text-[#4F46E5]">✓</span>
+                    <span className="text-sm text-gray-700">{t(`pricing.freeFeatureList.${idx}`)}</span>
                   </li>
                 ))}
               </ul>
-            </div>
 
-            {/* Starter */}
-            <div className="p-5 md:p-6 border-b md:border-b-0 md:border-r border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900 mb-1">
-                {t("pricing.starter.name")}
-              </h3>
-              <p className="text-xs text-gray-400 mb-4">
-                {t("pricing.starter.desc")}
-              </p>
-              <div className="mb-1">
-                <span className="text-3xl md:text-4xl font-bold text-gray-900">
-                  {t("pricing.starter.price")}
-                </span>
-              </div>
-              <p className="text-xs text-gray-400 mb-5">
-                {t("pricing.starter.period")}
-              </p>
-              {notifyDone ? (
-                <div className="w-full py-2.5 bg-green-50 border border-green-200 text-green-700 font-semibold rounded-lg text-sm text-center">
-                  알림 신청 완료
-                </div>
+              {user ? (
+                <a
+                  href="/?new"
+                  className="inline-block px-8 py-3 bg-[#4F46E5] text-white font-semibold rounded-lg hover:bg-[#4338CA] transition-colors text-sm"
+                >
+                  {t("pricing.startFreeBtn")}
+                </a>
               ) : (
                 <button
-                  onClick={handleNotify}
-                  disabled={notifyLoading}
-                  className="w-full py-2.5 bg-[#4F46E5] text-white font-semibold rounded-lg text-sm hover:bg-[#4338CA] transition-colors disabled:opacity-50"
+                  onClick={() => setShowLoginModal(true)}
+                  className="px-8 py-3 bg-[#4F46E5] text-white font-semibold rounded-lg hover:bg-[#4338CA] transition-colors text-sm"
                 >
-                  {notifyLoading ? "신청 중..." : "알림 받기"}
+                  {t("pricing.loginToStart")}
                 </button>
               )}
-              <ul className="space-y-2.5 mt-6">
-                {([0, 1, 2, 3, 4] as const).map((idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-[#4F46E5] mt-0.5 text-sm">✓</span>
-                    <span className="text-xs text-gray-600">
-                      {t(`pricing.starter.features.${idx}`)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Pro */}
-            <div className="p-5 md:p-6 relative bg-[#FAFAFE]">
-              <span className="absolute top-4 right-4 px-2.5 py-0.5 bg-[#EEF2FF] text-[#4F46E5] text-xs font-semibold rounded-full">
-                {t("common.recommended")}
-              </span>
-              <h3 className="text-lg font-bold text-gray-900 mb-1">
-                {t("pricing.pro.name")}
-              </h3>
-              <p className="text-xs text-gray-400 mb-4">
-                {t("pricing.pro.desc")}
-              </p>
-              <div className="mb-1">
-                <span className="text-3xl md:text-4xl font-bold text-gray-900">
-                  {t("pricing.pro.price")}
-                </span>
-              </div>
-              <p className="text-xs text-gray-400 mb-5">
-                {t("pricing.pro.period")}
-              </p>
-              {notifyDone ? (
-                <div className="w-full py-2.5 bg-green-50 border border-green-200 text-green-700 font-semibold rounded-lg text-sm text-center">
-                  알림 신청 완료
-                </div>
-              ) : (
-                <button
-                  onClick={handleNotify}
-                  disabled={notifyLoading}
-                  className="w-full py-2.5 bg-[#4F46E5] text-white font-semibold rounded-lg text-sm hover:bg-[#4338CA] transition-colors disabled:opacity-50"
-                >
-                  {notifyLoading ? "신청 중..." : "알림 받기"}
-                </button>
-              )}
-              <ul className="space-y-2.5 mt-6">
-                {([0, 1, 2, 3, 4] as const).map((idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-[#4F46E5] mt-0.5 text-sm">✓</span>
-                    <span className="text-xs text-gray-600">
-                      {t(`pricing.pro.features.${idx}`)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
 
           {/* Value Proposition */}
           <div className="mt-8 p-5 bg-[#f9fafb] rounded-xl border border-gray-100">
-            <p className="text-sm text-gray-600 leading-relaxed text-center">
+            <p className="text-sm text-gray-600 leading-relaxed">
               {t("pricing.valueProposition")}
             </p>
           </div>

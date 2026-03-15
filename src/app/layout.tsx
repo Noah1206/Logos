@@ -19,17 +19,10 @@ const jsonLd = {
   offers: [
     {
       "@type": "Offer",
-      name: "Starter Pack",
-      price: "9900",
+      name: "Free",
+      price: "0",
       priceCurrency: "KRW",
-      description: "10 conversions / 10건 변환",
-    },
-    {
-      "@type": "Offer",
-      name: "Pro Pack",
-      price: "29000",
-      priceCurrency: "KRW",
-      description: "50 conversions / 50건 변환",
+      description: "All features unlimited free / 모든 기능 무제한 무료",
     },
   ],
   inLanguage: ["ko", "en"],
@@ -53,7 +46,7 @@ export const metadata: Metadata = {
     template: "%s | LOGOS.ai",
   },
   description:
-    "유튜브 쇼츠·인스타 릴스를 네이버 블로그 SEO 글로 자동 변환. 블로그를 숏폼 영상으로도 변환. AI가 1분 안에 완성, 건당 990원.",
+    "유튜브 쇼츠·인스타 릴스를 네이버 블로그 SEO 글로 자동 변환. 블로그를 숏폼 영상으로도 변환. AI가 1분 안에 완성, 무제한 무료.",
   keywords: [
     // English keywords
     "AI blog writer",

@@ -3,11 +3,11 @@
 import { useSearchParams } from "next/navigation";
 import React, { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSession, signIn } from "next-auth/react";
-import { usePayment } from "@/hooks/usePayment";
+// import { usePayment } from "@/hooks/usePayment"; // 유료화 시 복원
 import { useTranslation, useTranslationArray } from "@/i18n";
 import VideoTimeline from "@/components/VideoTimeline";
-import TrialBanner from "@/components/TrialBanner";
-import ConversionTrigger from "@/components/ConversionTrigger";
+// import TrialBanner from "@/components/TrialBanner"; // 유료화 시 복원
+// import ConversionTrigger from "@/components/ConversionTrigger"; // 유료화 시 복원
 
 type ReportTab = "detailed" | "summary" | "easy" | "script";
 
@@ -444,6 +444,7 @@ function ResultContent() {
   const { data: session, update: updateSession } = useSession();
   const user = session?.user;
 
+  /* 유료화 시 복원
   const { purchasePackage, isProcessing } = usePayment({
     onSuccess: (credits) => {
       alert(t("payment.completed", { credits }));
@@ -464,6 +465,7 @@ function ResultContent() {
     }
     purchasePackage(packageId);
   };
+  */
 
   const [progress, setProgress] = useState(0); // 백엔드 목표값
   const [displayProgress, setDisplayProgress] = useState(0); // 화면 표시값 (점진 증가)
@@ -490,7 +492,7 @@ function ResultContent() {
   const [showToc, setShowToc] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [showSubtitle, setShowSubtitle] = useState(true);
-  const [showPricing, setShowPricing] = useState(false);
+  // const [showPricing, setShowPricing] = useState(false); // 유료화 시 복원
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginLoading, setLoginLoading] = useState<string | null>(null);
   const [userImages, setUserImages] = useState<string[]>([]);
@@ -1407,7 +1409,7 @@ function ResultContent() {
 
   return (
     <main className="min-h-screen bg-white">
-      <ConversionTrigger />
+      {/* <ConversionTrigger /> 유료화 시 복원 */}
       {!isComplete ? (
         /* Loading State */
         <div className="flex flex-col items-center justify-center min-h-screen px-6">
@@ -1588,7 +1590,7 @@ function ResultContent() {
                   <p className="text-xs text-gray-400 truncate">{user ? t("common.free") : t("common.loginRequired")}</p>
                 </div>
               </div>
-              <TrialBanner onUpgrade={() => setShowPricing(true)} />
+              {/* <TrialBanner onUpgrade={() => setShowPricing(true)} /> 유료화 시 복원 */}
             </div>
           </aside>
 
@@ -1799,7 +1801,7 @@ function ResultContent() {
                   </div>
                 </div>
               </div>
-              <TrialBanner onUpgrade={() => setShowPricing(true)} />
+              {/* <TrialBanner onUpgrade={() => setShowPricing(true)} /> 유료화 시 복원 */}
             </div>
           </aside>
 
@@ -2093,7 +2095,7 @@ function ResultContent() {
                   </div>
                 </div>
               </div>
-              <TrialBanner onUpgrade={() => setShowPricing(true)} />
+              {/* <TrialBanner onUpgrade={() => setShowPricing(true)} /> 유료화 시 복원 */}
             </div>
           </aside>
 
@@ -2701,116 +2703,7 @@ function ResultContent() {
         />
       )}
 
-      {/* 요금제 모달 */}
-      {showPricing && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
-          {/* 배경 오버레이 */}
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowPricing(false)}
-          />
-          {/* 모달 본체 */}
-          <div className="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            {/* 닫기 버튼 */}
-            <button
-              onClick={() => setShowPricing(false)}
-              className="absolute top-4 right-4 p-1.5 hover:bg-gray-100 rounded-lg transition-colors z-10"
-            >
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* 헤더 */}
-            <div className="px-8 pt-8 pb-4">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">{t("pricing.selectPlan")}</h2>
-              <p className="text-sm text-gray-500">
-                {t("pricing.modalSubtitle")}
-              </p>
-            </div>
-
-            {/* 요금제 카드 */}
-            <div className="px-8 pb-8">
-              <div className="grid md:grid-cols-3 gap-0 border border-gray-200 rounded-xl overflow-hidden">
-                {/* 무료 테스터 */}
-                <div className="p-5 border-b md:border-b-0 md:border-r border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">{t("pricing.free.name")}</h3>
-                  <p className="text-xs text-gray-400 mb-3">{t("pricing.free.desc")}</p>
-                  <div className="mb-0.5">
-                    <span className="text-3xl font-bold text-gray-900">{t("pricing.free.price")}</span>
-                  </div>
-                  <p className="text-xs text-gray-400 mb-4">{t("pricing.free.period")}</p>
-                  <button
-                    onClick={() => setShowPricing(false)}
-                    className="w-full py-2.5 bg-gray-900 text-white font-medium rounded-lg text-sm mb-5"
-                  >
-                    {t("common.currentPlan")}
-                  </button>
-                  <ul className="space-y-2.5">
-                    {[0, 1, 2].map((i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="text-gray-400 mt-0.5 text-xs">✓</span>
-                        <span className="text-xs text-gray-600">{t(`pricing.modalFreeFeatures.${i}`)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* 스타터 팩 */}
-                <div className="p-5 border-b md:border-b-0 md:border-r border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">{t("pricing.starter.name")}</h3>
-                  <p className="text-xs text-gray-400 mb-3">{t("pricing.starter.desc")}</p>
-                  <div className="mb-0.5">
-                    <span className="text-3xl font-bold text-gray-900">{t("pricing.starter.price")}</span>
-                  </div>
-                  <p className="text-xs text-gray-400 mb-4">{t("pricing.starter.period")}</p>
-                  <button
-                    onClick={() => handlePurchase("starter")}
-                    disabled={isProcessing}
-                    className="w-full py-2.5 bg-[#4F46E5] text-white font-medium rounded-lg hover:bg-[#4338CA] active:scale-[0.98] transition-all text-sm mb-5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isProcessing ? t("common.processing") : t("common.purchase")}
-                  </button>
-                  <ul className="space-y-2.5">
-                    {[0, 1, 2, 3].map((i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="text-gray-400 mt-0.5 text-xs">✓</span>
-                        <span className="text-xs text-gray-600">{t(`pricing.modalStarterFeatures.${i}`)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* 프로 팩 */}
-                <div className="p-5 relative">
-                  <span className="absolute top-4 right-4 px-2 py-0.5 bg-[#EEF2FF] text-[#4F46E5] text-[10px] font-medium rounded-full">{t("common.recommended")}</span>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">{t("pricing.pro.name")}</h3>
-                  <p className="text-xs text-gray-400 mb-3">{t("pricing.modalProDesc")}</p>
-                  <div className="mb-0.5">
-                    <span className="text-3xl font-bold text-gray-900">{t("pricing.pro.price")}</span>
-                  </div>
-                  <p className="text-xs text-gray-400 mb-4">{t("pricing.pro.period")}</p>
-                  <button
-                    onClick={() => handlePurchase("pro")}
-                    disabled={isProcessing}
-                    className="w-full py-2.5 bg-[#4F46E5] text-white font-medium rounded-lg hover:bg-[#4338CA] active:scale-[0.98] transition-all text-sm mb-5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isProcessing ? t("common.processing") : t("common.purchase")}
-                  </button>
-                  <ul className="space-y-2.5">
-                    {[0, 1, 2, 3].map((i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="text-gray-400 mt-0.5 text-xs">✓</span>
-                        <span className="text-xs text-gray-600">{t(`pricing.modalProFeatures.${i}`)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 요금제 모달 - 유료화 시 복원 */}
 
       {/* 로그인 모달 */}
       {showLoginModal && (

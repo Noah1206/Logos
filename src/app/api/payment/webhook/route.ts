@@ -1,3 +1,16 @@
+// 유료화 시 복원 - 결제 웹훅 API
+// 현재 무료 전환으로 전체 주석 처리
+
+import { NextResponse } from "next/server";
+
+export async function POST() {
+  return NextResponse.json(
+    { success: false, error: "결제 시스템이 비활성화되어 있습니다." },
+    { status: 503 }
+  );
+}
+
+/* 유료화 시 복원
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -96,3 +109,4 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ success: true });
 }
+*/

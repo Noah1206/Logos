@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
+
+// 현재 무제한 무료 - 결제 비활성화
+export async function POST() {
+  return NextResponse.json(
+    { success: false, error: "결제 시스템이 비활성화되어 있습니다. 현재 모든 기능이 무료입니다." },
+    { status: 503 }
+  );
+}
+
+/* 유료화 시 복원 - Stripe Checkout Session 생성
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { stripe, getStripePackage } from "@/lib/stripe";
 
-// Stripe Checkout Session 생성
-export async function POST(request: Request) {
+export async function POST_ORIGINAL(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json(
@@ -26,7 +35,6 @@ export async function POST(request: Request) {
 
   const paymentId = `stripe_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
-  // DB에 주문 생성 (PENDING 상태)
   await prisma.order.create({
     data: {
       userId: session.user.id,
@@ -38,7 +46,6 @@ export async function POST(request: Request) {
     },
   });
 
-  // Stripe Checkout Session 생성
   const origin = request.headers.get("origin") ?? process.env.NEXTAUTH_URL;
 
   const checkoutSession = await stripe.checkout.sessions.create({
@@ -70,3 +77,4 @@ export async function POST(request: Request) {
     checkoutUrl: checkoutSession.url,
   });
 }
+*/

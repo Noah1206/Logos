@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { usePayment } from "@/hooks/usePayment";
+// import { usePayment } from "@/hooks/usePayment"; // 유료화 시 복원
 import { PROMOTION } from "@/lib/promotion";
 import { useTranslation } from "@/i18n";
 import LanguageToggle from "@/components/LanguageToggle";
@@ -68,6 +68,7 @@ export default function Home() {
       .catch(() => {});
   }, [status, user]);
 
+  /* 유료화 시 복원
   const { purchasePackage, isProcessing } = usePayment({
     onSuccess: (credits) => {
       alert(t("payment.completed", { credits }));
@@ -87,6 +88,7 @@ export default function Home() {
     }
     purchasePackage(packageId);
   };
+  */
 
   const [loginLoading, setLoginLoading] = useState<string | null>(null);
 
@@ -535,8 +537,8 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <span className="text-2xl animate-bounce">🎉</span>
                 <div className="text-left">
-                  <p className="text-white font-bold text-base md:text-lg tracking-tight">정식 출시 기념 · 7일 무료체험</p>
-                  <p className="text-indigo-200 text-xs md:text-sm">로그인만 하면 7일간 무제한 사용</p>
+                  <p className="text-white font-bold text-base md:text-lg tracking-tight">오픈 기념 · 무제한 무료</p>
+                  <p className="text-indigo-200 text-xs md:text-sm">로그인만 하면 모든 기능 무제한 이용</p>
                 </div>
               </div>
             </div>
@@ -1182,87 +1184,39 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* Pricing Section - 현재 무료 */}
       <section id="pricing" className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-xl font-bold text-gray-900 mb-3">{t("pricing.title")}</h2>
           <p className="text-sm text-gray-500 mb-10">
-            {t("pricing.subtitle")}<br />
-            <span className="text-gray-900 font-medium">{t("pricing.subtitleBold")}</span>
+            {t("pricing.subtitle")}
           </p>
 
-          {/* Pricing Cards */}
-          <div className="grid md:grid-cols-3 gap-0 border border-gray-200 rounded-2xl overflow-hidden">
-            {/* Free */}
-            <div className="p-6 border-r border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t("pricing.free.name")}</h3>
-              <p className="text-sm text-gray-400 mb-4">{t("pricing.free.desc")}</p>
-              <div className="mb-1">
-                <span className="text-4xl font-bold text-gray-900">{t("pricing.free.price")}</span>
+          {/* 무료 이용 안내 */}
+          <div className="border border-gray-200 rounded-2xl overflow-hidden">
+            <div className="p-8 md:p-12 text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-green-50 border border-green-200 rounded-full mb-6">
+                <span className="text-green-600 text-sm font-semibold">{t("pricing.freeBadge")}</span>
               </div>
-              <p className="text-sm text-gray-400 mb-6">{t("pricing.free.period")}</p>
-              <button className="w-full py-3 bg-gray-900 text-white font-medium rounded-lg mb-8 text-sm">
-                {t("common.startNow")}
-              </button>
-              <ul className="space-y-4">
-                {([0, 1, 2, 3] as const).map((idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-gray-400 mt-0.5">✓</span>
-                    <span className="text-sm text-gray-700">{t(`pricing.free.features.${idx}`)}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">{t("pricing.freeTitle")}</h3>
+              <p className="text-sm text-gray-500 max-w-md mx-auto mb-8">{t("pricing.freeDesc")}</p>
 
-            {/* Starter */}
-            <div className="p-6 border-r border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t("pricing.starter.name")}</h3>
-              <p className="text-sm text-gray-400 mb-4">{t("pricing.starter.desc")}</p>
-              <div className="mb-1">
-                <span className="text-4xl font-bold text-gray-900">{t("pricing.starter.price")}</span>
-              </div>
-              <p className="text-sm text-gray-400 mb-6">{t("pricing.starter.period")}</p>
-              <button
-                onClick={() => handlePurchase("starter")}
-                disabled={isProcessing}
-                className="w-full py-3 bg-[#4F46E5] text-white font-medium rounded-lg hover:bg-[#4338CA] active:scale-[0.98] transition-all mb-8 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isProcessing ? t("common.processing") : t("common.purchase")}
-              </button>
-              <ul className="space-y-4">
+              <ul className="inline-flex flex-col items-start gap-3 mb-8">
                 {([0, 1, 2, 3, 4] as const).map((idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-gray-400 mt-0.5">✓</span>
-                    <span className="text-sm text-gray-700">{t(`pricing.starter.features.${idx}`)}</span>
+                  <li key={idx} className="flex items-center gap-2">
+                    <span className="text-[#4F46E5]">✓</span>
+                    <span className="text-sm text-gray-700">{t(`pricing.freeFeatureList.${idx}`)}</span>
                   </li>
                 ))}
               </ul>
-            </div>
 
-            {/* Pro */}
-            <div className="p-6 relative">
-              <span className="absolute top-5 right-5 px-2.5 py-0.5 bg-[#EEF2FF] text-[#4F46E5] text-xs font-medium rounded-full">{t("common.recommended")}</span>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t("pricing.pro.name")}</h3>
-              <p className="text-sm text-gray-400 mb-4">{t("pricing.pro.desc")}</p>
-              <div className="mb-1">
-                <span className="text-4xl font-bold text-gray-900">{t("pricing.pro.price")}</span>
-              </div>
-              <p className="text-sm text-gray-400 mb-6">{t("pricing.pro.period")}</p>
-              <button
-                onClick={() => handlePurchase("pro")}
-                disabled={isProcessing}
-                className="w-full py-3 bg-[#4F46E5] text-white font-medium rounded-lg hover:bg-[#4338CA] active:scale-[0.98] transition-all mb-8 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              <a
+                href={user ? "/?new" : "#"}
+                onClick={(e) => { if (!user) { e.preventDefault(); setShowLoginModal(true); } }}
+                className="inline-block px-8 py-3 bg-[#4F46E5] text-white font-semibold rounded-lg hover:bg-[#4338CA] transition-colors text-sm"
               >
-                {isProcessing ? t("common.processing") : t("common.purchase")}
-              </button>
-              <ul className="space-y-4">
-                {([0, 1, 2, 3, 4] as const).map((idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-gray-400 mt-0.5">✓</span>
-                    <span className="text-sm text-gray-700">{t(`pricing.pro.features.${idx}`)}</span>
-                  </li>
-                ))}
-              </ul>
+                {user ? t("pricing.startFreeBtn") : t("pricing.loginToStart")}
+              </a>
             </div>
           </div>
 

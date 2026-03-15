@@ -49,7 +49,7 @@
     "timeFormat": "{{hours}}h {{minutes}}m {{seconds}}s"
   },
   "nav": {
-    "pricing": "Pricing",
+    "pricing": "Service Info",
     "dashboard": "Dashboard"
   },
   "hero": {
@@ -180,15 +180,21 @@
       { "num": "01", "title": "Speech to text, accurately", "desc": "AI speech recognition converts every word in your video to text without missing anything." },
       { "num": "02", "title": "Blog structure search engines love", "desc": "Auto-generates subheadings, emojis, and paragraph layouts optimized for top search rankings." },
       { "num": "03", "title": "Perfect tone for your industry", "desc": "Applies natural blog writing styles tailored to your business — gyms, restaurants, academies, and more." },
-      { "num": "04", "title": "1/10 the cost of an agency", "desc": "Skip the $300+/month agency fees. Starting at just $0.50 per post — focus on your business." },
+      { "num": "04", "title": "1/10 the cost of an agency", "desc": "Skip the $300+/month agency fees. It's free right now — focus on your business." },
       { "num": "05", "title": "One link, one minute, done", "desc": "No complex setup — just paste a video URL and your blog post is ready." }
     ]
   },
   "pricing": {
-    "title": "Pricing",
-    "subtitle": "Finish a blog post that would take an hour — for less than $1 per post.",
-    "subtitleBold": "Busy business owners choose to pay.",
-    "modalSubtitle": "Auto-complete blog posts for less than $1 each.",
+    "title": "Service Info",
+    "subtitle": "Log in and enjoy all features for free — unlimited.",
+    "subtitleBold": "",
+    "freeBadge": "Currently Free",
+    "freeTitle": "Unlimited Free with Login",
+    "freeDesc": "All features are unlimited and free during our launch period. Get started now!",
+    "freeFeatureList": ["Unlimited blog conversions", "Unlimited AI study notes", "SEO keyword optimization", "Conversion history forever", "YouTube Shorts + Instagram Reels support"],
+    "startFreeBtn": "Start Free Now",
+    "loginToStart": "Log in to Start Free",
+    "modalSubtitle": "Auto-complete blog posts for free — unlimited.",
     "selectPlan": "Choose a Plan",
     "free": {
       "name": "Free Trial",
@@ -211,7 +217,7 @@
       "period": "Monthly",
       "features": ["Unlimited blog conversions", "Unlimited AI study notes", "Advanced SEO + tone customization", "Conversion history forever", "Priority support + early access"]
     },
-    "valueProposition": "Blog agency: $300+/month vs LOGOS.ai: ~$0.44-0.80/post — the smartest choice for business owners who need to focus on what they do best.",
+    "valueProposition": "All features are currently unlimited and free during our launch period. Log in to access blog conversions, study notes, and more with no limits.",
     "modalFreeFeatures": ["1 free conversion", "YouTube Shorts support", "Naver blog SEO generation"],
     "modalStarterFeatures": ["Blog conversion 100/month", "AI study notes 50/month", "SEO keyword optimization", "Conversion history forever"],
     "modalProDesc": "The choice of revenue-driven owners",

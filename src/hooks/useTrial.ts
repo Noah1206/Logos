@@ -1,3 +1,7 @@
+// 유료화 시 복원 - 트라이얼 상태 확인 훅
+// 현재 무료 전환으로 전체 주석 처리
+
+/*
 "use client";
 
 import { useEffect, useState } from "react";
@@ -29,3 +33,4 @@ export function useTrial() {
 
   return { ...trial, days };
 }
+*/

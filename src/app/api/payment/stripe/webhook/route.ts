@@ -1,4 +1,14 @@
 import { NextResponse } from "next/server";
+
+// 현재 무제한 무료 - Stripe 웹훅 비활성화
+export async function POST() {
+  return NextResponse.json(
+    { error: "결제 시스템이 비활성화되어 있습니다." },
+    { status: 503 }
+  );
+}
+
+/* 유료화 시 복원 - Stripe Webhook 처리
 import { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
@@ -9,7 +19,7 @@ type TransactionClient = Omit<
   "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
 >;
 
-export async function POST(request: Request) {
+export async function POST_ORIGINAL(request: Request) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
 
@@ -58,12 +68,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
-    // 이미 처리된 주문 (멱등성)
     if (order.status === "PAID") {
       return NextResponse.json({ received: true });
     }
 
-    // 금액 검증 (cents 단위)
     const paidAmount = session.amount_total;
     if (paidAmount !== order.amount) {
       await prisma.order.update({
@@ -76,7 +84,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
-    // 트랜잭션: Order 업데이트 + Payment 생성 + 크레딧 추가
     await prisma.$transaction(async (tx: TransactionClient) => {
       await tx.order.update({
         where: { id: order.id },
@@ -105,3 +112,4 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ received: true });
 }
+*/

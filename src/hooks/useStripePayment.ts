@@ -1,3 +1,4 @@
+/* 유료화 시 복원 - Stripe 결제 훅
 "use client";
 
 import { useState } from "react";
@@ -30,7 +31,6 @@ export function useStripePayment({
         throw new Error(data.error ?? "Failed to create checkout session.");
       }
 
-      // Stripe Checkout 페이지로 리다이렉트
       window.location.href = data.checkoutUrl;
       onSuccess?.();
     } catch (err) {
@@ -44,3 +44,4 @@ export function useStripePayment({
 
   return { purchasePackage, isProcessing };
 }
+*/
