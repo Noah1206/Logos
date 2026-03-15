@@ -195,125 +195,163 @@ ConceptCardNode.displayName = "ConceptCardNode";
 
 const nodeTypes = { conceptCard: ConceptCardNode };
 
-/* ─── Layout: Tree branching from center root ─── */
+/* ─── Layout: Force-directed from center, no overlap ─── */
 
-function applyRadialLayout(nodes: Node[], edges: Edge[]) {
+function applyForceLayout(nodes: Node[], edges: Edge[]) {
   if (nodes.length === 0) return [];
-  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+  if (nodes.length === 1) {
+    return [{ ...nodes[0], position: { x: -CARD_W / 2, y: -50 } }];
+  }
 
-  // Build directed adjacency (source → targets)
-  const children = new Map<string, string[]>();
-  const hasParent = new Set<string>();
-  for (const n of nodes) children.set(n.id, []);
+  const N = nodes.length;
+  const idIdx = new Map(nodes.map((n, i) => [n.id, i]));
 
+  // Node bounding box for collision
+  const NW = CARD_W + 40;  // card width + margin
+  const NH = 140;           // card height + margin
+
+  // Adjacency set for edge lookup
+  const linked = new Set<string>();
   for (const e of edges) {
-    if (nodeMap.has(e.source) && nodeMap.has(e.target)) {
-      children.get(e.source)!.push(e.target);
-      hasParent.add(e.target);
+    if (idIdx.has(e.source) && idIdx.has(e.target)) {
+      linked.add(`${e.source}|${e.target}`);
+      linked.add(`${e.target}|${e.source}`);
     }
   }
+  const isLinked = (a: string, b: string) => linked.has(`${a}|${b}`);
 
-  // Root = node with most outgoing edges that has no parent, or fallback to most connections
-  const roots = nodes.filter((n) => !hasParent.has(n.id));
-  let root: string;
-  if (roots.length > 0) {
-    root = roots.reduce((best, n) =>
-      (children.get(n.id)?.length || 0) > (children.get(best.id)?.length || 0) ? n : best
-    ).id;
-  } else {
-    // Cycle: pick the one with most children
-    root = nodes.reduce((best, n) =>
-      (children.get(n.id)?.length || 0) > (children.get(best.id)?.length || 0) ? n : best
-    ).id;
+  // Find root (most connected)
+  const connCount = new Map<string, number>();
+  for (const n of nodes) connCount.set(n.id, 0);
+  for (const e of edges) {
+    if (idIdx.has(e.source)) connCount.set(e.source, (connCount.get(e.source) || 0) + 1);
+    if (idIdx.has(e.target)) connCount.set(e.target, (connCount.get(e.target) || 0) + 1);
+  }
+  let rootIdx = 0;
+  let maxC = 0;
+  for (const [id, c] of connCount) {
+    if (c > maxC) { maxC = c; rootIdx = idIdx.get(id)!; }
   }
 
-  // BFS tree from root
-  const depth = new Map<string, number>();
-  const parentOf = new Map<string, string>();
-  const treeChildren = new Map<string, string[]>();
-  const queue: string[] = [root];
-  depth.set(root, 0);
-  treeChildren.set(root, []);
+  // Init positions: root at center, others in a small circle
+  const px = new Float64Array(N);
+  const py = new Float64Array(N);
+  const vx = new Float64Array(N);
+  const vy = new Float64Array(N);
 
-  while (queue.length > 0) {
-    const cur = queue.shift()!;
-    for (const child of children.get(cur) || []) {
-      if (!depth.has(child)) {
-        depth.set(child, depth.get(cur)! + 1);
-        parentOf.set(child, cur);
-        treeChildren.set(child, []);
-        treeChildren.get(cur)!.push(child);
-        queue.push(child);
-      }
-    }
-    // Also check reverse edges (target → source) for bidirectional discovery
-    for (const e of edges) {
-      const neighbor = e.source === cur ? e.target : e.target === cur ? e.source : null;
-      if (neighbor && nodeMap.has(neighbor) && !depth.has(neighbor)) {
-        depth.set(neighbor, depth.get(cur)! + 1);
-        parentOf.set(neighbor, cur);
-        treeChildren.set(neighbor, []);
-        treeChildren.get(cur)!.push(neighbor);
-        queue.push(neighbor);
-      }
-    }
-  }
-
-  // Orphan nodes (no edges): cluster them in a ring around root
-  const orphans = nodes.filter((n) => !depth.has(n.id));
-  for (const o of orphans) {
-    depth.set(o.id, 1);
-    treeChildren.set(o.id, []);
-    treeChildren.get(root)?.push(o.id);
-  }
-
-  // Count subtree leaves for angular allocation
-  function countLeaves(id: string): number {
-    const kids = treeChildren.get(id) || [];
-    if (kids.length === 0) return 1;
-    return kids.reduce((sum, k) => sum + countLeaves(k), 0);
-  }
-
-  // Position nodes: root at center, children spread in angular sectors
-  const positions = new Map<string, { x: number; y: number }>();
-  const RING_GAP = 350;
-
-  function positionSubtree(id: string, d: number, angleStart: number, angleEnd: number) {
-    if (d === 0) {
-      positions.set(id, { x: 0, y: 0 });
+  const initR = Math.max(200, N * 30);
+  for (let i = 0; i < N; i++) {
+    if (i === rootIdx) {
+      px[i] = 0;
+      py[i] = 0;
     } else {
-      const angleMid = (angleStart + angleEnd) / 2;
-      const r = d * RING_GAP;
-      positions.set(id, {
-        x: Math.cos(angleMid) * r,
-        y: Math.sin(angleMid) * r,
-      });
-    }
-
-    const kids = treeChildren.get(id) || [];
-    if (kids.length === 0) return;
-
-    const totalLeaves = kids.reduce((s, k) => s + countLeaves(k), 0);
-    let curAngle = angleStart;
-
-    for (const kid of kids) {
-      const leafCount = countLeaves(kid);
-      const share = (leafCount / totalLeaves) * (angleEnd - angleStart);
-      positionSubtree(kid, d + 1, curAngle, curAngle + share);
-      curAngle += share;
+      const a = ((i - (i > rootIdx ? 1 : 0)) / (N - 1)) * 2 * Math.PI;
+      px[i] = Math.cos(a) * initR;
+      py[i] = Math.sin(a) * initR;
     }
   }
 
-  positionSubtree(root, 0, 0, 2 * Math.PI);
+  // Simulation parameters
+  const ITERATIONS = 300;
+  const EDGE_LEN = 350;        // ideal distance for connected nodes
+  const REPULSION = 800000;     // push apart force
+  const EDGE_STRENGTH = 0.003;  // pull together along edges
+  const CENTER_PULL = 0.002;    // gravity toward center for root
+  const DAMPING = 0.9;
+
+  for (let iter = 0; iter < ITERATIONS; iter++) {
+    const alpha = 1 - iter / ITERATIONS; // cooling
+
+    // Repulsion: all pairs push away (prevent overlap)
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        let dx = px[j] - px[i];
+        let dy = py[j] - py[i];
+        let dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 1) { dx = 1; dy = 1; dist = 1.41; }
+
+        // Minimum distance based on card size
+        const minDist = Math.sqrt(NW * NW + NH * NH);
+        const force = (REPULSION * alpha) / (dist * dist);
+
+        // Extra strong repulsion if overlapping
+        const overlap = dist < minDist ? 3 : 1;
+
+        const fx = (dx / dist) * force * overlap;
+        const fy = (dy / dist) * force * overlap;
+        vx[i] -= fx;
+        vy[i] -= fy;
+        vx[j] += fx;
+        vy[j] += fy;
+      }
+    }
+
+    // Attraction: connected nodes pull together
+    for (const e of edges) {
+      const i = idIdx.get(e.source);
+      const j = idIdx.get(e.target);
+      if (i === undefined || j === undefined) continue;
+
+      const dx = px[j] - px[i];
+      const dy = py[j] - py[i];
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 1) continue;
+
+      const diff = dist - EDGE_LEN;
+      const force = diff * EDGE_STRENGTH * alpha;
+      const fx = (dx / dist) * force;
+      const fy = (dy / dist) * force;
+      vx[i] += fx;
+      vy[i] += fy;
+      vx[j] -= fx;
+      vy[j] -= fy;
+    }
+
+    // Root gravity: keep root near center
+    vx[rootIdx] -= px[rootIdx] * CENTER_PULL;
+    vy[rootIdx] -= py[rootIdx] * CENTER_PULL;
+
+    // Apply velocity with damping
+    for (let i = 0; i < N; i++) {
+      vx[i] *= DAMPING;
+      vy[i] *= DAMPING;
+      px[i] += vx[i];
+      py[i] += vy[i];
+    }
+  }
+
+  // Final overlap resolution pass
+  for (let pass = 0; pass < 50; pass++) {
+    let moved = false;
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        const dx = px[j] - px[i];
+        const dy = py[j] - py[i];
+        const ox = NW - Math.abs(dx);
+        const oy = NH - Math.abs(dy);
+        if (ox > 0 && oy > 0) {
+          // Overlap — push apart along the axis of least overlap
+          moved = true;
+          if (ox < oy) {
+            const push = ox / 2 + 5;
+            px[i] -= dx > 0 ? push : -push;
+            px[j] += dx > 0 ? push : -push;
+          } else {
+            const push = oy / 2 + 5;
+            py[i] -= dy > 0 ? push : -push;
+            py[j] += dy > 0 ? push : -push;
+          }
+        }
+      }
+    }
+    if (!moved) break;
+  }
 
   const halfW = CARD_W / 2;
-  return nodes.map((node) => {
-    const pos = positions.get(node.id) || { x: 0, y: 0 };
-    return {
-      ...node,
-      position: { x: pos.x - halfW, y: pos.y - 50 },
-    };
-  });
+  return nodes.map((node, i) => ({
+    ...node,
+    position: { x: px[i] - halfW, y: py[i] - 50 },
+  }));
 }
 
 /* ─── Main Component ─── */
@@ -390,7 +428,7 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
       });
 
     const layoutNodes =
-      styledNodes.length > 0 ? applyRadialLayout(styledNodes, styledEdges) : [];
+      styledNodes.length > 0 ? applyForceLayout(styledNodes, styledEdges) : [];
 
     return { flowNodes: layoutNodes, flowEdges: styledEdges, topics: Array.from(allTopics) };
   }, [graphData, topicFilter]);
@@ -403,8 +441,8 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
     setEdges(flowEdges);
   }, [flowNodes, flowEdges, setNodes, setEdges]);
 
-  const onInit = useCallback((instance: { fitView: () => void }) => {
-    setTimeout(() => instance.fitView(), 100);
+  const onInit = useCallback((instance: { fitView: (opts?: { padding?: number; maxZoom?: number }) => void }) => {
+    setTimeout(() => instance.fitView({ padding: 0.15, maxZoom: 1.2 }), 100);
   }, []);
 
   return (
@@ -497,7 +535,8 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
               onEdgesChange={onEdgesChange}
               onInit={onInit as any}
               fitView
-              minZoom={0.15}
+              fitViewOptions={{ padding: 0.15, maxZoom: 1.2 }}
+              minZoom={0.05}
               maxZoom={2.5}
               attributionPosition="bottom-left"
               style={{ background: "#1a1a1a" }}
