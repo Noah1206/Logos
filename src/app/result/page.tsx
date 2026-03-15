@@ -491,6 +491,8 @@ function ResultContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [resultData, setResultData] = useState<ResultData | null>(null);
   const [editedData, setEditedData] = useState<ResultData | null>(null);
+  const [allHashtags, setAllHashtags] = useState<string[]>([]);
+  const [hashtagCount, setHashtagCount] = useState(0);
   const [videoResult, setVideoResult] = useState<VideoResultData | null>(null);
   const [promptOpen, setPromptOpen] = useState(false);
   const [textAlign, setTextAlign] = useState<"left" | "center" | "right">("left");
@@ -1369,6 +1371,25 @@ function ResultContent() {
       sectionFileRef.current?.click();
     }
   }, [galleryUrls]);
+
+  // 해시태그 원본 저장 (최초 1회)
+  useEffect(() => {
+    const data = editedData ?? resultData;
+    if (data?.hashtags?.length && allHashtags.length === 0) {
+      setAllHashtags([...data.hashtags]);
+      setHashtagCount(data.hashtags.length);
+    }
+  }, [resultData, editedData, allHashtags.length]);
+
+  // 해시태그 개수 변경 시 editedData 반영
+  useEffect(() => {
+    if (allHashtags.length === 0 || !resultData) return;
+    const sliced = allHashtags.slice(0, hashtagCount);
+    setEditedData((prev) => {
+      const base = prev ?? JSON.parse(JSON.stringify(resultData));
+      return { ...base, hashtags: sliced };
+    });
+  }, [hashtagCount, allHashtags, resultData]);
 
   // 표시용 데이터 (편집본 우선)
   const displayData = editedData ?? resultData;
@@ -2483,16 +2504,46 @@ function ResultContent() {
                 );
               })}
 
-              {/* 해시태그 (편집 가능) */}
+              {/* 해시태그 (편집 가능 + 개수 조절) */}
               {displayData?.hashtags && displayData.hashtags.length > 0 && (
                 <div className="mt-10 pt-6 border-t border-gray-100">
+                  {/* 해시태그 개수 조절 */}
+                  {allHashtags.length > 0 && (
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-xs font-medium text-gray-400">해시태그</span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setHashtagCount((c) => Math.max(1, c - 1))}
+                          disabled={hashtagCount <= 1}
+                          className="w-6 h-6 flex items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-bold"
+                        >
+                          −
+                        </button>
+                        <span className="text-xs font-semibold text-gray-700 w-4 text-center">{hashtagCount}</span>
+                        <button
+                          onClick={() => setHashtagCount((c) => Math.min(allHashtags.length, c + 1))}
+                          disabled={hashtagCount >= allHashtags.length}
+                          className="w-6 h-6 flex items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-bold"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <span className="text-[10px] text-gray-300">/ {allHashtags.length}개</span>
+                    </div>
+                  )}
                   <EditableText
                     value={displayData.hashtags.join(" ")}
-                    onChange={(v) => updateEdited((d) => {
-                      d.hashtags = v.split(/\s+/).filter(Boolean).map(
+                    onChange={(v) => {
+                      const newTags = v.split(/\s+/).filter(Boolean).map(
                         (t) => t.startsWith("#") ? t : `#${t}`
                       );
-                    })}
+                      updateEdited((d) => { d.hashtags = newTags; });
+                      setAllHashtags((prev) => {
+                        const merged = [...newTags, ...prev.filter((t) => !newTags.includes(t))];
+                        return merged;
+                      });
+                      setHashtagCount(newTags.length);
+                    }}
                     className="text-[#4F46E5] px-1 -mx-1"
                   />
                 </div>
