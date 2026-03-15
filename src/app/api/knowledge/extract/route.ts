@@ -40,6 +40,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No content to extract" }, { status: 400 });
   }
 
+  // resultJson에서 concept_hierarchy, timestamp_segments 추출
+  const resultJson = conversion.resultJson as Record<string, unknown> | null;
+  const studyStructure = resultJson?.study_structure as Record<string, unknown> | null;
+  const conceptHierarchy = studyStructure?.concept_hierarchy || null;
+  const timestampSegments = resultJson?.timestamp_segments || null;
+
   try {
     const fastapiRes = await fetch(`${FASTAPI_URL}/api/extract-knowledge`, {
       method: "POST",
@@ -54,7 +60,7 @@ export async function POST(req: NextRequest) {
 
     const result = await fastapiRes.json();
 
-    // Knowledge 테이블에 저장
+    // Knowledge 테이블에 저장 (새 필드 포함)
     const knowledge = await prisma.knowledge.create({
       data: {
         conversionId,
@@ -64,6 +70,9 @@ export async function POST(req: NextRequest) {
         keywords: result.keywords,
         topic: result.topic,
         subtopics: result.subtopics,
+        conceptRelationships: result.concept_relationships || undefined,
+        conceptHierarchy: (conceptHierarchy as any) || undefined,
+        timestampSegments: (timestampSegments as any) || undefined,
       },
     });
 

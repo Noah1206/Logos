@@ -1,6 +1,6 @@
 """
-콘텐츠에서 지식 추출 (summary, key_concepts, keywords, topic, subtopics)
-GPT-4o 경량 호출 (~200 토큰 출력)
+콘텐츠에서 지식 추출 (summary, key_concepts, keywords, topic, subtopics, concept_relationships)
+GPT-4o 경량 호출 (~400 토큰 출력)
 """
 import json
 from openai import OpenAI
@@ -17,7 +17,10 @@ KNOWLEDGE_PROMPT = """당신은 콘텐츠 분석 전문가입니다.
   "key_concepts": ["핵심개념1", "핵심개념2", ...],
   "keywords": ["키워드1", "키워드2", ...],
   "topic": "food|fitness|beauty|education|tech|business|lifestyle|other 중 하나",
-  "subtopics": ["세부주제1", "세부주제2", ...]
+  "subtopics": ["세부주제1", "세부주제2", ...],
+  "concept_relationships": [
+    {"from": "개념A", "to": "개념B", "type": "related|prerequisite|extends"}
+  ]
 }
 
 규칙:
@@ -26,6 +29,10 @@ KNOWLEDGE_PROMPT = """당신은 콘텐츠 분석 전문가입니다.
 - keywords: 5-10개, SEO/검색 키워드
 - topic: 반드시 위 카테고리 중 하나
 - subtopics: 2-5개, 세부 분야
+- concept_relationships: 개념 간 관계 (3-10개)
+  - type "related": 서로 관련됨
+  - type "prerequisite": from을 알아야 to를 이해 가능
+  - type "extends": from을 확장/심화한 것이 to
 """
 
 
@@ -44,7 +51,7 @@ async def extract_knowledge(content: str, transcript: str | None = None) -> dict
             {"role": "user", "content": user_message},
         ],
         temperature=0.3,
-        max_tokens=500,
+        max_tokens=800,
         response_format={"type": "json_object"},
     )
 
@@ -57,4 +64,5 @@ async def extract_knowledge(content: str, transcript: str | None = None) -> dict
         "keywords": result.get("keywords", []),
         "topic": result.get("topic", "other"),
         "subtopics": result.get("subtopics", []),
+        "concept_relationships": result.get("concept_relationships", []),
     }

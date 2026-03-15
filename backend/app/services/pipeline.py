@@ -246,6 +246,7 @@ async def run_study_pipeline(
     try:
         text = ""
         transcript = ""
+        timestamp_segments = None
 
         if mode == "pdf":
             await emit(10, "PDF에서 학습 자료를 읽고 있어요")
@@ -283,7 +284,7 @@ async def run_study_pipeline(
             audio_path = await extract_audio_from_video(content_path)
 
             await emit(40, "강의 내용을 텍스트로 정리하고 있어요")
-            transcript = await transcribe_audio(audio_path)
+            transcript, timestamp_segments = await transcribe_audio(audio_path, with_timestamps=True)
 
             if not transcript or len(transcript.strip()) < 30:
                 return StudyResponse(
@@ -314,6 +315,7 @@ async def run_study_pipeline(
             transcript=transcript if transcript else None,
             study_structure=study_structure,
             study_content=study_content,
+            timestamp_segments=timestamp_segments,
         )
 
     except Exception as e:

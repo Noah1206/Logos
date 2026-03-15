@@ -125,6 +125,7 @@ class KnowledgeExtractionResponse(BaseModel):
     keywords: List[str]
     topic: str
     subtopics: List[str]
+    concept_relationships: Optional[List[dict]] = None  # [{from, to, type: "related"|"prerequisite"|"extends"}]
 
 
 # ─── Study Mode ───
@@ -141,15 +142,18 @@ class StudyConcept(BaseModel):
     name: str
     definition: str
     importance: str  # "high" | "medium" | "low"
+    parent_concept: Optional[str] = None  # 상위 개념 (null이면 루트)
+    related_concepts: List[str] = []  # 연관 개념 배열
 
 
 class StudyStructure(BaseModel):
     title: str
     executive_summary: str
     key_concepts: List[StudyConcept]
-    detailed_notes: List[dict]  # [{topic, content}]
+    detailed_notes: List[dict]  # [{topic, content, key_takeaways}]
     study_questions: List[dict]  # [{question, answer}]
     related_topics: List[str]
+    concept_hierarchy: Optional[dict] = None  # 마인드맵용 트리 {root, children: [{name, children}]}
 
 
 ConvertResponse.model_rebuild()
@@ -161,6 +165,7 @@ class StudyResponse(BaseModel):
     transcript: Optional[str] = None
     study_structure: Optional[StudyStructure] = None
     study_content: Optional[str] = None
+    timestamp_segments: Optional[List[dict]] = None  # [{start, end, text}]
     error: Optional[str] = None
 
 

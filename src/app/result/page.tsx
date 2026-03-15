@@ -6,6 +6,9 @@ import { useSession, signIn } from "next-auth/react";
 // import { usePayment } from "@/hooks/usePayment"; // 유료화 시 복원
 import { useTranslation, useTranslationArray } from "@/i18n";
 import VideoTimeline from "@/components/VideoTimeline";
+import StudyResultView from "@/components/study/StudyResultView";
+import dynamic from "next/dynamic";
+const KnowledgeGraphView = dynamic(() => import("@/components/study/KnowledgeGraphView"), { ssr: false });
 // import TrialBanner from "@/components/TrialBanner"; // 유료화 시 복원
 // import ConversionTrigger from "@/components/ConversionTrigger"; // 유료화 시 복원
 
@@ -572,6 +575,7 @@ function ResultContent() {
   const [userImages, setUserImages] = useState<string[]>([]);
   const [excludeFrames, setExcludeFrames] = useState(false);
   const [studyResult, setStudyResult] = useState<any>(null);
+  const [showKnowledgeGraph, setShowKnowledgeGraph] = useState(false);
   const [openQuestions, setOpenQuestions] = useState<Set<number>>(new Set());
   const [blogStudyStructure, setBlogStudyStructure] = useState<any>(null);
   const [openBlogStudyQuestions, setOpenBlogStudyQuestions] = useState<Set<number>>(new Set());
@@ -1985,6 +1989,19 @@ function ResultContent() {
                   </div>
                 )}
               </div>
+
+              {/* 지식 그래프 버튼 */}
+              <div className="mt-4 mb-2">
+                <button
+                  onClick={() => setShowKnowledgeGraph(true)}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg text-sm font-medium text-purple-700 hover:from-purple-100 hover:to-blue-100 transition-colors"
+                >
+                  <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                  {t("study.graph.title")}
+                </button>
+              </div>
             </div>
 
             {/* 유저 프로필 */}
@@ -2045,116 +2062,10 @@ function ResultContent() {
                 )}
               </div>
 
-              {/* 핵심 요약 */}
-              <section id="study-summary" className="mb-10 scroll-mt-20">
-                <div className="flex items-center gap-2 mt-10 mb-4">
-                  <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
-                  <h2 className="font-bold text-gray-900">{t("study.result.executiveSummary")}</h2>
-                </div>
-                <p className="text-gray-600 leading-[2] whitespace-pre-line">{studyResult.study_structure.executive_summary}</p>
-              </section>
-
-              {/* 핵심 개념 */}
-              <section id="study-concepts" className="mb-10 scroll-mt-20">
-                <div className="flex items-center gap-2 mt-10 mb-4">
-                  <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
-                  <h2 className="font-bold text-gray-900">{t("study.result.keyConcepts")}</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {studyResult.study_structure.key_concepts.map((concept: any, i: number) => (
-                    <div key={i} className="rounded-2xl bg-gray-50 border border-gray-200 p-5 hover:shadow-sm transition-shadow">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                          concept.importance === "high" ? "bg-red-400" :
-                          concept.importance === "medium" ? "bg-amber-400" :
-                          "bg-gray-300"
-                        }`} />
-                        <h3 className="text-sm font-bold text-gray-900">{concept.name}</h3>
-                        <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                          concept.importance === "high" ? "bg-red-50 text-red-500" :
-                          concept.importance === "medium" ? "bg-amber-50 text-amber-600" :
-                          "bg-gray-100 text-gray-400"
-                        }`}>
-                          {t(`study.result.importance.${concept.importance}`)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-500 leading-relaxed">{concept.definition}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* 상세 노트 */}
-              <section id="study-notes" className="mb-10 scroll-mt-20">
-                <div className="flex items-center gap-2 mt-10 mb-4">
-                  <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
-                  <h2 className="font-bold text-gray-900">{t("study.result.detailedNotes")}</h2>
-                </div>
-                {studyResult.study_structure.detailed_notes.map((note: any, i: number) => (
-                  <div key={i} id={`study-note-${i}`} className="mb-6 scroll-mt-20">
-                    <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                      <span className="text-gray-300 text-xs font-mono">{String(i + 1).padStart(2, "0")}</span>
-                      {note.topic}
-                    </h3>
-                    <p className="text-gray-600 leading-[2] whitespace-pre-line">{note.content}</p>
-                    {i < studyResult.study_structure.detailed_notes.length - 1 && (
-                      <div className="border-b border-gray-100 mt-6" />
-                    )}
-                  </div>
-                ))}
-              </section>
-
-              {/* 연습 문제 */}
-              <section id="study-questions" className="mb-10 scroll-mt-20">
-                <div className="flex items-center gap-2 mt-10 mb-4">
-                  <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
-                  <h2 className="font-bold text-gray-900">{t("study.result.studyQuestions")}</h2>
-                </div>
-                <div className="space-y-3">
-                  {studyResult.study_structure.study_questions.map((q: any, i: number) => (
-                    <div key={i} className="rounded-2xl bg-gray-50 border border-gray-200 overflow-hidden">
-                      <button
-                        onClick={() => {
-                          const next = new Set(openQuestions);
-                          next.has(i) ? next.delete(i) : next.add(i);
-                          setOpenQuestions(next);
-                        }}
-                        className="w-full text-left px-5 py-4 flex items-start gap-3 hover:bg-gray-100 transition-colors"
-                      >
-                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 text-gray-600 text-xs font-bold flex items-center justify-center mt-0.5">
-                          {i + 1}
-                        </span>
-                        <span className="text-sm font-medium text-gray-900 flex-1">{q.question}</span>
-                        <svg className={`w-4 h-4 text-gray-400 flex-shrink-0 mt-1 transition-transform ${openQuestions.has(i) ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                      {openQuestions.has(i) && (
-                        <div className="px-5 pb-4 pl-14">
-                          <p className="text-sm text-gray-600 leading-relaxed">{q.answer}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* 관련 주제 */}
-              {studyResult.study_structure.related_topics?.length > 0 && (
-                <section id="study-related" className="mb-10 scroll-mt-20">
-                  <div className="flex items-center gap-2 mt-10 mb-4">
-                    <span className="w-1 h-6 bg-gray-800 rounded-sm flex-shrink-0" />
-                    <h2 className="font-bold text-gray-900">{t("study.result.relatedTopics")}</h2>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {studyResult.study_structure.related_topics.map((topic: string, i: number) => (
-                      <span key={i} className="px-3 py-1.5 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors">
-                        {topic}
-                      </span>
-                    ))}
-                  </div>
-                </section>
-              )}
+              <StudyResultView
+                studyResult={studyResult}
+                sourceUrl={url || undefined}
+              />
             </div>
 
             {/* 하단 액션 바 (블로그와 동일) */}
@@ -3025,6 +2936,11 @@ function ResultContent() {
             </p>
           </div>
         </div>
+      )}
+
+      {/* 지식 그래프 풀스크린 모달 */}
+      {showKnowledgeGraph && (
+        <KnowledgeGraphView onClose={() => setShowKnowledgeGraph(false)} />
       )}
     </main>
   );

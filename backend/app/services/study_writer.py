@@ -20,13 +20,16 @@ STUDY_WRITER_PROMPT = """당신은 최고의 교육 전문가이자 학습 코�
     {
       "name": "개념명",
       "definition": "개념에 대한 명확한 설명 (2-3문장)",
-      "importance": "high|medium|low"
+      "importance": "high|medium|low",
+      "parent_concept": "상위 개념명 (없으면 null)",
+      "related_concepts": ["연관 개념1", "연관 개념2"]
     }
   ],
   "detailed_notes": [
     {
       "topic": "세부 주제명",
-      "content": "해당 주제에 대한 상세 설명 (3-5문장). 예시나 핵심 포인트 포함."
+      "content": "해당 주제에 대한 상세 설명 (3-5문장). 예시나 핵심 포인트 포함.",
+      "key_takeaways": ["핵심 포인트 1", "핵심 포인트 2"]
     }
   ],
   "study_questions": [
@@ -35,16 +38,32 @@ STUDY_WRITER_PROMPT = """당신은 최고의 교육 전문가이자 학습 코�
       "answer": "모범 답안 (2-3문장)"
     }
   ],
-  "related_topics": ["관련 주제1", "관련 주제2"]
+  "related_topics": ["관련 주제1", "관련 주제2"],
+  "concept_hierarchy": {
+    "root": "전체 주제명",
+    "children": [
+      {
+        "name": "대분류 개념",
+        "children": [
+          {"name": "세부 개념1", "children": []},
+          {"name": "세부 개념2", "children": []}
+        ]
+      }
+    ]
+  }
 }
 
 규칙:
 - title: 학습 내용을 잘 나타내는 간결한 제목
 - executive_summary: 전체 내용의 핵심을 3-5문장으로 압축
 - key_concepts: 3-7개, importance는 내용 이해에 대한 중요도 기준
+  - parent_concept: 이 개념의 상위 개념명 (최상위면 null)
+  - related_concepts: 1-3개의 연관 개념 (key_concepts 내 다른 개념명)
 - detailed_notes: 3-6개 주제, 각 주제별 상세하고 명확한 설명
+  - key_takeaways: 각 섹션의 핵심 포인트 2-3개 (짧은 문장)
 - study_questions: 3-5개, 학습 내용을 확인할 수 있는 질문과 답
 - related_topics: 2-5개, 추가 학습할 수 있는 관련 주제
+- concept_hierarchy: 마인드맵용 계층 트리 (root → children → children 구조)
 - 한국어로 작성하되, 원문이 영어인 경우 핵심 용어는 영어 병기
 """
 
@@ -68,7 +87,7 @@ async def write_study_notes(text: str) -> tuple[StudyStructure, str]:
             {"role": "user", "content": f"다음 내용을 학습 노트로 변환해주세요:\n\n{truncated}"},
         ],
         temperature=0.3,
-        max_tokens=3000,
+        max_tokens=4500,
         response_format={"type": "json_object"},
     )
 
@@ -81,6 +100,8 @@ async def write_study_notes(text: str) -> tuple[StudyStructure, str]:
             name=c.get("name", ""),
             definition=c.get("definition", ""),
             importance=c.get("importance", "medium"),
+            parent_concept=c.get("parent_concept"),
+            related_concepts=c.get("related_concepts", []),
         )
         for c in result.get("key_concepts", [])
     ]
@@ -92,6 +113,7 @@ async def write_study_notes(text: str) -> tuple[StudyStructure, str]:
         detailed_notes=result.get("detailed_notes", []),
         study_questions=result.get("study_questions", []),
         related_topics=result.get("related_topics", []),
+        concept_hierarchy=result.get("concept_hierarchy"),
     )
 
     # 전체 텍스트 콘텐츠 생성 (복사용)
@@ -106,6 +128,11 @@ async def write_study_notes(text: str) -> tuple[StudyStructure, str]:
     content_parts.append("\n## 상세 노트")
     for note in structure.detailed_notes:
         content_parts.append(f"### {note.get('topic', '')}\n{note.get('content', '')}")
+        takeaways = note.get("key_takeaways", [])
+        if takeaways:
+            content_parts.append("\n**핵심 포인트:**")
+            for t in takeaways:
+                content_parts.append(f"- {t}")
 
     content_parts.append("\n## 학습 문제")
     for q in structure.study_questions:

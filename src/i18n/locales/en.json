@@ -477,6 +477,41 @@
       "Practice questions help reinforce your learning",
       "Study notes are saved to your knowledge base"
     ],
+    "tabs": {
+      "notes": "Notes",
+      "mindmap": "Mind Map",
+      "timeline": "Timeline",
+      "export": "Export",
+      "keyTakeaways": "Key Takeaways"
+    },
+    "mindMap": {
+      "empty": "No mind map data available"
+    },
+    "timeline": {
+      "unavailable": "Timeline is only available for YouTube videos"
+    },
+    "export": {
+      "title": "Export",
+      "copyMarkdown": "Copy Markdown",
+      "copyMarkdownDesc": "Copy to clipboard",
+      "downloadMd": "Download .md",
+      "downloadMdDesc": "Save as markdown file",
+      "notion": "Paste to Notion",
+      "notionDesc": "Copy in markdown format",
+      "preview": "Preview"
+    },
+    "graph": {
+      "title": "Knowledge Graph",
+      "all": "All",
+      "empty": "Your knowledge graph is empty",
+      "emptyDesc": "Create 2+ study notes to see concept connections"
+    },
+    "stats": {
+      "title": "Study Stats",
+      "studies": "Studies",
+      "concepts": "Concepts",
+      "connections": "Connections"
+    },
     "result": {
       "sectionTitle": "Study Notes",
       "executiveSummary": "Executive Summary",

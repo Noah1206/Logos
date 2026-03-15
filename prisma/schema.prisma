@@ -126,17 +126,20 @@ model WritingStyleProfile {
 }
 
 model Knowledge {
-  id            String    @id @default(cuid())
-  conversionId  String    @unique
-  userId        String
-  summary       String?   @db.Text
-  keyConcepts   Json?
-  keywords      Json?
-  topic         String?
-  subtopics     Json?
-  createdAt     DateTime  @default(now())
-  conversion    Conversion @relation(fields: [conversionId], references: [id], onDelete: Cascade)
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                    String    @id @default(cuid())
+  conversionId          String    @unique
+  userId                String
+  summary               String?   @db.Text
+  keyConcepts           Json?
+  keywords              Json?
+  topic                 String?
+  subtopics             Json?
+  conceptRelationships  Json?
+  conceptHierarchy      Json?
+  timestampSegments     Json?
+  createdAt             DateTime  @default(now())
+  conversion            Conversion @relation(fields: [conversionId], references: [id], onDelete: Cascade)
+  user                  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId, topic])
   @@index([userId, createdAt(sort: Desc)])
 }
