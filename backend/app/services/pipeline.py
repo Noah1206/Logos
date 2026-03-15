@@ -29,6 +29,7 @@ async def run_conversion_pipeline(
     location: Optional[str] = None,
     tone: Optional[str] = None,
     user_context: Optional[str] = None,
+    style_profile: Optional[dict] = None,
     progress_callback: Optional[ProgressCallback] = None,
 ) -> ConvertResponse:
     """
@@ -179,7 +180,8 @@ async def run_conversion_pipeline(
             location=location,
             frame_descriptions=frame_desc_list if frame_desc_list else None,
             tone=tone,
-            user_context=user_context
+            user_context=user_context,
+            style_profile=style_profile,
         )
         blog_structure, seo_keywords, blog_content = blog_result
 

@@ -1113,10 +1113,33 @@ function ResultContent() {
       try {
         const userContext = sessionStorage.getItem("user_context") || "";
         if (userContext) sessionStorage.removeItem("user_context");
+
+        // 내 말투 적용 확인
+        const useMyStyle = sessionStorage.getItem("use_my_style") === "true";
+        if (useMyStyle) sessionStorage.removeItem("use_my_style");
+
+        let styleProfile = null;
+        if (useMyStyle) {
+          try {
+            const styleRes = await fetch("/api/style");
+            const styleData = await styleRes.json();
+            if (styleData.data?.styleProfile) {
+              styleProfile = styleData.data.styleProfile;
+            }
+          } catch {
+            // 스타일 로드 실패 시 무시하고 진행
+          }
+        }
+
         const res = await fetch("/api/convert/stream", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url, ...(tone && { tone }), ...(userContext && { user_context: userContext }) }),
+          body: JSON.stringify({
+            url,
+            ...(tone && { tone }),
+            ...(userContext && { user_context: userContext }),
+            ...(styleProfile && { style_profile: styleProfile }),
+          }),
         });
 
         if (!res.ok || !res.body) {
@@ -1768,16 +1791,23 @@ function ResultContent() {
             </div>
           </aside>
 
-          {!sidebarOpen && (
-            <button onClick={() => setSidebarOpen(true)} className="fixed top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm transition-colors">
-              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          )}
-
           {/* ===== 오른쪽 메인 콘텐츠 (비디오) ===== */}
           <div className={`animate-fade-in flex-1 transition-all duration-300 ${sidebarOpen ? "ml-60" : "ml-0"}`}>
+            {/* 미니 헤더 (사이드바 닫혔을 때) */}
+            {!sidebarOpen && (
+              <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-sm border-b border-gray-100">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 h-11 flex items-center">
+                  <button
+                    onClick={() => setSidebarOpen(true)}
+                    className="p-1.5 -ml-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
             {/* 소스 바 */}
             <div className="bg-gray-50 border-b border-gray-200">
               <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-3 flex items-center gap-2">
@@ -1979,15 +2009,23 @@ function ResultContent() {
             </div>
           </aside>
 
-          {/* 사이드바 닫혔을 때 열기 버튼 */}
-          {!sidebarOpen && (
-            <button onClick={() => setSidebarOpen(true)} className="fixed top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm transition-colors">
-              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-            </button>
-          )}
-
           {/* ===== 오른쪽 메인 콘텐츠 ===== */}
           <div className={`animate-fade-in flex-1 transition-all duration-300 ${sidebarOpen ? "ml-60" : "ml-0"}`}>
+            {/* 미니 헤더 (사이드바 닫혔을 때) */}
+            {!sidebarOpen && (
+              <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-sm border-b border-gray-100">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 h-11 flex items-center">
+                  <button
+                    onClick={() => setSidebarOpen(true)}
+                    className="p-1.5 -ml-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-32">
 
               {/* 제목 */}
@@ -2273,24 +2311,28 @@ function ResultContent() {
             </div>
           </aside>
 
-          {/* 사이드바 닫혔을 때 열기 버튼 */}
-          {!sidebarOpen && (
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="fixed top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm transition-colors"
-            >
-              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          )}
-
           {/* ===== 오른쪽 메인 콘텐츠 ===== */}
           <div
             className={`animate-fade-in flex-1 transition-all duration-300 ${
               sidebarOpen ? "ml-60" : "ml-0"
             }`}
           >
+            {/* 미니 헤더 (사이드바 닫혔을 때) */}
+            {!sidebarOpen && (
+              <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-sm border-b border-gray-100">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 h-11 flex items-center">
+                  <button
+                    onClick={() => setSidebarOpen(true)}
+                    className="p-1.5 -ml-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* 메인 콘텐츠 영역 */}
             <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-32">
 

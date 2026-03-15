@@ -265,7 +265,45 @@
       "title": "Extract frames from video",
       "desc": "Auto-captured frames from Reels/Shorts included in blog post"
     },
+    "myStyle": {
+      "title": "Apply My Writing Style",
+      "desc": "Write blog posts in your learned writing style",
+      "learnLink": "Teach AI your blog writing style →"
+    },
     "startConvert": "Start Conversion"
+  },
+  "style": {
+    "title": "Learn My Writing Style",
+    "subtitle": "Enter your Naver blog URL and AI will analyze your writing style",
+    "loginRequired": "Login required",
+    "urlLabel": "Naver Blog URL",
+    "analyzeButton": "Start Analysis",
+    "reanalyze": "Re-analyze",
+    "delete": "Delete",
+    "backToHome": "← Back to Home",
+    "howItWorks": {
+      "title": "How it works",
+      "step1": "We collect your recent blog posts",
+      "step2": "AI analyzes your writing tone, expressions, and emoji patterns",
+      "step3": "Your learned style is automatically applied to future conversions"
+    },
+    "progress": {
+      "starting": "Starting analysis..."
+    },
+    "errors": {
+      "invalidUrl": "Please enter a valid Naver blog URL (e.g., https://blog.naver.com/myblog)",
+      "serverError": "Cannot connect to analysis server",
+      "networkError": "A network error occurred"
+    },
+    "result": {
+      "toneTitle": "Your Writing Style",
+      "postsAnalyzed": "{{count}} posts analyzed",
+      "expressions": "Frequent Expressions",
+      "endings": "Sentence Endings",
+      "emojiStyle": "Emoji Style",
+      "emojiFrequency": "Usage Frequency",
+      "examples": "Style Examples"
+    }
   },
   "result": {
     "blogLoading": [

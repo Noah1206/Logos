@@ -237,6 +237,63 @@ def _build_tone_section(tone: Optional[str] = None) -> str:
     return TONE_PROMPTS[tone]
 
 
+def _build_style_section(style_profile: Optional[dict] = None) -> str:
+    """유저 블로그 스타일 프로필 → 프롬프트 텍스트 변환"""
+    if not style_profile:
+        return ""
+
+    parts = ["【글쓰기 스타일 (유저의 실제 블로그에서 학습한 말투 — 반드시 이 스타일로 작성!)】"]
+
+    tone_summary = style_profile.get("tone_summary")
+    if tone_summary:
+        parts.append(f"전체 톤: {tone_summary}")
+
+    endings = style_profile.get("sentence_endings", [])
+    if endings:
+        parts.append(f"문장 종결 어미: {', '.join(endings)}")
+
+    expressions = style_profile.get("frequent_expressions", [])
+    if expressions:
+        parts.append(f"자주 쓰는 표현: {', '.join(expressions)}")
+
+    emoji_style = style_profile.get("emoji_style", {})
+    if emoji_style:
+        freq = emoji_style.get("frequency", "")
+        preferred = emoji_style.get("preferred_emojis", [])
+        if freq:
+            parts.append(f"이모지 사용: {freq}" + (f" (선호: {' '.join(preferred)})" if preferred else ""))
+
+    paragraph = style_profile.get("paragraph_style", {})
+    if paragraph:
+        flow = paragraph.get("flow_description", "")
+        if flow:
+            parts.append(f"문단 스타일: {flow}")
+
+    openings = style_profile.get("opening_patterns", [])
+    if openings:
+        parts.append(f"도입부 패턴: {'; '.join(openings)}")
+
+    closings = style_profile.get("closing_patterns", [])
+    if closings:
+        parts.append(f"마무리 패턴: {'; '.join(closings)}")
+
+    traits = style_profile.get("unique_traits", [])
+    if traits:
+        parts.append(f"고유 특징: {'; '.join(traits)}")
+
+    examples = style_profile.get("style_examples", [])
+    if examples:
+        parts.append("문체 예시:")
+        for ex in examples[:5]:
+            parts.append(f"  - \"{ex}\"")
+
+    instructions = style_profile.get("writing_instructions")
+    if instructions:
+        parts.append(f"\n핵심 규칙: {instructions}")
+
+    return "\n".join(parts)
+
+
 async def write_blog(
     transcript: Optional[str] = None,
     screen_text: Optional[str] = None,
@@ -245,7 +302,8 @@ async def write_blog(
     location: Optional[str] = None,
     frame_descriptions: Optional[List[dict]] = None,
     tone: Optional[str] = None,
-    user_context: Optional[str] = None
+    user_context: Optional[str] = None,
+    style_profile: Optional[dict] = None
 ) -> tuple[BlogStructure, SEOKeywords, str]:
     """
     모든 소스를 종합하여 네이버 블로그 글 생성 (단일 GPT 호출)
@@ -261,6 +319,11 @@ async def write_blog(
     )
 
     frame_matching = _build_frame_matching_section(frame_descriptions)
+
+    # 유저 스타일 프로필 삽입 (톤보다 우선)
+    style_section = _build_style_section(style_profile)
+    if style_section:
+        sources = style_section + "\n\n" + sources
 
     # 톤별 추가 프롬프트 삽입
     tone_section = _build_tone_section(tone)

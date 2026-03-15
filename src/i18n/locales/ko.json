@@ -265,7 +265,45 @@
       "title": "영상에서 사진 추출",
       "desc": "릴스/쇼츠에서 자동으로 캡처한 사진을 블로그에 포함"
     },
+    "myStyle": {
+      "title": "내 말투 적용",
+      "desc": "학습한 내 블로그 스타일로 글을 작성합니다",
+      "learnLink": "내 블로그 말투를 학습시켜보세요 →"
+    },
     "startConvert": "변환 시작"
+  },
+  "style": {
+    "title": "내 블로그 말투 학습",
+    "subtitle": "네이버 블로그 URL을 입력하면 AI가 당신의 글쓰기 스타일을 분석해요",
+    "loginRequired": "로그인이 필요합니다",
+    "urlLabel": "네이버 블로그 URL",
+    "analyzeButton": "분석 시작",
+    "reanalyze": "다시 분석하기",
+    "delete": "삭제",
+    "backToHome": "← 홈으로 돌아가기",
+    "howItWorks": {
+      "title": "이렇게 작동해요",
+      "step1": "블로그의 최근 게시글을 수집합니다",
+      "step2": "AI가 문체, 말투, 이모지 사용 패턴을 분석합니다",
+      "step3": "이후 변환 시 학습된 스타일이 자동 적용됩니다"
+    },
+    "progress": {
+      "starting": "분석을 시작합니다..."
+    },
+    "errors": {
+      "invalidUrl": "올바른 네이버 블로그 URL을 입력해주세요 (예: https://blog.naver.com/myblog)",
+      "serverError": "분석 서버에 연결할 수 없습니다",
+      "networkError": "네트워크 오류가 발생했습니다"
+    },
+    "result": {
+      "toneTitle": "당신의 글쓰기 스타일",
+      "postsAnalyzed": "게시글 {{count}}개 분석",
+      "expressions": "자주 쓰는 표현",
+      "endings": "문장 종결 어미",
+      "emojiStyle": "이모지 스타일",
+      "emojiFrequency": "사용 빈도",
+      "examples": "문체 예시"
+    }
   },
   "result": {
     "blogLoading": [

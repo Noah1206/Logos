@@ -2,6 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback, Suspense } from "react";
+import { useSession } from "next-auth/react";
 import { useTranslation } from "@/i18n";
 import LanguageToggle from "@/components/LanguageToggle";
 
@@ -10,6 +11,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 function ToneContent() {
   const { t } = useTranslation();
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
   const url = searchParams.get("url") || "";
@@ -17,10 +19,27 @@ function ToneContent() {
   const [images, setImages] = useState<string[]>([]);
   const [checkedImages, setCheckedImages] = useState<Set<number>>(new Set());
   const [includeFrames, setIncludeFrames] = useState(true);
+  const [useMyStyle, setUseMyStyle] = useState(false);
+  const [hasStyleProfile, setHasStyleProfile] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [userContext, setUserContext] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
+
+  // 스타일 프로필 존재 여부 확인
+  useEffect(() => {
+    if (session?.user) {
+      fetch("/api/style")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.data?.styleProfile) {
+            setHasStyleProfile(true);
+            setUseMyStyle(true); // 기본으로 적용
+          }
+        })
+        .catch(() => {});
+    }
+  }, [session]);
 
   const tones = [
     {
@@ -126,6 +145,11 @@ function ToneContent() {
       sessionStorage.setItem("exclude_frames", "true");
     } else {
       sessionStorage.removeItem("exclude_frames");
+    }
+    if (useMyStyle && hasStyleProfile) {
+      sessionStorage.setItem("use_my_style", "true");
+    } else {
+      sessionStorage.removeItem("use_my_style");
     }
     if (userContext.trim()) {
       sessionStorage.setItem("user_context", userContext.trim());
@@ -346,6 +370,44 @@ function ToneContent() {
                 />
               </div>
             </button>
+          </div>
+
+          {/* 내 말투 적용 */}
+          <div className="mb-10">
+            {hasStyleProfile ? (
+              <button
+                onClick={() => setUseMyStyle((v) => !v)}
+                className="w-full flex items-center justify-between px-5 py-4 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">✍️</span>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{t("tone.myStyle.title")}</p>
+                    <p className="text-xs text-gray-400">{t("tone.myStyle.desc")}</p>
+                  </div>
+                </div>
+                <div
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+                    useMyStyle ? "bg-[#4F46E5]" : "bg-gray-200"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                      useMyStyle ? "translate-x-[22px]" : "translate-x-0.5"
+                    }`}
+                  />
+                </div>
+              </button>
+            ) : (
+              <a
+                href="/style"
+                className="block w-full px-5 py-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors text-center"
+              >
+                <p className="text-sm text-gray-500">
+                  ✍️ {t("tone.myStyle.learnLink")}
+                </p>
+              </a>
+            )}
           </div>
 
           {/* CTA Button */}

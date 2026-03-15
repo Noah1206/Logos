@@ -19,6 +19,7 @@ model User {
   orders        Order[]
   conversions   Conversion[]
   knowledge     Knowledge[]
+  writingStyle  WritingStyleProfile?
   credits                  Int       @default(0)
   freeTrialStartedAt       DateTime?
   freeTrialConversionCount Int       @default(0)
@@ -106,6 +107,22 @@ model Conversion {
   knowledge     Knowledge?
   @@index([userId, createdAt(sort: Desc)])
   @@index([userId, mode])
+}
+
+model WritingStyleProfile {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  blogUrl         String
+  blogId          String
+  styleProfile    Json?
+  postsAnalyzed   Int       @default(0)
+  status          String    @default("PENDING") // PENDING | ANALYZING | COMPLETED | FAILED
+  errorMessage    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  analyzedAt      DateTime?
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
 }
 
 model Knowledge {

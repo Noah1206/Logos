@@ -18,11 +18,14 @@ from ..models.schemas import (
     StudyRequest,
     StudyResponse,
     ThinkRequest,
+    StyleAnalyzeRequest,
 )
 from ..services.pipeline import run_conversion_pipeline, run_study_pipeline
 from ..services.video_generator import generate_video_from_blog
 from ..services.knowledge_extractor import extract_knowledge
 from ..services.thinking_engine import generate_thinking_response
+from ..services.blog_crawler import extract_blog_id, crawl_blog
+from ..services.style_analyzer import analyze_writing_style
 
 router = APIRouter()
 
@@ -41,7 +44,8 @@ async def convert_video(request: ConvertRequest):
         url=request.url,
         location=request.location,
         tone=request.tone,
-        user_context=request.user_context
+        user_context=request.user_context,
+        style_profile=request.style_profile,
     )
 
     if not result.success:
@@ -73,6 +77,7 @@ async def convert_video_stream(request: ConvertRequest):
                 location=request.location,
                 tone=request.tone,
                 user_context=request.user_context,
+                style_profile=request.style_profile,
                 progress_callback=progress_callback,
             )
         )
@@ -324,6 +329,61 @@ async def think_endpoint(request: ThinkRequest):
         ):
             yield f"data: {json.dumps({'content': chunk}, ensure_ascii=False)}\n\n"
         yield f"data: {json.dumps({'done': True}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@router.post("/style/analyze")
+async def analyze_blog_style(request: StyleAnalyzeRequest):
+    """블로그 글쓰기 스타일 분석 (SSE 스트리밍)"""
+    async def event_generator():
+        try:
+            # Step 1: URL에서 blogId 추출
+            blog_id = extract_blog_id(request.blog_url)
+            if not blog_id:
+                yield f"data: {json.dumps({'progress': -1, 'message': '올바른 네이버 블로그 URL을 입력해주세요.', 'error': True}, ensure_ascii=False)}\n\n"
+                return
+
+            yield f"data: {json.dumps({'progress': 10, 'message': '블로그를 찾고 있어요...', 'blog_id': blog_id}, ensure_ascii=False)}\n\n"
+
+            # Step 2: RSS에서 게시글 수집
+            try:
+                posts = await crawl_blog(blog_id, max_posts=7)
+            except ValueError as e:
+                yield f"data: {json.dumps({'progress': -1, 'message': str(e), 'error': True}, ensure_ascii=False)}\n\n"
+                return
+
+            if len(posts) < 3:
+                yield f"data: {json.dumps({'progress': -1, 'message': '분석에 최소 3개 이상의 게시글이 필요합니다.', 'error': True}, ensure_ascii=False)}\n\n"
+                return
+
+            yield f"data: {json.dumps({'progress': 40, 'message': f'{len(posts)}개 게시글을 수집했어요. AI 분석 중...'}, ensure_ascii=False)}\n\n"
+
+            # Step 3: GPT로 스타일 분석
+            try:
+                style_profile = await analyze_writing_style(posts)
+            except Exception:
+                # 1회 재시도
+                try:
+                    style_profile = await analyze_writing_style(posts)
+                except Exception as e2:
+                    yield f"data: {json.dumps({'progress': -1, 'message': f'스타일 분석에 실패했습니다: {str(e2)}', 'error': True}, ensure_ascii=False)}\n\n"
+                    return
+
+            yield f"data: {json.dumps({'progress': 100, 'message': '분석 완료!', 'result': {'blog_id': blog_id, 'posts_analyzed': len(posts), 'style_profile': style_profile}}, ensure_ascii=False)}\n\n"
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            yield f"data: {json.dumps({'progress': -1, 'message': f'오류가 발생했습니다: {str(e)}', 'error': True}, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(
         event_generator(),
