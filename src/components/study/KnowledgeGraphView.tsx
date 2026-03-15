@@ -20,26 +20,27 @@ import StudyStatsCard from "./StudyStatsCard";
 
 /* ─── Types ─── */
 
-interface NodeData {
+interface StudyNodeData {
   label: string;
-  count: number;
-  topics: string[];
-  summary?: string;
-  keywords?: string[];
+  topic: string;
+  summary: string;
+  keyConcepts: string[];
+  keywords: string[];
+  createdAt: string;
   [key: string]: unknown;
 }
 
 interface GraphData {
   nodes: Array<{
     id: string;
-    data: NodeData;
+    data: StudyNodeData;
     position: { x: number; y: number };
   }>;
   edges: Array<{
     id: string;
     source: string;
     target: string;
-    data?: { type: string; label?: string };
+    data?: { shared: string[] };
   }>;
 }
 
@@ -53,7 +54,7 @@ interface KnowledgeGraphViewProps {
   onClose: () => void;
 }
 
-/* ─── Obsidian-style color palette ─── */
+/* ─── Color palette ─── */
 
 const ACCENT: Record<string, { border: string; tag: string; tagBg: string }> = {
   food:      { border: "#EF4444", tag: "#FCA5A5", tagBg: "rgba(239,68,68,0.15)" },
@@ -66,78 +67,68 @@ const ACCENT: Record<string, { border: string; tag: string; tagBg: string }> = {
   other:     { border: "#7f6df2", tag: "#C4B5FD", tagBg: "rgba(127,109,242,0.15)" },
 };
 
-const FILTER_PILL: Record<string, string> = {
-  food: "bg-red-500/20 text-red-300 border-red-500/30",
-  fitness: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-  beauty: "bg-pink-500/20 text-pink-300 border-pink-500/30",
-  education: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  tech: "bg-violet-500/20 text-violet-300 border-violet-500/30",
-  business: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-  lifestyle: "bg-orange-500/20 text-orange-300 border-orange-500/30",
-  other: "bg-gray-500/20 text-gray-300 border-gray-500/30",
-};
+/* ─── Custom Study Card Node ─── */
 
-/* ─── Custom Card Node (Obsidian Canvas style) ─── */
+const CARD_W = 280;
 
-const CARD_W = 240;
-const CARD_MIN_H = 72;
-
-const ConceptCardNode = memo(({ data }: NodeProps) => {
-  const d = data as NodeData;
-  const topic = d.topics?.[0] || "other";
+const StudyCardNode = memo(({ data }: NodeProps) => {
+  const d = data as StudyNodeData;
+  const topic = d.topic || "other";
   const a = ACCENT[topic] || ACCENT.other;
+  const date = d.createdAt ? new Date(d.createdAt).toLocaleDateString() : "";
 
   return (
     <div
       style={{
         width: CARD_W,
-        minHeight: CARD_MIN_H,
         background: "#262626",
-        borderRadius: 8,
+        borderRadius: 10,
         borderLeft: `3px solid ${a.border}`,
-        boxShadow: `0 0 16px rgba(0,0,0,0.4), 0 0 1px ${a.border}40`,
-        padding: "12px 14px",
+        boxShadow: `0 2px 20px rgba(0,0,0,0.4), 0 0 1px ${a.border}40`,
+        padding: "14px 16px",
         fontFamily: "system-ui, -apple-system, sans-serif",
         cursor: "grab",
       }}
     >
-      {/* Handles — all sides for radial layout */}
       <Handle type="target" position={Position.Top} style={{ background: "transparent", width: 8, height: 8, border: "none" }} />
-      <Handle type="target" position={Position.Left} id="left-t" style={{ background: "transparent", width: 8, height: 8, border: "none" }} />
+      <Handle type="target" position={Position.Left} id="lt" style={{ background: "transparent", width: 8, height: 8, border: "none" }} />
       <Handle type="source" position={Position.Bottom} style={{ background: "transparent", width: 8, height: 8, border: "none" }} />
-      <Handle type="source" position={Position.Right} id="right-s" style={{ background: "transparent", width: 8, height: 8, border: "none" }} />
+      <Handle type="source" position={Position.Right} id="rs" style={{ background: "transparent", width: 8, height: 8, border: "none" }} />
 
-      {/* Title */}
-      <div style={{ fontSize: 14, fontWeight: 700, color: "#e5e5e5", lineHeight: 1.3, marginBottom: 4 }}>
+      {/* Header: title + date */}
+      <div style={{ fontSize: 15, fontWeight: 700, color: "#e5e5e5", lineHeight: 1.35, marginBottom: 6, paddingRight: 4 }}>
         {d.label}
       </div>
 
-      {/* Topic tag */}
-      <div
-        style={{
-          display: "inline-block",
-          fontSize: 10,
-          fontWeight: 600,
-          color: a.tag,
-          background: a.tagBg,
-          padding: "1px 6px",
-          borderRadius: 3,
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-          marginBottom: d.summary || (d.keywords && d.keywords.length > 0) ? 8 : 0,
-        }}
-      >
-        {topic}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+        {/* Topic tag */}
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 600,
+            color: a.tag,
+            background: a.tagBg,
+            padding: "2px 7px",
+            borderRadius: 4,
+            textTransform: "uppercase",
+            letterSpacing: "0.04em",
+          }}
+        >
+          {topic}
+        </span>
+        {date && (
+          <span style={{ fontSize: 10, color: "#555" }}>{date}</span>
+        )}
       </div>
 
-      {/* Summary (truncated) */}
+      {/* Summary */}
       {d.summary && (
         <div
           style={{
-            fontSize: 11,
+            fontSize: 11.5,
             color: "#888",
-            lineHeight: 1.5,
-            marginBottom: d.keywords && d.keywords.length > 0 ? 8 : 0,
+            lineHeight: 1.55,
+            marginBottom: 10,
             display: "-webkit-box",
             WebkitLineClamp: 3,
             WebkitBoxOrient: "vertical" as const,
@@ -148,79 +139,47 @@ const ConceptCardNode = memo(({ data }: NodeProps) => {
         </div>
       )}
 
-      {/* Keywords pills */}
-      {d.keywords && d.keywords.length > 0 && (
+      {/* Key concepts */}
+      {d.keyConcepts && d.keyConcepts.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-          {d.keywords.slice(0, 3).map((kw: string, i: number) => (
+          {d.keyConcepts.map((c: string, i: number) => (
             <span
               key={i}
               style={{
-                fontSize: 9,
-                color: "#777",
+                fontSize: 10,
+                color: "#999",
                 background: "#333",
-                borderRadius: 3,
-                padding: "1px 5px",
+                borderRadius: 4,
+                padding: "2px 7px",
               }}
             >
-              {kw}
+              {c}
             </span>
           ))}
-        </div>
-      )}
-
-      {/* Count badge */}
-      {d.count > 1 && (
-        <div
-          style={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            fontSize: 9,
-            fontWeight: 700,
-            color: "#999",
-            background: "#333",
-            borderRadius: 10,
-            padding: "1px 6px",
-            minWidth: 18,
-            textAlign: "center",
-          }}
-        >
-          {d.count}
         </div>
       )}
     </div>
   );
 });
-ConceptCardNode.displayName = "ConceptCardNode";
+StudyCardNode.displayName = "StudyCardNode";
 
-const nodeTypes = { conceptCard: ConceptCardNode };
+const nodeTypes = { studyCard: StudyCardNode };
 
-/* ─── Layout: Force-directed from center, no overlap ─── */
+/* ─── Layout: Force-directed, center-out, no overlap ─── */
 
 function applyForceLayout(nodes: Node[], edges: Edge[]) {
   if (nodes.length === 0) return [];
   if (nodes.length === 1) {
-    return [{ ...nodes[0], position: { x: -CARD_W / 2, y: -50 } }];
+    return [{ ...nodes[0], position: { x: -CARD_W / 2, y: -60 } }];
   }
 
   const N = nodes.length;
   const idIdx = new Map(nodes.map((n, i) => [n.id, i]));
 
-  // Node bounding box for collision
-  const NW = CARD_W + 40;  // card width + margin
-  const NH = 140;           // card height + margin
+  const NW = CARD_W + 50;
+  const NH = 180;
 
-  // Adjacency set for edge lookup
-  const linked = new Set<string>();
-  for (const e of edges) {
-    if (idIdx.has(e.source) && idIdx.has(e.target)) {
-      linked.add(`${e.source}|${e.target}`);
-      linked.add(`${e.target}|${e.source}`);
-    }
-  }
-  const isLinked = (a: string, b: string) => linked.has(`${a}|${b}`);
-
-  // Find root (most connected)
+  // Find root: most connected node
   const connCount = new Map<string, number>();
   for (const n of nodes) connCount.set(n.id, 0);
   for (const e of edges) {
@@ -228,101 +187,88 @@ function applyForceLayout(nodes: Node[], edges: Edge[]) {
     if (idIdx.has(e.target)) connCount.set(e.target, (connCount.get(e.target) || 0) + 1);
   }
   let rootIdx = 0;
-  let maxC = 0;
+  let maxC = -1;
   for (const [id, c] of connCount) {
     if (c > maxC) { maxC = c; rootIdx = idIdx.get(id)!; }
   }
 
-  // Init positions: root at center, others in a small circle
+  // Init positions
   const px = new Float64Array(N);
   const py = new Float64Array(N);
   const vx = new Float64Array(N);
   const vy = new Float64Array(N);
 
-  const initR = Math.max(200, N * 30);
+  const initR = Math.max(250, N * 50);
   for (let i = 0; i < N; i++) {
     if (i === rootIdx) {
-      px[i] = 0;
-      py[i] = 0;
+      px[i] = 0; py[i] = 0;
     } else {
-      const a = ((i - (i > rootIdx ? 1 : 0)) / (N - 1)) * 2 * Math.PI;
+      const idx = i > rootIdx ? i - 1 : i;
+      const a = (idx / (N - 1)) * 2 * Math.PI;
       px[i] = Math.cos(a) * initR;
       py[i] = Math.sin(a) * initR;
     }
   }
 
-  // Simulation parameters
-  const ITERATIONS = 300;
-  const EDGE_LEN = 350;        // ideal distance for connected nodes
-  const REPULSION = 800000;     // push apart force
-  const EDGE_STRENGTH = 0.003;  // pull together along edges
-  const CENTER_PULL = 0.002;    // gravity toward center for root
-  const DAMPING = 0.9;
+  // Simulation
+  const ITERS = 250;
+  const EDGE_LEN = 420;
+  const REPULSION = 1200000;
+  const EDGE_STR = 0.004;
+  const CENTER_G = 0.003;
+  const DAMPING = 0.88;
 
-  for (let iter = 0; iter < ITERATIONS; iter++) {
-    const alpha = 1 - iter / ITERATIONS; // cooling
+  for (let iter = 0; iter < ITERS; iter++) {
+    const alpha = 1 - iter / ITERS;
 
-    // Repulsion: all pairs push away (prevent overlap)
+    // Repulsion
     for (let i = 0; i < N; i++) {
       for (let j = i + 1; j < N; j++) {
         let dx = px[j] - px[i];
         let dy = py[j] - py[i];
         let dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 1) { dx = 1; dy = 1; dist = 1.41; }
+        if (dist < 1) { dx = Math.random() * 2 - 1; dy = Math.random() * 2 - 1; dist = 1.41; }
 
-        // Minimum distance based on card size
-        const minDist = Math.sqrt(NW * NW + NH * NH);
-        const force = (REPULSION * alpha) / (dist * dist);
-
-        // Extra strong repulsion if overlapping
-        const overlap = dist < minDist ? 3 : 1;
-
-        const fx = (dx / dist) * force * overlap;
-        const fy = (dy / dist) * force * overlap;
-        vx[i] -= fx;
-        vy[i] -= fy;
-        vx[j] += fx;
-        vy[j] += fy;
+        const minD = Math.sqrt(NW * NW + NH * NH);
+        const overlap = dist < minD ? 4 : 1;
+        const f = (REPULSION * alpha * overlap) / (dist * dist);
+        const fx = (dx / dist) * f;
+        const fy = (dy / dist) * f;
+        vx[i] -= fx; vy[i] -= fy;
+        vx[j] += fx; vy[j] += fy;
       }
     }
 
-    // Attraction: connected nodes pull together
+    // Edge attraction
     for (const e of edges) {
       const i = idIdx.get(e.source);
       const j = idIdx.get(e.target);
       if (i === undefined || j === undefined) continue;
-
       const dx = px[j] - px[i];
       const dy = py[j] - py[i];
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < 1) continue;
-
       const diff = dist - EDGE_LEN;
-      const force = diff * EDGE_STRENGTH * alpha;
-      const fx = (dx / dist) * force;
-      const fy = (dy / dist) * force;
-      vx[i] += fx;
-      vy[i] += fy;
-      vx[j] -= fx;
-      vy[j] -= fy;
+      const f = diff * EDGE_STR * alpha;
+      const fx = (dx / dist) * f;
+      const fy = (dy / dist) * f;
+      vx[i] += fx; vy[i] += fy;
+      vx[j] -= fx; vy[j] -= fy;
     }
 
-    // Root gravity: keep root near center
-    vx[rootIdx] -= px[rootIdx] * CENTER_PULL;
-    vy[rootIdx] -= py[rootIdx] * CENTER_PULL;
+    // Root gravity
+    vx[rootIdx] -= px[rootIdx] * CENTER_G;
+    vy[rootIdx] -= py[rootIdx] * CENTER_G;
 
-    // Apply velocity with damping
     for (let i = 0; i < N; i++) {
-      vx[i] *= DAMPING;
-      vy[i] *= DAMPING;
-      px[i] += vx[i];
-      py[i] += vy[i];
+      vx[i] *= DAMPING; vy[i] *= DAMPING;
+      px[i] += vx[i]; py[i] += vy[i];
     }
   }
 
-  // Final overlap resolution pass
-  for (let pass = 0; pass < 50; pass++) {
-    let moved = false;
+  // Overlap resolution
+  for (let pass = 0; pass < 80; pass++) {
+    let any = false;
     for (let i = 0; i < N; i++) {
       for (let j = i + 1; j < N; j++) {
         const dx = px[j] - px[i];
@@ -330,27 +276,26 @@ function applyForceLayout(nodes: Node[], edges: Edge[]) {
         const ox = NW - Math.abs(dx);
         const oy = NH - Math.abs(dy);
         if (ox > 0 && oy > 0) {
-          // Overlap — push apart along the axis of least overlap
-          moved = true;
+          any = true;
           if (ox < oy) {
-            const push = ox / 2 + 5;
-            px[i] -= dx > 0 ? push : -push;
-            px[j] += dx > 0 ? push : -push;
+            const p = ox / 2 + 8;
+            px[i] -= dx > 0 ? p : -p;
+            px[j] += dx > 0 ? p : -p;
           } else {
-            const push = oy / 2 + 5;
-            py[i] -= dy > 0 ? push : -push;
-            py[j] += dy > 0 ? push : -push;
+            const p = oy / 2 + 8;
+            py[i] -= dy > 0 ? p : -p;
+            py[j] += dy > 0 ? p : -p;
           }
         }
       }
     }
-    if (!moved) break;
+    if (!any) break;
   }
 
   const halfW = CARD_W / 2;
-  return nodes.map((node, i) => ({
-    ...node,
-    position: { x: px[i] - halfW, y: py[i] - 50 },
+  return nodes.map((n, i) => ({
+    ...n,
+    position: { x: px[i] - halfW, y: py[i] - 60 },
   }));
 }
 
@@ -361,7 +306,6 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [graphStats, setGraphStats] = useState<GraphStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [topicFilter, setTopicFilter] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/knowledge/graph")
@@ -374,64 +318,36 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
       .catch(() => setLoading(false));
   }, []);
 
-  const { flowNodes, flowEdges, topics } = useMemo(() => {
-    if (!graphData) return { flowNodes: [], flowEdges: [], topics: [] as string[] };
+  const { flowNodes, flowEdges } = useMemo(() => {
+    if (!graphData) return { flowNodes: [], flowEdges: [] };
 
-    const allTopics = new Set<string>();
-    graphData.nodes.forEach((n) => n.data.topics.forEach((t: string) => allTopics.add(t)));
-
-    let filteredNodes = graphData.nodes;
-    if (topicFilter) {
-      filteredNodes = graphData.nodes.filter((n) =>
-        n.data.topics.includes(topicFilter)
-      );
-    }
-    const nodeIds = new Set(filteredNodes.map((n) => n.id));
-
-    // Card-style nodes
-    const styledNodes: Node[] = filteredNodes.map((n) => ({
+    const styledNodes: Node[] = graphData.nodes.map((n) => ({
       id: n.id,
-      type: "conceptCard",
+      type: "studyCard",
       data: n.data,
       position: n.position,
     }));
 
-    // Edges — Obsidian-style thin lines
-    const styledEdges: Edge[] = graphData.edges
-      .filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target))
-      .map((e) => {
-        const isPrereq = e.data?.type === "prerequisite";
-        const isExtends = e.data?.type === "extends";
-        return {
-          id: e.id,
-          source: e.source,
-          target: e.target,
-          label: e.data?.label || "",
-          labelStyle: { fill: "#666", fontSize: 10 },
-          labelBgStyle: { fill: "#1e1e1e", fillOpacity: 0.8 },
-          labelBgPadding: [4, 2] as [number, number],
-          labelBgBorderRadius: 3,
-          style: {
-            stroke: isPrereq ? "#EF4444" : isExtends ? "#3B82F6" : "#444",
-            strokeWidth: isPrereq || isExtends ? 1.5 : 1,
-            strokeDasharray: !isPrereq && !isExtends ? "6 4" : undefined,
-          },
-          type: "smoothstep",
-          animated: isPrereq,
-          markerEnd: {
-            type: "arrowclosed" as const,
-            color: isPrereq ? "#EF4444" : isExtends ? "#3B82F6" : "#444",
-            width: 14,
-            height: 14,
-          },
-        };
-      });
+    const styledEdges: Edge[] = graphData.edges.map((e) => {
+      const shared = e.data?.shared || [];
+      return {
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        label: shared.length > 0 ? shared[0] : "",
+        labelStyle: { fill: "#666", fontSize: 10 },
+        labelBgStyle: { fill: "#1a1a1a", fillOpacity: 0.85 },
+        labelBgPadding: [4, 2] as [number, number],
+        labelBgBorderRadius: 3,
+        style: { stroke: "#444", strokeWidth: 1, strokeDasharray: "6 4" },
+        type: "smoothstep",
+        markerEnd: { type: "arrowclosed" as const, color: "#444", width: 12, height: 12 },
+      };
+    });
 
-    const layoutNodes =
-      styledNodes.length > 0 ? applyForceLayout(styledNodes, styledEdges) : [];
-
-    return { flowNodes: layoutNodes, flowEdges: styledEdges, topics: Array.from(allTopics) };
-  }, [graphData, topicFilter]);
+    const laid = styledNodes.length > 0 ? applyForceLayout(styledNodes, styledEdges) : [];
+    return { flowNodes: laid, flowEdges: styledEdges };
+  }, [graphData]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(flowNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
@@ -441,18 +357,15 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
     setEdges(flowEdges);
   }, [flowNodes, flowEdges, setNodes, setEdges]);
 
-  const onInit = useCallback((instance: { fitView: (opts?: { padding?: number; maxZoom?: number }) => void }) => {
-    setTimeout(() => instance.fitView({ padding: 0.15, maxZoom: 1.2 }), 100);
+  const onInit = useCallback((instance: { fitView: (o?: { padding?: number; maxZoom?: number }) => void }) => {
+    setTimeout(() => instance.fitView({ padding: 0.2, maxZoom: 1 }), 100);
   }, []);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-32">
       {/* Header */}
       <div className="flex items-center gap-3 mb-1">
-        <button
-          onClick={onClose}
-          className="p-1.5 -ml-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-        >
+        <button onClick={onClose} className="p-1.5 -ml-1.5 hover:bg-gray-100 rounded-lg transition-colors">
           <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
@@ -464,46 +377,15 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
 
       {graphStats && (
         <p className="text-sm text-gray-400 ml-8 mb-8">
-          {graphStats.totalStudies} {t("study.stats.studies")} · {graphStats.totalConcepts}{" "}
-          {t("study.stats.concepts")} · {graphStats.totalConnections}{" "}
-          {t("study.stats.connections")}
+          {graphStats.totalStudies} {t("study.stats.studies")} · {graphStats.totalConcepts} {t("study.stats.concepts")} · {graphStats.totalConnections} {t("study.stats.connections")}
         </p>
       )}
 
       {graphStats && <StudyStatsCard stats={graphStats} />}
 
-      {/* Topic filters */}
-      {topics.length > 0 && (
-        <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
-          <button
-            onClick={() => setTopicFilter(null)}
-            className={`px-3.5 py-1.5 text-xs font-medium rounded-full border transition-all flex-shrink-0 ${
-              !topicFilter
-                ? "bg-gray-900 text-white border-gray-900 shadow-sm"
-                : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
-            }`}
-          >
-            {t("study.graph.all")}
-          </button>
-          {topics.map((topic) => (
-            <button
-              key={topic}
-              onClick={() => setTopicFilter(topic === topicFilter ? null : topic)}
-              className={`px-3.5 py-1.5 text-xs font-medium rounded-full border transition-all flex-shrink-0 ${
-                topicFilter === topic
-                  ? FILTER_PILL[topic] || FILTER_PILL.other
-                  : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
-              }`}
-            >
-              {topic}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Graph Canvas — Obsidian Canvas dark */}
+      {/* Graph */}
       <div className="rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.15)] border border-gray-200/60">
-        <div className="h-[600px] relative">
+        <div className="h-[600px]">
           {loading ? (
             <div className="flex items-center justify-center h-full bg-[#1a1a1a]">
               <div className="flex items-center gap-2.5">
@@ -521,9 +403,7 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
                   </svg>
                 </div>
                 <p className="text-[#bbb] font-semibold text-[15px]">{t("study.graph.empty")}</p>
-                <p className="text-[#666] text-sm mt-2 max-w-[280px] leading-relaxed">
-                  {t("study.graph.emptyDesc")}
-                </p>
+                <p className="text-[#666] text-sm mt-2 max-w-[280px] leading-relaxed">{t("study.graph.emptyDesc")}</p>
               </div>
             </div>
           ) : (
@@ -535,9 +415,9 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
               onEdgesChange={onEdgesChange}
               onInit={onInit as any}
               fitView
-              fitViewOptions={{ padding: 0.15, maxZoom: 1.2 }}
-              minZoom={0.05}
-              maxZoom={2.5}
+              fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
+              minZoom={0.02}
+              maxZoom={2}
               attributionPosition="bottom-left"
               style={{ background: "#1a1a1a" }}
               defaultEdgeOptions={{ type: "smoothstep" }}
@@ -564,14 +444,6 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
         <span className="flex items-center gap-2">
           <span className="w-5 h-0 border-t border-dashed border-gray-400" />
           {t("study.graph.legend.related")}
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="w-5 h-0 border-t-[1.5px] border-red-400" />
-          {t("study.graph.legend.prerequisite")}
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="w-5 h-0 border-t-[1.5px] border-blue-400" />
-          {t("study.graph.legend.extends")}
         </span>
       </div>
     </div>

@@ -4,26 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-interface GraphNode {
-  id: string;
-  data: {
-    label: string;
-    count: number;
-    topics: string[];
-    summary?: string;
-    keywords?: string[];
-  };
-  position: { x: number; y: number };
-}
-
-interface GraphEdge {
-  id: string;
-  source: string;
-  target: string;
-  data?: { type: string; label?: string };
-}
-
-// GET: 유저의 모든 Knowledge에서 지식 그래프 데이터 생성
+// GET: 유저의 모든 Knowledge — 변환 1개 = 노드 1개
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -33,112 +14,77 @@ export async function GET() {
   const knowledgeList = await prisma.knowledge.findMany({
     where: { userId: session.user.id },
     select: {
-      keyConcepts: true,
-      conceptRelationships: true,
-      topic: true,
+      id: true,
       summary: true,
+      keyConcepts: true,
       keywords: true,
+      topic: true,
       subtopics: true,
+      conceptRelationships: true,
+      createdAt: true,
+      conversion: {
+        select: {
+          title: true,
+          sourceUrl: true,
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
 
-  // 노드: 개념명 → {count, topics, summary, keywords} (중복 제거, 출현 횟수 집계)
-  const nodeMap = new Map<
-    string,
-    { count: number; topics: Set<string>; summary?: string; keywords: Set<string> }
-  >();
-  const edges: GraphEdge[] = [];
+  // 노드: 변환 1개 = 1 노드
+  const nodes = knowledgeList.map((k, i) => ({
+    id: k.id,
+    data: {
+      label: k.conversion?.title || k.topic || "학습 노트",
+      topic: k.topic || "other",
+      summary: k.summary || "",
+      keyConcepts: ((k.keyConcepts as string[]) || []).slice(0, 5),
+      keywords: ((k.keywords as string[]) || []).slice(0, 4),
+      createdAt: k.createdAt.toISOString(),
+    },
+    position: { x: 0, y: 0 },
+  }));
+
+  // 엣지: 공유 개념이 있는 노드끼리 연결
+  const edges: Array<{ id: string; source: string; target: string; data: { shared: string[] } }> = [];
   const edgeSet = new Set<string>();
 
-  for (const k of knowledgeList) {
-    const topic = k.topic || "other";
-    const concepts = (k.keyConcepts as string[]) || [];
-    const kw = (k.keywords as string[]) || [];
-    const subtopics = (k.subtopics as string[]) || [];
+  for (let i = 0; i < knowledgeList.length; i++) {
+    const aConcepts = new Set((knowledgeList[i].keyConcepts as string[]) || []);
+    const aKeywords = new Set((knowledgeList[i].keywords as string[]) || []);
 
-    for (const concept of concepts) {
-      const name = concept.trim();
-      if (!name) continue;
-      const existing = nodeMap.get(name);
-      if (existing) {
-        existing.count++;
-        existing.topics.add(topic);
-        kw.forEach((w) => existing.keywords.add(w));
-      } else {
-        nodeMap.set(name, {
-          count: 1,
-          topics: new Set([topic]),
-          summary: k.summary || undefined,
-          keywords: new Set(kw),
-        });
+    for (let j = i + 1; j < knowledgeList.length; j++) {
+      const bConcepts = (knowledgeList[j].keyConcepts as string[]) || [];
+      const bKeywords = (knowledgeList[j].keywords as string[]) || [];
+
+      // 공유 개념 + 키워드
+      const shared: string[] = [];
+      for (const c of bConcepts) if (aConcepts.has(c)) shared.push(c);
+      for (const w of bKeywords) if (aKeywords.has(w)) shared.push(w);
+
+      // 같은 토픽이면 연결
+      const sameTopic = knowledgeList[i].topic === knowledgeList[j].topic && !!knowledgeList[i].topic;
+
+      if (shared.length > 0 || sameTopic) {
+        const key = `${knowledgeList[i].id}-${knowledgeList[j].id}`;
+        if (!edgeSet.has(key)) {
+          edgeSet.add(key);
+          edges.push({
+            id: `e-${edges.length}`,
+            source: knowledgeList[i].id,
+            target: knowledgeList[j].id,
+            data: { shared: shared.slice(0, 3) },
+          });
+        }
       }
     }
-
-    // subtopics도 별도 노드로 추가 (연결 풍부화)
-    for (const sub of subtopics) {
-      const name = sub.trim();
-      if (!name) continue;
-      if (!nodeMap.has(name)) {
-        nodeMap.set(name, {
-          count: 1,
-          topics: new Set([topic]),
-          keywords: new Set(kw),
-        });
-      }
-    }
-
-    // concept_relationships에서 엣지 생성
-    const relationships =
-      (k.conceptRelationships as Array<{ from: string; to: string; type: string }>) || [];
-    for (const rel of relationships) {
-      const from = rel.from?.trim();
-      const to = rel.to?.trim();
-      if (!from || !to) continue;
-
-      // 노드가 없으면 추가
-      if (!nodeMap.has(from)) {
-        nodeMap.set(from, { count: 1, topics: new Set([topic]), keywords: new Set(kw) });
-      }
-      if (!nodeMap.has(to)) {
-        nodeMap.set(to, { count: 1, topics: new Set([topic]), keywords: new Set(kw) });
-      }
-
-      const edgeKey = `${from}->${to}`;
-      if (!edgeSet.has(edgeKey)) {
-        edgeSet.add(edgeKey);
-        edges.push({
-          id: `e-${edgeSet.size}`,
-          source: from,
-          target: to,
-          data: { type: rel.type || "related", label: rel.type || "related" },
-        });
-      }
-    }
-  }
-
-  // 노드 배열 생성 (위치는 프론트에서 dagre로 재계산)
-  const nodes: GraphNode[] = [];
-  let i = 0;
-  for (const [name, data] of nodeMap) {
-    nodes.push({
-      id: name,
-      data: {
-        label: name,
-        count: data.count,
-        topics: Array.from(data.topics),
-        summary: data.summary,
-        keywords: Array.from(data.keywords).slice(0, 4),
-      },
-      position: { x: (i % 5) * 300, y: Math.floor(i / 5) * 250 },
-    });
-    i++;
   }
 
   return NextResponse.json({
     data: { nodes, edges },
     stats: {
-      totalConcepts: nodes.length,
+      totalConcepts: knowledgeList.reduce((s, k) => s + ((k.keyConcepts as string[]) || []).length, 0),
       totalConnections: edges.length,
       totalStudies: knowledgeList.length,
     },
