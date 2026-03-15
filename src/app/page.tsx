@@ -204,6 +204,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-white">
       <style jsx global>{`
+        /* === Base scroll animations === */
         .anim-element {
           opacity: 0;
           transform: translateY(32px);
@@ -239,6 +240,129 @@ export default function Home() {
         .anim-right.anim-visible {
           opacity: 1;
           transform: translateX(0);
+        }
+
+        /* === Hero "WOW" animations === */
+
+        /* Title: clip-path reveal from bottom + subtle blur clear */
+        .hero-title-wow {
+          opacity: 0;
+          transform: translateY(60px) scale(0.97);
+          filter: blur(8px);
+          animation: heroTitleIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+        }
+        @keyframes heroTitleIn {
+          0% { opacity: 0; transform: translateY(60px) scale(0.97); filter: blur(8px); }
+          60% { filter: blur(0px); }
+          100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); }
+        }
+
+        /* Highlight underline sweep animation */
+        .hero-highlight-sweep {
+          position: relative;
+        }
+        .hero-highlight-sweep > span:last-child {
+          transform: scaleX(0);
+          transform-origin: left;
+          animation: highlightSweep 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.9s forwards;
+        }
+        @keyframes highlightSweep {
+          0% { transform: scaleX(0); }
+          100% { transform: scaleX(1); }
+        }
+
+        /* Desc: fade up with word spacing feel */
+        .hero-desc-wow {
+          opacity: 0;
+          transform: translateY(30px);
+          filter: blur(4px);
+          animation: heroDescIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+        }
+        @keyframes heroDescIn {
+          0% { opacity: 0; transform: translateY(30px); filter: blur(4px); }
+          100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+        /* Convert form: scale up + shadow bloom */
+        .hero-form-wow {
+          opacity: 0;
+          transform: translateY(40px) scale(0.95);
+          animation: heroFormIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.9s forwards;
+        }
+        @keyframes heroFormIn {
+          0% { opacity: 0; transform: translateY(40px) scale(0.95); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Tabs: stagger pop-in */
+        .hero-tabs-wow > button {
+          opacity: 0;
+          transform: translateY(16px) scale(0.9);
+          animation: tabPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        .hero-tabs-wow > button:nth-child(1) { animation-delay: 0.95s; }
+        .hero-tabs-wow > button:nth-child(2) { animation-delay: 1.05s; }
+        .hero-tabs-wow > button:nth-child(3) { animation-delay: 1.15s; }
+        @keyframes tabPopIn {
+          0% { opacity: 0; transform: translateY(16px) scale(0.9); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Input glow pulse after appear */
+        .hero-input-wow {
+          animation: inputGlow 2s ease-in-out 1.8s 3;
+        }
+        @keyframes inputGlow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+          50% { box-shadow: 0 0 0 6px rgba(79, 70, 229, 0.12); }
+        }
+
+        /* Platform buttons stagger */
+        .hero-platform-wow > button {
+          opacity: 0;
+          transform: scale(0.85);
+          animation: platformIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        .hero-platform-wow > button:nth-child(1) { animation-delay: 1.2s; }
+        .hero-platform-wow > button:nth-child(2) { animation-delay: 1.35s; }
+        @keyframes platformIn {
+          0% { opacity: 0; transform: scale(0.85); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Free trial text fade in */
+        .hero-trial-wow {
+          opacity: 0;
+          animation: trialFadeIn 0.6s ease 1.6s forwards;
+        }
+        @keyframes trialFadeIn {
+          0% { opacity: 0; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Features label shimmer */
+        .hero-features-wow {
+          opacity: 0;
+          transform: translateY(24px);
+          animation: featureLabelIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 1.4s forwards;
+        }
+        @keyframes featureLabelIn {
+          0% { opacity: 0; transform: translateY(24px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Gradient shimmer on Features label text */
+        .shimmer-text {
+          background: linear-gradient(90deg, #4F46E5 0%, #7C3AED 25%, #4F46E5 50%, #EC4899 75%, #4F46E5 100%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: shimmerGradient 3s linear infinite 2s;
+        }
+        @keyframes shimmerGradient {
+          0% { background-position: 0% center; }
+          100% { background-position: 200% center; }
         }
       `}</style>
       {/* ===== Onboarding Path Selector Overlay ===== */}
@@ -548,12 +672,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Promotion Banner */}
-      {isPromoActive && (
-        <div className="bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] text-white text-center py-2.5 px-4 text-sm font-medium">
-          {t("promo.banner")}<span className="font-bold">{promoTimeLeft}</span>
-        </div>
-      )}
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -599,18 +717,18 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-14 pb-12 px-4 bg-white">
+      <section className="pt-14 pb-12 px-4 bg-white overflow-hidden">
         <div className="max-w-4xl mx-auto text-center">
           {/* 모드별 Hero 타이틀 */}
-          <div {...anim("hero-title")} >
+          <div className="hero-title-wow">
           <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-8">
-            {mode === "video-to-blog" && (<>{t("hero.videoToBlog.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("hero.videoToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
-            {mode === "feed-to-blog" && (<>{t("hero.feedToBlog.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("hero.feedToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
-            {mode === "study" && (<>{t("study.title1")}<br /><span className="relative inline-block"><span className="relative z-10">{t("study.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
+            {mode === "video-to-blog" && (<>{t("hero.videoToBlog.title1")}<br /><span className="relative inline-block hero-highlight-sweep"><span className="relative z-10">{t("hero.videoToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
+            {mode === "feed-to-blog" && (<>{t("hero.feedToBlog.title1")}<br /><span className="relative inline-block hero-highlight-sweep"><span className="relative z-10">{t("hero.feedToBlog.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
+            {mode === "study" && (<>{t("study.title1")}<br /><span className="relative inline-block hero-highlight-sweep"><span className="relative z-10">{t("study.title2")}</span><span className="absolute bottom-1 left-0 w-full h-3 md:h-4 bg-[#C7D2FE] -z-0"></span></span></>)}
           </h1>
           </div>
 
-          <div {...anim("hero-desc", 150)}>
+          <div className="hero-desc-wow">
           <p className="text-sm md:text-base text-gray-500 max-w-2xl mx-auto mb-12 leading-relaxed whitespace-pre-line">
             {mode === "video-to-blog" && t("hero.videoToBlog.desc")}
             {mode === "feed-to-blog" && t("hero.feedToBlog.desc")}
@@ -620,10 +738,10 @@ export default function Home() {
 
           {/* CTA Button */}
           {/* Convert Section */}
-          <div {...anim("hero-convert", 300)} >
+          <div className="hero-form-wow">
           <div className="max-w-2xl mx-auto mb-20">
             {/* 모드 선택 탭 */}
-            <div className="flex justify-center gap-2 mb-6">
+            <div className="flex justify-center gap-2 mb-6 hero-tabs-wow">
               {([
                 { key: "video-to-blog" as ConvertMode, label: t("tabs.videoToBlog") },
                 { key: "feed-to-blog" as ConvertMode, label: t("tabs.feedToBlog") },
@@ -652,7 +770,7 @@ export default function Home() {
             {/* video-to-blog: 플랫폼 선택 + URL 입력 */}
             {mode === "video-to-blog" && (
               <>
-                <div className="flex justify-center gap-1.5 mb-4">
+                <div className="flex justify-center gap-1.5 mb-4 hero-platform-wow">
                   <button
                     onClick={() => setPlatform("youtube")}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-xs font-medium ${
@@ -693,7 +811,7 @@ export default function Home() {
                     onKeyDown={(e) => { if (e.key === "Enter" && url.trim()) handleConvert(); }}
                     disabled={isConverting}
                     placeholder={platform === "youtube" ? "https://www.youtube.com/shorts/..." : "https://www.instagram.com/reel/..."}
-                    className={`w-full px-5 py-3 border rounded-xl focus:outline-none text-base pr-20 transition-all duration-300 ${
+                    className={`w-full px-5 py-3 border rounded-xl focus:outline-none text-base pr-20 transition-all duration-300 hero-input-wow ${
                       isConverting ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed" : "bg-white border-gray-200 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] text-gray-900 placeholder-gray-400"
                     }`}
                   />
@@ -711,7 +829,7 @@ export default function Home() {
                     )}
                   </button>
                 </div>
-                <p className="text-center text-sm text-gray-500 mt-4">
+                <p className="text-center text-sm text-gray-500 mt-4 hero-trial-wow">
                   <span className="text-[#4F46E5] font-medium">{t("convert.freeTrial")}</span> {t("convert.freeTrialDesc")}
                 </p>
               </>
@@ -866,7 +984,7 @@ export default function Home() {
           <div className="mt-20 mb-10">
             {/* Section Header */}
             <div {...anim("features-header")} className={`text-center mb-10 anim-element ${visible.has("features-header") ? "anim-visible" : ""}`} ref={setAnimRef("features-header")} data-anim-id="features-header">
-              <span className="text-sm font-semibold text-[#4F46E5] tracking-wider uppercase">{t("features.label")}</span>
+              <span className="text-sm font-semibold tracking-wider uppercase shimmer-text">{t("features.label")}</span>
               <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mt-3 mb-4">{t("features.title")}</h2>
               <p className="text-sm md:text-base text-gray-500 max-w-xl mx-auto">{t("features.subtitle")}</p>
             </div>
