@@ -54,22 +54,22 @@ interface KnowledgeGraphViewProps {
   onClose: () => void;
 }
 
-/* ─── Color palette ─── */
+/* ─── Color palette (light) ─── */
 
 const ACCENT: Record<string, { border: string; tag: string; tagBg: string }> = {
-  food:      { border: "#EF4444", tag: "#FCA5A5", tagBg: "rgba(239,68,68,0.15)" },
-  fitness:   { border: "#10B981", tag: "#6EE7B7", tagBg: "rgba(16,185,129,0.15)" },
-  beauty:    { border: "#EC4899", tag: "#F9A8D4", tagBg: "rgba(236,72,153,0.15)" },
-  education: { border: "#3B82F6", tag: "#93C5FD", tagBg: "rgba(59,130,246,0.15)" },
-  tech:      { border: "#8B5CF6", tag: "#C4B5FD", tagBg: "rgba(139,92,246,0.15)" },
-  business:  { border: "#F59E0B", tag: "#FCD34D", tagBg: "rgba(245,158,11,0.15)" },
-  lifestyle: { border: "#F97316", tag: "#FDBA74", tagBg: "rgba(249,115,22,0.15)" },
-  other:     { border: "#7f6df2", tag: "#C4B5FD", tagBg: "rgba(127,109,242,0.15)" },
+  food:      { border: "#EF4444", tag: "#DC2626", tagBg: "#FEF2F2" },
+  fitness:   { border: "#10B981", tag: "#059669", tagBg: "#ECFDF5" },
+  beauty:    { border: "#EC4899", tag: "#DB2777", tagBg: "#FDF2F8" },
+  education: { border: "#3B82F6", tag: "#2563EB", tagBg: "#EFF6FF" },
+  tech:      { border: "#8B5CF6", tag: "#7C3AED", tagBg: "#F5F3FF" },
+  business:  { border: "#F59E0B", tag: "#D97706", tagBg: "#FFFBEB" },
+  lifestyle: { border: "#F97316", tag: "#EA580C", tagBg: "#FFF7ED" },
+  other:     { border: "#6366F1", tag: "#4F46E5", tagBg: "#EEF2FF" },
 };
 
-/* ─── Custom Study Card Node ─── */
+/* ─── Custom Study Card Node (white) ─── */
 
-const CARD_W = 280;
+const CARD_W = 340;
 
 const StudyCardNode = memo(({ data }: NodeProps) => {
   const d = data as StudyNodeData;
@@ -81,43 +81,44 @@ const StudyCardNode = memo(({ data }: NodeProps) => {
     <div
       style={{
         width: CARD_W,
-        background: "#262626",
-        borderRadius: 10,
-        borderLeft: `3px solid ${a.border}`,
-        boxShadow: `0 2px 20px rgba(0,0,0,0.4), 0 0 1px ${a.border}40`,
-        padding: "14px 16px",
+        background: "#fff",
+        borderRadius: 14,
+        border: "1px solid #E5E7EB",
+        borderLeft: `4px solid ${a.border}`,
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)",
+        padding: "18px 20px",
         fontFamily: "system-ui, -apple-system, sans-serif",
         cursor: "grab",
       }}
     >
-      <Handle type="target" position={Position.Top} style={{ background: "transparent", width: 8, height: 8, border: "none" }} />
-      <Handle type="target" position={Position.Left} id="lt" style={{ background: "transparent", width: 8, height: 8, border: "none" }} />
-      <Handle type="source" position={Position.Bottom} style={{ background: "transparent", width: 8, height: 8, border: "none" }} />
-      <Handle type="source" position={Position.Right} id="rs" style={{ background: "transparent", width: 8, height: 8, border: "none" }} />
+      <Handle type="target" position={Position.Top} style={{ background: "#D1D5DB", width: 7, height: 7, border: "2px solid #fff" }} />
+      <Handle type="target" position={Position.Left} id="lt" style={{ background: "#D1D5DB", width: 7, height: 7, border: "2px solid #fff" }} />
+      <Handle type="source" position={Position.Bottom} style={{ background: "#D1D5DB", width: 7, height: 7, border: "2px solid #fff" }} />
+      <Handle type="source" position={Position.Right} id="rs" style={{ background: "#D1D5DB", width: 7, height: 7, border: "2px solid #fff" }} />
 
-      {/* Header: title + date */}
-      <div style={{ fontSize: 15, fontWeight: 700, color: "#e5e5e5", lineHeight: 1.35, marginBottom: 6, paddingRight: 4 }}>
+      {/* Title */}
+      <div style={{ fontSize: 16, fontWeight: 700, color: "#111827", lineHeight: 1.4, marginBottom: 8 }}>
         {d.label}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-        {/* Topic tag */}
+      {/* Topic tag + date */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
         <span
           style={{
-            fontSize: 10,
+            fontSize: 11,
             fontWeight: 600,
             color: a.tag,
             background: a.tagBg,
-            padding: "2px 7px",
-            borderRadius: 4,
+            padding: "3px 8px",
+            borderRadius: 5,
             textTransform: "uppercase",
-            letterSpacing: "0.04em",
+            letterSpacing: "0.03em",
           }}
         >
           {topic}
         </span>
         {date && (
-          <span style={{ fontSize: 10, color: "#555" }}>{date}</span>
+          <span style={{ fontSize: 11, color: "#9CA3AF" }}>{date}</span>
         )}
       </div>
 
@@ -125,10 +126,10 @@ const StudyCardNode = memo(({ data }: NodeProps) => {
       {d.summary && (
         <div
           style={{
-            fontSize: 11.5,
-            color: "#888",
-            lineHeight: 1.55,
-            marginBottom: 10,
+            fontSize: 13,
+            color: "#6B7280",
+            lineHeight: 1.6,
+            marginBottom: 12,
             display: "-webkit-box",
             WebkitLineClamp: 3,
             WebkitBoxOrient: "vertical" as const,
@@ -141,16 +142,17 @@ const StudyCardNode = memo(({ data }: NodeProps) => {
 
       {/* Key concepts */}
       {d.keyConcepts && d.keyConcepts.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
           {d.keyConcepts.map((c: string, i: number) => (
             <span
               key={i}
               style={{
-                fontSize: 10,
-                color: "#999",
-                background: "#333",
-                borderRadius: 4,
-                padding: "2px 7px",
+                fontSize: 11,
+                color: "#6B7280",
+                background: "#F3F4F6",
+                borderRadius: 5,
+                padding: "3px 8px",
+                border: "1px solid #E5E7EB",
               }}
             >
               {c}
@@ -170,14 +172,14 @@ const nodeTypes = { studyCard: StudyCardNode };
 function applyForceLayout(nodes: Node[], edges: Edge[]) {
   if (nodes.length === 0) return [];
   if (nodes.length === 1) {
-    return [{ ...nodes[0], position: { x: -CARD_W / 2, y: -60 } }];
+    return [{ ...nodes[0], position: { x: -CARD_W / 2, y: -80 } }];
   }
 
   const N = nodes.length;
   const idIdx = new Map(nodes.map((n, i) => [n.id, i]));
 
-  const NW = CARD_W + 50;
-  const NH = 180;
+  const NW = CARD_W + 60;
+  const NH = 220;
 
   // Find root: most connected node
   const connCount = new Map<string, number>();
@@ -192,13 +194,12 @@ function applyForceLayout(nodes: Node[], edges: Edge[]) {
     if (c > maxC) { maxC = c; rootIdx = idIdx.get(id)!; }
   }
 
-  // Init positions
   const px = new Float64Array(N);
   const py = new Float64Array(N);
   const vx = new Float64Array(N);
   const vy = new Float64Array(N);
 
-  const initR = Math.max(250, N * 50);
+  const initR = Math.max(300, N * 60);
   for (let i = 0; i < N; i++) {
     if (i === rootIdx) {
       px[i] = 0; py[i] = 0;
@@ -210,10 +211,9 @@ function applyForceLayout(nodes: Node[], edges: Edge[]) {
     }
   }
 
-  // Simulation
   const ITERS = 250;
-  const EDGE_LEN = 420;
-  const REPULSION = 1200000;
+  const EDGE_LEN = 500;
+  const REPULSION = 1800000;
   const EDGE_STR = 0.004;
   const CENTER_G = 0.003;
   const DAMPING = 0.88;
@@ -221,7 +221,6 @@ function applyForceLayout(nodes: Node[], edges: Edge[]) {
   for (let iter = 0; iter < ITERS; iter++) {
     const alpha = 1 - iter / ITERS;
 
-    // Repulsion
     for (let i = 0; i < N; i++) {
       for (let j = i + 1; j < N; j++) {
         let dx = px[j] - px[i];
@@ -239,7 +238,6 @@ function applyForceLayout(nodes: Node[], edges: Edge[]) {
       }
     }
 
-    // Edge attraction
     for (const e of edges) {
       const i = idIdx.get(e.source);
       const j = idIdx.get(e.target);
@@ -256,7 +254,6 @@ function applyForceLayout(nodes: Node[], edges: Edge[]) {
       vx[j] -= fx; vy[j] -= fy;
     }
 
-    // Root gravity
     vx[rootIdx] -= px[rootIdx] * CENTER_G;
     vy[rootIdx] -= py[rootIdx] * CENTER_G;
 
@@ -278,11 +275,11 @@ function applyForceLayout(nodes: Node[], edges: Edge[]) {
         if (ox > 0 && oy > 0) {
           any = true;
           if (ox < oy) {
-            const p = ox / 2 + 8;
+            const p = ox / 2 + 10;
             px[i] -= dx > 0 ? p : -p;
             px[j] += dx > 0 ? p : -p;
           } else {
-            const p = oy / 2 + 8;
+            const p = oy / 2 + 10;
             py[i] -= dy > 0 ? p : -p;
             py[j] += dy > 0 ? p : -p;
           }
@@ -295,7 +292,7 @@ function applyForceLayout(nodes: Node[], edges: Edge[]) {
   const halfW = CARD_W / 2;
   return nodes.map((n, i) => ({
     ...n,
-    position: { x: px[i] - halfW, y: py[i] - 60 },
+    position: { x: px[i] - halfW, y: py[i] - 80 },
   }));
 }
 
@@ -335,13 +332,13 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
         source: e.source,
         target: e.target,
         label: shared.length > 0 ? shared[0] : "",
-        labelStyle: { fill: "#666", fontSize: 10 },
-        labelBgStyle: { fill: "#1a1a1a", fillOpacity: 0.85 },
-        labelBgPadding: [4, 2] as [number, number],
-        labelBgBorderRadius: 3,
-        style: { stroke: "#444", strokeWidth: 1, strokeDasharray: "6 4" },
+        labelStyle: { fill: "#9CA3AF", fontSize: 11, fontWeight: 500 },
+        labelBgStyle: { fill: "#fff", fillOpacity: 0.9 },
+        labelBgPadding: [6, 3] as [number, number],
+        labelBgBorderRadius: 4,
+        style: { stroke: "#D1D5DB", strokeWidth: 1.5 },
         type: "smoothstep",
-        markerEnd: { type: "arrowclosed" as const, color: "#444", width: 12, height: 12 },
+        markerEnd: { type: "arrowclosed" as const, color: "#D1D5DB", width: 14, height: 14 },
       };
     });
 
@@ -358,11 +355,11 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
   }, [flowNodes, flowEdges, setNodes, setEdges]);
 
   const onInit = useCallback((instance: { fitView: (o?: { padding?: number; maxZoom?: number }) => void }) => {
-    setTimeout(() => instance.fitView({ padding: 0.2, maxZoom: 1 }), 100);
+    setTimeout(() => instance.fitView({ padding: 0.25, maxZoom: 1 }), 100);
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-32">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pt-10 pb-32">
       {/* Header */}
       <div className="flex items-center gap-3 mb-1">
         <button onClick={onClose} className="p-1.5 -ml-1.5 hover:bg-gray-100 rounded-lg transition-colors">
@@ -384,26 +381,26 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
       {graphStats && <StudyStatsCard stats={graphStats} />}
 
       {/* Graph */}
-      <div className="rounded-2xl overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.15)] border border-gray-200/60">
-        <div className="h-[600px]">
+      <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+        <div className="h-[700px]">
           {loading ? (
-            <div className="flex items-center justify-center h-full bg-[#1a1a1a]">
+            <div className="flex items-center justify-center h-full bg-gray-50">
               <div className="flex items-center gap-2.5">
-                <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" style={{ animationDelay: "0s" }} />
-                <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" style={{ animationDelay: "0.3s" }} />
-                <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" style={{ animationDelay: "0.6s" }} />
+                <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse" style={{ animationDelay: "0s" }} />
+                <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse" style={{ animationDelay: "0.3s" }} />
+                <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse" style={{ animationDelay: "0.6s" }} />
               </div>
             </div>
           ) : flowNodes.length === 0 ? (
-            <div className="flex items-center justify-center h-full bg-[#1a1a1a]">
+            <div className="flex items-center justify-center h-full bg-gray-50">
               <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-[#252525] border border-[#333] flex items-center justify-center mx-auto mb-5">
-                  <svg className="w-7 h-7 text-[#555]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-16 h-16 rounded-2xl bg-white border border-gray-200 flex items-center justify-center mx-auto mb-5 shadow-sm">
+                  <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
                 </div>
-                <p className="text-[#bbb] font-semibold text-[15px]">{t("study.graph.empty")}</p>
-                <p className="text-[#666] text-sm mt-2 max-w-[280px] leading-relaxed">{t("study.graph.emptyDesc")}</p>
+                <p className="text-gray-900 font-semibold text-[15px]">{t("study.graph.empty")}</p>
+                <p className="text-gray-400 text-sm mt-2 max-w-[280px] leading-relaxed">{t("study.graph.emptyDesc")}</p>
               </div>
             </div>
           ) : (
@@ -415,24 +412,24 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
               onEdgesChange={onEdgesChange}
               onInit={onInit as any}
               fitView
-              fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
+              fitViewOptions={{ padding: 0.25, maxZoom: 1 }}
               minZoom={0.02}
               maxZoom={2}
               attributionPosition="bottom-left"
-              style={{ background: "#1a1a1a" }}
+              style={{ background: "#FAFAFA" }}
               defaultEdgeOptions={{ type: "smoothstep" }}
             >
-              <Background color="#282828" gap={30} size={1} />
+              <Background color="#E5E7EB" gap={24} size={1} />
               <Controls showInteractive={false} />
               <MiniMap
                 style={{
-                  background: "#222",
-                  borderRadius: 8,
-                  border: "1px solid #333",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+                  background: "#fff",
+                  borderRadius: 10,
+                  border: "1px solid #E5E7EB",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
                 }}
-                maskColor="rgba(0,0,0,0.55)"
-                nodeColor={() => "#7f6df2"}
+                maskColor="rgba(250,250,250,0.7)"
+                nodeColor={() => "#6366F1"}
               />
             </ReactFlow>
           )}
@@ -442,7 +439,7 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
       {/* Legend */}
       <div className="flex items-center gap-6 mt-5 text-xs text-gray-400">
         <span className="flex items-center gap-2">
-          <span className="w-5 h-0 border-t border-dashed border-gray-400" />
+          <span className="w-5 h-0 border-t-[1.5px] border-gray-300" />
           {t("study.graph.legend.related")}
         </span>
       </div>
