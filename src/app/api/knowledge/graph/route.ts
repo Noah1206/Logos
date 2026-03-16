@@ -32,6 +32,13 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
 
+  // 유튜브 URL → 썸네일
+  function getThumbnail(url?: string | null): string | null {
+    if (!url) return null;
+    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/))([a-zA-Z0-9_-]{11})/);
+    return m ? `https://img.youtube.com/vi/${m[1]}/mqdefault.jpg` : null;
+  }
+
   // 노드: 변환 1개 = 1 노드
   const nodes = knowledgeList.map((k, i) => ({
     id: k.id,
@@ -42,6 +49,7 @@ export async function GET() {
       keyConcepts: ((k.keyConcepts as string[]) || []).slice(0, 5),
       keywords: ((k.keywords as string[]) || []).slice(0, 4),
       createdAt: k.createdAt.toISOString(),
+      thumbnail: getThumbnail(k.conversion?.sourceUrl),
     },
     position: { x: 0, y: 0 },
   }));

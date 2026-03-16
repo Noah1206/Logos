@@ -81,6 +81,8 @@ const StudyCardNode = memo(({ data }: NodeProps) => {
       })
     : "";
 
+  const thumbnail = (d as any).thumbnail as string | undefined;
+
   return (
     <div
       style={{
@@ -88,8 +90,8 @@ const StudyCardNode = memo(({ data }: NodeProps) => {
         background: "#fff",
         borderRadius: 12,
         border: "1px solid #F0F0F0",
-        padding: "16px 18px",
-        cursor: "default",
+        overflow: "hidden",
+        cursor: "grab",
         transition: "box-shadow 0.2s ease",
       }}
       className="hover:shadow-md"
@@ -99,39 +101,49 @@ const StudyCardNode = memo(({ data }: NodeProps) => {
       <Handle type="source" position={Position.Bottom} style={{ opacity: 0, width: 1, height: 1 }} />
       <Handle type="source" position={Position.Right} id="rs" style={{ opacity: 0, width: 1, height: 1 }} />
 
-      {/* Title */}
-      <p style={{ fontSize: 14, fontWeight: 600, color: "#1A1A1A", lineHeight: 1.5, marginBottom: 8 }}>
-        {d.label}
-      </p>
+      {/* Thumbnail area */}
+      {thumbnail ? (
+        <div style={{ width: "100%", height: 140, background: "#F5F5F5" }}>
+          <img src={thumbnail} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        </div>
+      ) : null}
 
-      {/* Meta row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: d.summary ? 10 : 0 }}>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot, flexShrink: 0 }} />
-        <span style={{ fontSize: 11, color: "#999", fontWeight: 500 }}>{topic}</span>
-        {date && (
-          <>
-            <span style={{ fontSize: 11, color: "#DDD" }}>|</span>
-            <span style={{ fontSize: 11, color: "#BBB" }}>{date}</span>
-          </>
+      {/* Content */}
+      <div style={{ padding: "14px 16px" }}>
+        {/* Title */}
+        <p style={{ fontSize: 14, fontWeight: 600, color: "#1A1A1A", lineHeight: 1.5, marginBottom: 8 }}>
+          {d.label}
+        </p>
+
+        {/* Meta row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: d.summary ? 10 : 0 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot, flexShrink: 0 }} />
+          <span style={{ fontSize: 11, color: "#999", fontWeight: 500 }}>{topic}</span>
+          {date && (
+            <>
+              <span style={{ fontSize: 11, color: "#DDD" }}>|</span>
+              <span style={{ fontSize: 11, color: "#BBB" }}>{date}</span>
+            </>
+          )}
+        </div>
+
+        {/* Summary - 2 lines max */}
+        {d.summary && (
+          <p
+            style={{
+              fontSize: 12,
+              color: "#888",
+              lineHeight: 1.6,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical" as const,
+              overflow: "hidden",
+            }}
+          >
+            {d.summary}
+          </p>
         )}
       </div>
-
-      {/* Summary - 2 lines max */}
-      {d.summary && (
-        <p
-          style={{
-            fontSize: 12,
-            color: "#888",
-            lineHeight: 1.6,
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical" as const,
-            overflow: "hidden",
-          }}
-        >
-          {d.summary}
-        </p>
-      )}
     </div>
   );
 });
@@ -287,7 +299,7 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
       type: "studyCard",
       data: n.data,
       position: n.position,
-      draggable: false,
+      draggable: true,
     }));
 
     const styledEdges: Edge[] = graphData.edges.map((e) => ({
