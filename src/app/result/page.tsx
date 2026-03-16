@@ -1746,12 +1746,12 @@ function ResultContent() {
               sidebarOpen ? "w-[85vw] sm:w-60" : "w-0"
             }`}
           >
-            <div className="flex-shrink-0 flex items-center justify-between px-4 pt-5 pb-3">
+            <div className="flex-shrink-0 flex items-center justify-between px-4 py-2.5">
               <div className="flex items-center gap-1.5">
-                <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-6 w-6" />
-                <span className="text-[15px] font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
+                <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-5 w-5" />
+                <span className="text-[14px] font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
               </div>
-              <button onClick={() => setSidebarOpen(false)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+              <button onClick={() => setSidebarOpen(false)} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                 </svg>
@@ -1912,12 +1912,12 @@ function ResultContent() {
             }`}
           >
             {/* 로고 + 토글 */}
-            <div className="flex-shrink-0 flex items-center justify-between px-4 pt-5 pb-3">
+            <div className="flex-shrink-0 flex items-center justify-between px-4 py-2.5">
               <div className="flex items-center gap-1.5">
-                <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-6 w-6" />
-                <span className="text-[15px] font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
+                <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-5 w-5" />
+                <span className="text-[14px] font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
               </div>
-              <button onClick={() => setSidebarOpen(false)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+              <button onClick={() => setSidebarOpen(false)} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                 </svg>
@@ -2126,15 +2126,12 @@ function ResultContent() {
             }`}
           >
             {/* 로고 + 토글 */}
-            <div className="flex-shrink-0 flex items-center justify-between px-4 pt-5 pb-3">
+            <div className="flex-shrink-0 flex items-center justify-between px-4 py-2.5">
               <div className="flex items-center gap-1.5">
-                <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-6 w-6" />
-                <span className="text-[15px] font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
+                <img src="/images/brain-icon.png" alt="LOGOS.ai" className="h-5 w-5" />
+                <span className="text-[14px] font-extrabold text-gray-900 font-[var(--font-poppins)] tracking-tight">LOGOS.ai</span>
               </div>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-              >
+              <button onClick={() => setSidebarOpen(false)} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                 </svg>
