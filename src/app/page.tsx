@@ -1497,7 +1497,6 @@ export default function Home() {
           </div>
           <div className="mt-4 text-center sm:text-left text-xs text-gray-300 space-y-0.5">
             <p>스터풀 | 대표: 조현웅 | 사업자등록번호: 508-14-52353</p>
-            <p>통신판매업 신고번호: 제2024-경남양산-0000호</p>
             <p>경상남도 양산시 동면 금오16길 122, 513동 2202호</p>
             <p>전화: 055-389-6223 | 이메일: support@logos.builders</p>
             <p className="mt-1">
