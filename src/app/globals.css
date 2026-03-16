@@ -68,26 +68,26 @@
   animation: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* React Flow controls (light theme) */
+/* React Flow controls */
 .react-flow__controls button {
   background: #fff !important;
-  border: 1px solid #E5E7EB !important;
-  fill: #6B7280 !important;
-  color: #6B7280 !important;
+  border: none !important;
+  border-bottom: 1px solid #F0F0F0 !important;
+  fill: #bbb !important;
+  color: #bbb !important;
+  width: 28px !important;
+  height: 28px !important;
+}
+.react-flow__controls button:last-child {
+  border-bottom: none !important;
 }
 .react-flow__controls button:hover {
-  background: #F9FAFB !important;
-  fill: #374151 !important;
+  background: #F9F9F9 !important;
+  fill: #666 !important;
 }
 .react-flow__controls {
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04) !important;
-  border-radius: 10px !important;
-  border: 1px solid #E5E7EB !important;
-  overflow: hidden;
+  box-shadow: none !important;
 }
 .react-flow__attribution {
-  background: transparent !important;
-}
-.react-flow__attribution a {
-  color: #D1D5DB !important;
+  display: none !important;
 }
