@@ -23,8 +23,39 @@ async function getPaymentFromPortOneV2(paymentId: string) {
   return res.json();
 }
 
+// 웹훅 서명 검증 (HMAC-SHA256)
+async function verifyWebhookSignature(body: string, signature: string): Promise<boolean> {
+  const secret = process.env.PORTONE_WEBHOOK_SECRET;
+  if (!secret) return true; // 시크릿 미설정 시 스킵
+
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+    const computed = Buffer.from(sig).toString("base64");
+    return computed === signature;
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: Request) {
-  const body = await request.json();
+  // 웹훅 서명 검증
+  const rawBody = await request.text();
+  const webhookSignature = request.headers.get("webhook-signature") ?? "";
+  const isValid = await verifyWebhookSignature(rawBody, webhookSignature);
+
+  if (!isValid) {
+    return NextResponse.json({ success: false, error: "서명 검증 실패" }, { status: 401 });
+  }
+
+  const body = JSON.parse(rawBody);
 
   // V2 웹훅 형식: { type: "Transaction.Paid", data: { paymentId, ... } }
   const paymentId = body.data?.paymentId ?? body.merchant_uid;
