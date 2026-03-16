@@ -337,7 +337,7 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
         labelBgPadding: [6, 3] as [number, number],
         labelBgBorderRadius: 4,
         style: { stroke: "#D1D5DB", strokeWidth: 1.5 },
-        type: "smoothstep",
+        type: "default",
         markerEnd: { type: "arrowclosed" as const, color: "#D1D5DB", width: 14, height: 14 },
       };
     });
@@ -417,7 +417,7 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
               maxZoom={2}
               attributionPosition="bottom-left"
               style={{ background: "#FAFAFA" }}
-              defaultEdgeOptions={{ type: "smoothstep" }}
+              defaultEdgeOptions={{ type: "default" }}
             >
               <Background color="#E5E7EB" gap={24} size={1} />
               <Controls showInteractive={false} />
