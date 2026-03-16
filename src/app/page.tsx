@@ -351,6 +351,68 @@ export default function Home() {
           100% { opacity: 1; transform: translateY(0); }
         }
 
+        /* Feature mockup sequential cascade */
+        .feat-cascade > * {
+          opacity: 0;
+          transform: translateY(18px);
+          animation: featItemIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .feat-cascade > *:nth-child(1) { animation-delay: 0.1s; }
+        .feat-cascade > *:nth-child(2) { animation-delay: 0.45s; }
+        .feat-cascade > *:nth-child(3) { animation-delay: 0.8s; }
+        .feat-cascade > *:nth-child(4) { animation-delay: 1.1s; }
+        @keyframes featItemIn {
+          0% { opacity: 0; transform: translateY(18px) scale(0.96); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Arrow bounce after appear */
+        .feat-cascade > *:nth-child(2) {
+          animation: featArrowIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.45s forwards;
+        }
+        @keyframes featArrowIn {
+          0% { opacity: 0; transform: translateY(-8px) scale(0.7); }
+          60% { opacity: 1; transform: translateY(4px) scale(1.05); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Right card content delayed cascade */
+        .feat-cascade-right > * {
+          opacity: 0;
+          transform: translateY(14px);
+          animation: featItemIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .feat-cascade-right > *:nth-child(1) { animation-delay: 1.0s; }
+        .feat-cascade-right > *:nth-child(2) { animation-delay: 1.3s; }
+        .feat-cascade-right > *:nth-child(3) { animation-delay: 1.5s; }
+
+        /* Progress bar fill animation */
+        .feat-progress-fill {
+          width: 0%;
+          animation: progressFill 0.8s ease-out 0.3s forwards;
+        }
+        @keyframes progressFill {
+          0% { width: 0%; }
+          100% { width: 66.666%; }
+        }
+
+        /* Skeleton lines shimmer */
+        .feat-skeleton-line {
+          position: relative;
+          overflow: hidden;
+        }
+        .feat-skeleton-line::after {
+          content: '';
+          position: absolute;
+          top: 0; left: -100%; width: 100%; height: 100%;
+          background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%);
+          animation: skeletonShimmer 1.5s ease-in-out 1.2s infinite;
+        }
+        @keyframes skeletonShimmer {
+          0% { left: -100%; }
+          100% { left: 100%; }
+        }
+
         /* Gradient shimmer on Features label text */
         .shimmer-text {
           background: linear-gradient(90deg, #4F46E5 0%, #7C3AED 25%, #4F46E5 50%, #EC4899 75%, #4F46E5 100%);
@@ -1014,7 +1076,7 @@ export default function Home() {
               <div ref={setAnimRef("feature-left")} data-anim-id="feature-left" style={{ transitionDelay: "100ms" }} className={`rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow anim-left ${visible.has("feature-left") ? "anim-visible" : ""}`}>
                 <div className="bg-[#f0fdf4] p-6 min-h-[280px] flex items-center justify-center">
                   {activeFeatureTab === "blog" && (
-                    <div className="w-full max-w-[320px] space-y-3">
+                    <div key="blog-left" className="w-full max-w-[320px] space-y-3 feat-cascade">
                       {/* URL Input Mock */}
                       <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
@@ -1023,7 +1085,7 @@ export default function Home() {
                           </div>
                           <span className="text-[11px] text-gray-400 truncate">youtube.com/shorts/xK2d9f...</span>
                         </div>
-                        <div className="h-1 bg-[#4F46E5] rounded-full w-2/3" />
+                        <div className="h-1 bg-[#4F46E5] rounded-full feat-progress-fill" />
                       </div>
                       {/* Arrow */}
                       <div className="flex justify-center">
@@ -1039,15 +1101,15 @@ export default function Home() {
                         </div>
                         <div className="text-[10px] font-bold text-gray-800 mb-1">[강남 맛집] 웨이팅 없이 즐기는 오마카세</div>
                         <div className="space-y-1">
-                          <div className="h-1.5 bg-gray-100 rounded-full w-full" />
-                          <div className="h-1.5 bg-gray-100 rounded-full w-4/5" />
-                          <div className="h-1.5 bg-gray-100 rounded-full w-3/5" />
+                          <div className="h-1.5 bg-gray-100 rounded-full w-full feat-skeleton-line" />
+                          <div className="h-1.5 bg-gray-100 rounded-full w-4/5 feat-skeleton-line" />
+                          <div className="h-1.5 bg-gray-100 rounded-full w-3/5 feat-skeleton-line" />
                         </div>
                       </div>
                     </div>
                   )}
                   {activeFeatureTab === "study" && (
-                    <div className="w-full max-w-[320px] space-y-3">
+                    <div key="study-left" className="w-full max-w-[320px] space-y-3 feat-cascade">
                       {/* Study Note Mock */}
                       <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
                         <div className="flex items-center gap-1.5 mb-2">
@@ -1055,8 +1117,8 @@ export default function Home() {
                           <span className="text-[10px] font-medium text-gray-700">Executive Summary</span>
                         </div>
                         <div className="space-y-1 mb-3">
-                          <div className="h-1.5 bg-gray-100 rounded-full w-full" />
-                          <div className="h-1.5 bg-gray-100 rounded-full w-4/5" />
+                          <div className="h-1.5 bg-gray-100 rounded-full w-full feat-skeleton-line" />
+                          <div className="h-1.5 bg-gray-100 rounded-full w-4/5 feat-skeleton-line" />
                         </div>
                         <div className="text-[10px] font-medium text-gray-700 mb-1.5">Key Concepts</div>
                         <div className="flex flex-wrap gap-1.5">
@@ -1071,18 +1133,18 @@ export default function Home() {
                         <div className="space-y-1.5">
                           <div className="flex items-start gap-1.5">
                             <span className="text-[9px] text-[#4F46E5] font-bold mt-0.5">Q1</span>
-                            <div className="h-1.5 bg-gray-100 rounded-full w-full mt-1" />
+                            <div className="h-1.5 bg-gray-100 rounded-full w-full mt-1 feat-skeleton-line" />
                           </div>
                           <div className="flex items-start gap-1.5">
                             <span className="text-[9px] text-[#4F46E5] font-bold mt-0.5">Q2</span>
-                            <div className="h-1.5 bg-gray-100 rounded-full w-4/5 mt-1" />
+                            <div className="h-1.5 bg-gray-100 rounded-full w-4/5 mt-1 feat-skeleton-line" />
                           </div>
                         </div>
                       </div>
                     </div>
                   )}
                   {activeFeatureTab === "feed" && (
-                    <div className="w-full max-w-[320px] space-y-3">
+                    <div key="feed-left" className="w-full max-w-[320px] space-y-3 feat-cascade">
                       {/* Instagram Feed Mock */}
                       <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
@@ -1093,8 +1155,8 @@ export default function Home() {
                           <span className="text-3xl">📸</span>
                         </div>
                         <div className="space-y-1">
-                          <div className="h-1.5 bg-gray-100 rounded-full w-full" />
-                          <div className="h-1.5 bg-gray-100 rounded-full w-3/5" />
+                          <div className="h-1.5 bg-gray-100 rounded-full w-full feat-skeleton-line" />
+                          <div className="h-1.5 bg-gray-100 rounded-full w-3/5 feat-skeleton-line" />
                         </div>
                       </div>
                       {/* Arrow */}
@@ -1109,8 +1171,8 @@ export default function Home() {
                           <span className="px-1.5 py-0.5 bg-[#EEF2FF] text-[#4F46E5] text-[9px] font-bold rounded">SEO</span>
                         </div>
                         <div className="space-y-1">
-                          <div className="h-1.5 bg-gray-100 rounded-full w-full" />
-                          <div className="h-1.5 bg-gray-100 rounded-full w-4/5" />
+                          <div className="h-1.5 bg-gray-100 rounded-full w-full feat-skeleton-line" />
+                          <div className="h-1.5 bg-gray-100 rounded-full w-4/5 feat-skeleton-line" />
                         </div>
                       </div>
                     </div>
@@ -1126,7 +1188,7 @@ export default function Home() {
               <div ref={setAnimRef("feature-right")} data-anim-id="feature-right" style={{ transitionDelay: "250ms" }} className={`rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow anim-right ${visible.has("feature-right") ? "anim-visible" : ""}`}>
                 <div className="bg-gray-50 p-6 min-h-[280px] flex items-center justify-center">
                   {activeFeatureTab === "blog" && (
-                    <div className="w-full max-w-[300px]">
+                    <div key="blog-right" className="w-full max-w-[300px] feat-cascade-right">
                       {/* Naver Blog Preview Mini */}
                       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <div className="text-center pt-3">
@@ -1165,7 +1227,7 @@ export default function Home() {
                     </div>
                   )}
                   {activeFeatureTab === "study" && (
-                    <div className="w-full max-w-[320px] space-y-3">
+                    <div key="study-right" className="w-full max-w-[320px] space-y-3 feat-cascade-right">
                       {/* YouTube to Study Note flow */}
                       <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
@@ -1197,7 +1259,7 @@ export default function Home() {
                     </div>
                   )}
                   {activeFeatureTab === "feed" && (
-                    <div className="w-full max-w-[300px]">
+                    <div key="feed-right" className="w-full max-w-[300px] feat-cascade-right">
                       {/* SEO Result Preview */}
                       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-3">
                         <div className="flex items-center gap-1.5 mb-3">
