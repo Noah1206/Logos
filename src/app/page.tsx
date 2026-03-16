@@ -1076,7 +1076,7 @@ export default function Home() {
               <div ref={setAnimRef("feature-left")} data-anim-id="feature-left" style={{ transitionDelay: "100ms" }} className={`rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow anim-left ${visible.has("feature-left") ? "anim-visible" : ""}`}>
                 <div className="bg-[#f0fdf4] p-6 min-h-[280px] flex items-center justify-center">
                   {activeFeatureTab === "blog" && (
-                    <div key="blog-left" className="w-full max-w-[320px] space-y-3 feat-cascade">
+                    <div key="blog-left" className={`w-full max-w-[320px] space-y-3 ${!showOnboarding ? "feat-cascade" : ""}`}>
                       {/* URL Input Mock */}
                       <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
@@ -1109,7 +1109,7 @@ export default function Home() {
                     </div>
                   )}
                   {activeFeatureTab === "study" && (
-                    <div key="study-left" className="w-full max-w-[320px] space-y-3 feat-cascade">
+                    <div key="study-left" className={`w-full max-w-[320px] space-y-3 ${!showOnboarding ? "feat-cascade" : ""}`}>
                       {/* Study Note Mock */}
                       <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
                         <div className="flex items-center gap-1.5 mb-2">
@@ -1144,7 +1144,7 @@ export default function Home() {
                     </div>
                   )}
                   {activeFeatureTab === "feed" && (
-                    <div key="feed-left" className="w-full max-w-[320px] space-y-3 feat-cascade">
+                    <div key="feed-left" className={`w-full max-w-[320px] space-y-3 ${!showOnboarding ? "feat-cascade" : ""}`}>
                       {/* Instagram Feed Mock */}
                       <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
@@ -1188,7 +1188,7 @@ export default function Home() {
               <div ref={setAnimRef("feature-right")} data-anim-id="feature-right" style={{ transitionDelay: "250ms" }} className={`rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow anim-right ${visible.has("feature-right") ? "anim-visible" : ""}`}>
                 <div className="bg-gray-50 p-6 min-h-[280px] flex items-center justify-center">
                   {activeFeatureTab === "blog" && (
-                    <div key="blog-right" className="w-full max-w-[300px] feat-cascade-right">
+                    <div key="blog-right" className={`w-full max-w-[300px] ${!showOnboarding ? "feat-cascade-right" : ""}`}>
                       {/* Naver Blog Preview Mini */}
                       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <div className="text-center pt-3">
@@ -1227,7 +1227,7 @@ export default function Home() {
                     </div>
                   )}
                   {activeFeatureTab === "study" && (
-                    <div key="study-right" className="w-full max-w-[320px] space-y-3 feat-cascade-right">
+                    <div key="study-right" className={`w-full max-w-[320px] space-y-3 ${!showOnboarding ? "feat-cascade-right" : ""}`}>
                       {/* YouTube to Study Note flow */}
                       <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
@@ -1259,7 +1259,7 @@ export default function Home() {
                     </div>
                   )}
                   {activeFeatureTab === "feed" && (
-                    <div key="feed-right" className="w-full max-w-[300px] feat-cascade-right">
+                    <div key="feed-right" className={`w-full max-w-[300px] ${!showOnboarding ? "feat-cascade-right" : ""}`}>
                       {/* SEO Result Preview */}
                       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-3">
                         <div className="flex items-center gap-1.5 mb-3">
