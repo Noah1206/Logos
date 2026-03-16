@@ -6,33 +6,23 @@ import type { ConfirmPaymentResponse } from "@/types";
 
 type TransactionClient = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
-// V1 API: 액세스 토큰 발급
-async function getAccessToken(): Promise<string> {
-  const res = await fetch("https://api.iamport.kr/users/getToken", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      imp_key: process.env.NEXT_PUBLIC_PORTONE_STORE_ID,
-      imp_secret: process.env.PORTONE_API_SECRET,
-    }),
-  });
-  const data = await res.json();
-  if (data.code !== 0) {
-    throw new Error(`토큰 발급 실패: ${data.message}`);
-  }
-  return data.response.access_token;
-}
+// PortOne V2 API: paymentId로 결제 정보 조회
+async function getPaymentFromPortOneV2(paymentId: string) {
+  const res = await fetch(
+    `https://api.portone.io/payments/${encodeURIComponent(paymentId)}`,
+    {
+      headers: {
+        Authorization: `PortOne ${process.env.PORTONE_API_SECRET}`,
+      },
+    }
+  );
 
-// V1 API: imp_uid로 결제 정보 조회
-async function getPaymentByImpUid(impUid: string, accessToken: string) {
-  const res = await fetch(`https://api.iamport.kr/payments/${impUid}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  const data = await res.json();
-  if (data.code !== 0) {
-    throw new Error(`결제 조회 실패: ${data.message}`);
+  if (!res.ok) {
+    const errorBody = await res.text();
+    throw new Error(`결제 조회 실패 (${res.status}): ${errorBody}`);
   }
-  return data.response;
+
+  return res.json();
 }
 
 export async function POST(request: Request) {
@@ -45,11 +35,11 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { paymentId, impUid } = body;
+  const { paymentId } = body;
 
-  if (!paymentId || !impUid) {
+  if (!paymentId) {
     return NextResponse.json<ConfirmPaymentResponse>(
-      { success: false, error: "paymentId와 impUid가 필요합니다." },
+      { success: false, error: "paymentId가 필요합니다." },
       { status: 400 }
     );
   }
@@ -84,11 +74,10 @@ export async function POST(request: Request) {
     });
   }
 
-  // V1 API로 결제 상태 조회
+  // PortOne V2 API로 결제 상태 조회
   let payment;
   try {
-    const accessToken = await getAccessToken();
-    payment = await getPaymentByImpUid(impUid, accessToken);
+    payment = await getPaymentFromPortOneV2(paymentId);
   } catch {
     return NextResponse.json<ConfirmPaymentResponse>(
       { success: false, error: "결제 정보 조회에 실패했습니다." },
@@ -96,8 +85,8 @@ export async function POST(request: Request) {
     );
   }
 
-  // 결제 상태 확인
-  if (payment.status !== "paid") {
+  // V2 결제 상태 확인 (PAID)
+  if (payment.status !== "PAID") {
     await prisma.order.update({
       where: { id: order.id },
       data: { status: "FAILED" },
@@ -108,8 +97,9 @@ export async function POST(request: Request) {
     );
   }
 
-  // 금액 검증
-  if (payment.amount !== order.amount) {
+  // V2 금액 검증 (amount.total)
+  const paidAmount = payment.amount?.total ?? payment.amount;
+  if (paidAmount !== order.amount) {
     await prisma.order.update({
       where: { id: order.id },
       data: { status: "FAILED" },
@@ -131,8 +121,8 @@ export async function POST(request: Request) {
       data: {
         orderId: order.id,
         paymentId,
-        transactionId: impUid,
-        amount: payment.amount,
+        transactionId: payment.id ?? paymentId,
+        amount: paidAmount,
         status: "PAID",
         rawResponse: JSON.stringify(payment),
       },

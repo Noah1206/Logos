@@ -141,10 +141,6 @@ export default function RootLayout({
         </Script>
       </head>
       <body>
-        <Script
-          src="https://cdn.iamport.kr/v1/iamport.js"
-          strategy="beforeInteractive"
-        />
         <JsonLd data={jsonLd} />
         <Providers>{children}</Providers>
         <Analytics />

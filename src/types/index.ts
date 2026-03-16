@@ -112,10 +112,9 @@ export interface CreateOrderResponse {
   error?: string;
 }
 
-// 결제 검증
+// 결제 검증 (V2: paymentId만으로 조회 가능)
 export interface ConfirmPaymentRequest {
   paymentId: string;
-  orderId: string;
 }
 
 export interface ConfirmPaymentResponse {

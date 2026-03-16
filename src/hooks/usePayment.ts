@@ -1,24 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import * as PortOne from "@portone/browser-sdk/v2";
 import type { CreateOrderResponse, ConfirmPaymentResponse } from "@/types";
-
-declare global {
-  interface Window {
-    IMP?: {
-      init: (storeId: string) => void;
-      request_pay: (
-        params: Record<string, unknown>,
-        callback: (response: {
-          success: boolean;
-          imp_uid: string;
-          merchant_uid: string;
-          error_msg?: string;
-        }) => void
-      ) => void;
-    };
-  }
-}
 
 interface UsePaymentOptions {
   onSuccess?: (credits: number) => void;
@@ -33,12 +17,7 @@ export function usePayment({ onSuccess, onError }: UsePaymentOptions = {}) {
     setIsProcessing(true);
 
     try {
-      // 1. IMP SDK 로드 확인
-      if (!window.IMP) {
-        throw new Error("PAYMENT_MODULE_LOADING");
-      }
-
-      // 2. 서버에 주문 생성
+      // 1. 서버에 주문 생성
       const orderRes = await fetch("/api/payment/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -51,55 +30,40 @@ export function usePayment({ onSuccess, onError }: UsePaymentOptions = {}) {
         throw new Error(orderData.error ?? "PAYMENT_ORDER_FAILED");
       }
 
-      // 3. IMP 초기화 및 결제 요청
-      window.IMP.init(orderData.storeId!);
+      // 2. PortOne V2 SDK 결제 요청 (Promise 기반)
+      const response = await PortOne.requestPayment({
+        storeId: orderData.storeId!,
+        channelKey: orderData.channelKey!,
+        paymentId: orderData.paymentId,
+        orderName: orderData.orderName!,
+        totalAmount: orderData.totalAmount!,
+        currency: "CURRENCY_KRW",
+        payMethod: "CARD",
+      });
 
-      window.IMP.request_pay(
-        {
-          pg: "html5_inicis",
-          pay_method: "card",
-          merchant_uid: orderData.paymentId,
-          name: orderData.orderName,
-          amount: orderData.totalAmount,
-          channelKey: orderData.channelKey,
-        },
-        async (response) => {
-          try {
-            if (!response.success) {
-              throw new Error(response.error_msg ?? "PAYMENT_CANCELLED");
-            }
+      // 3. V2 SDK 에러 체크 (code가 있으면 실패)
+      if (response?.code) {
+        throw new Error(response.message ?? "PAYMENT_CANCELLED");
+      }
 
-            // 4. 서버에서 결제 검증
-            const confirmRes = await fetch("/api/payment/confirm", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                paymentId: orderData.paymentId,
-                impUid: response.imp_uid,
-              }),
-            });
+      // 4. 서버에서 결제 검증
+      const confirmRes = await fetch("/api/payment/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentId: orderData.paymentId }),
+      });
 
-            const confirmData: ConfirmPaymentResponse = await confirmRes.json();
+      const confirmData: ConfirmPaymentResponse = await confirmRes.json();
 
-            if (!confirmData.success) {
-              throw new Error(confirmData.error ?? "PAYMENT_VERIFY_FAILED");
-            }
+      if (!confirmData.success) {
+        throw new Error(confirmData.error ?? "PAYMENT_VERIFY_FAILED");
+      }
 
-            onSuccess?.(confirmData.credits ?? 0);
-          } catch (err) {
-            const message = err instanceof Error ? err.message : "PAYMENT_GENERIC_ERROR";
-            onError?.(message);
-          } finally {
-            setIsProcessing(false);
-          }
-        }
-      );
-
-      // V1은 콜백 기반이므로 여기서 return (finally는 콜백 안에서 처리)
-      return;
+      onSuccess?.(confirmData.credits ?? 0);
     } catch (err) {
       const message = err instanceof Error ? err.message : "PAYMENT_GENERIC_ERROR";
       onError?.(message);
+    } finally {
       setIsProcessing(false);
     }
   };
