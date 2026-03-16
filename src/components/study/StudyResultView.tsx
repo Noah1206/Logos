@@ -6,28 +6,14 @@ import StudyTabBar from "./StudyTabBar";
 import StudyNotesTab from "./StudyNotesTab";
 import StudyTimeline from "./StudyTimeline";
 import StudyExportPanel from "./StudyExportPanel";
+import type { StudyStructure } from "@/types/study";
 
 const StudyMindMap = dynamic(() => import("./StudyMindMap"), { ssr: false });
 
 interface StudyResultViewProps {
   studyResult: {
-    study_structure: {
+    study_structure: StudyStructure & {
       title: string;
-      executive_summary: string;
-      key_concepts: Array<{
-        name: string;
-        definition: string;
-        importance: string;
-        parent_concept?: string | null;
-        related_concepts?: string[];
-      }>;
-      detailed_notes: Array<{
-        topic: string;
-        content: string;
-        key_takeaways?: string[];
-      }>;
-      study_questions: Array<{ question: string; answer: string }>;
-      related_topics: string[];
       concept_hierarchy?: Record<string, unknown> | null;
     };
     study_content: string;

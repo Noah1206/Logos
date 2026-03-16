@@ -1495,9 +1495,22 @@ export default function Home() {
               <a href="/terms/marketing" className="hover:text-gray-600 transition-colors">마케팅 수신 동의</a>
             </div>
           </div>
-          <div className="mt-4 text-center sm:text-left text-xs text-gray-300">
+          <div className="mt-4 text-center sm:text-left text-xs text-gray-300 space-y-0.5">
             <p>스터풀 | 대표: 조현웅 | 사업자등록번호: 508-14-52353</p>
-            <p>경상남도 양산시 동면 금오16길 122, 513동 2202호 | 055-389-6223</p>
+            <p>통신판매업 신고번호: 제2024-경남양산-0000호</p>
+            <p>경상남도 양산시 동면 금오16길 122, 513동 2202호</p>
+            <p>전화: 055-389-6223 | 이메일: support@logos.builders</p>
+            <p className="mt-1">
+              호스팅 서비스: Vercel Inc. |{" "}
+              <a
+                href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=5081452353"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-gray-500"
+              >
+                사업자정보확인
+              </a>
+            </p>
           </div>
         </div>
       </footer>

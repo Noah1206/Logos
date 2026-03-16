@@ -26,6 +26,7 @@ from ..services.knowledge_extractor import extract_knowledge
 from ..services.thinking_engine import generate_thinking_response
 from ..services.blog_crawler import extract_blog_id, crawl_blog
 from ..services.style_analyzer import analyze_writing_style
+from ..services.visual_generator import generate_study_visual
 
 router = APIRouter()
 
@@ -394,6 +395,40 @@ async def analyze_blog_style(request: StyleAnalyzeRequest):
             "X-Accel-Buffering": "no",
         },
     )
+
+
+@router.post("/study/generate-visual")
+async def generate_visual(request: Request):
+    """학습 시각 자료 생성 (Gemini Imagen)"""
+    try:
+        body = await request.json()
+        topic = body.get("topic", "")
+        content = body.get("content", "")
+        visual_type = body.get("visual_type", "concept_diagram")
+
+        if not topic:
+            raise HTTPException(status_code=400, detail="topic은 필수입니다")
+
+        result = await generate_study_visual(
+            topic=topic,
+            content=content,
+            visual_type=visual_type,
+        )
+
+        if result is None:
+            raise HTTPException(
+                status_code=503,
+                detail="시각 자료 생성에 실패했습니다. GOOGLE_API_KEY를 확인해주세요.",
+            )
+
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/health")

@@ -529,7 +529,26 @@
         "high": "High",
         "medium": "Medium",
         "low": "Low"
-      }
+      },
+      "backgroundKnowledge": "Background Knowledge",
+      "prerequisites": "Prerequisites",
+      "context": "Context",
+      "example": "Example",
+      "deeperAnalysis": "Deeper Analysis",
+      "generateVisual": "Generate Visual",
+      "generatingVisual": "Generating visual...",
+      "visualError": "Failed to generate visual",
+      "recommendedResources": "Recommended Resources",
+      "youtubeSearch": "Search on YouTube",
+      "furtherReading": "Further Reading",
+      "difficulty": {
+        "basic": "Basic",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced",
+        "beginner": "Beginner"
+      },
+      "showHint": "Show Hint",
+      "hideHint": "Hide Hint"
     }
   },
   "payment": {

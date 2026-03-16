@@ -529,7 +529,26 @@
         "high": "높음",
         "medium": "보통",
         "low": "낮음"
-      }
+      },
+      "backgroundKnowledge": "배경 지식",
+      "prerequisites": "선행 지식",
+      "context": "맥락",
+      "example": "예시",
+      "deeperAnalysis": "심층 분석",
+      "generateVisual": "시각 자료 생성",
+      "generatingVisual": "시각 자료 생성 중...",
+      "visualError": "시각 자료 생성에 실패했습니다",
+      "recommendedResources": "추가 학습 자료",
+      "youtubeSearch": "유튜브에서 찾아보기",
+      "furtherReading": "추가 읽기 자료",
+      "difficulty": {
+        "basic": "기본",
+        "intermediate": "중급",
+        "advanced": "심화",
+        "beginner": "입문"
+      },
+      "showHint": "힌트 보기",
+      "hideHint": "힌트 숨기기"
     }
   },
   "payment": {

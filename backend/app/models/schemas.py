@@ -144,16 +144,38 @@ class StudyConcept(BaseModel):
     importance: str  # "high" | "medium" | "low"
     parent_concept: Optional[str] = None  # 상위 개념 (null이면 루트)
     related_concepts: List[str] = []  # 연관 개념 배열
+    example: Optional[str] = None  # 개념 예시
+
+
+class StudyPrerequisite(BaseModel):
+    topic: str
+    description: str
+    difficulty: str = "beginner"  # "beginner" | "intermediate" | "advanced"
+
+
+class BackgroundKnowledge(BaseModel):
+    overview: str
+    prerequisites: List[StudyPrerequisite] = []
+    context: str = ""
+
+
+class RecommendedResource(BaseModel):
+    type: str  # "youtube_search" | "further_reading"
+    topic: Optional[str] = None
+    search_query: Optional[str] = None
+    description: Optional[str] = None
 
 
 class StudyStructure(BaseModel):
     title: str
     executive_summary: str
     key_concepts: List[StudyConcept]
-    detailed_notes: List[dict]  # [{topic, content, key_takeaways}]
-    study_questions: List[dict]  # [{question, answer}]
+    detailed_notes: List[dict]  # [{topic, content, key_takeaways, deeper_analysis?, visual_suggestion?}]
+    study_questions: List[dict]  # [{question, answer, difficulty?, hint?}]
     related_topics: List[str]
     concept_hierarchy: Optional[dict] = None  # 마인드맵용 트리 {root, children: [{name, children}]}
+    background_knowledge: Optional[BackgroundKnowledge] = None
+    recommended_resources: List[RecommendedResource] = []
 
 
 ConvertResponse.model_rebuild()

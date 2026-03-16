@@ -115,21 +115,122 @@ export default function TermsPage() {
 
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            제7조 (환불 정책)
+            제7조 (서비스 제공기간)
           </h2>
           <ol className="list-decimal pl-5 space-y-1">
             <li>
-              현재 서비스는 무료로 제공되므로 환불 대상이 없습니다.
+              서비스는 이용자의 요청 즉시 AI가 자동으로 처리하며, 영상·PDF
+              변환의 경우 통상 1~3분 이내에 결과가 제공됩니다.
             </li>
             <li>
-              향후 유료 서비스 도입 시 환불 정책은 별도로 안내됩니다.
+              서버 상태, 콘텐츠 길이, 외부 API 응답 시간 등에 따라 처리 시간이
+              달라질 수 있으며, 최대 10분 이내에 완료됩니다.
+            </li>
+            <li>
+              월 구독 상품의 서비스 제공기간은 결제일로부터 1개월(30일)이며,
+              자동 갱신됩니다.
+            </li>
+            <li>
+              크레딧(이용권) 상품의 유효기간은 구매일로부터 1년입니다.
             </li>
           </ol>
         </div>
 
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            제8조 (이용자의 의무)
+            제8조 (청약철회 및 환불 정책)
+          </h2>
+          <ol className="list-decimal pl-5 space-y-1">
+            <li>
+              이용자는 구매일로부터 7일 이내에 청약철회를 요청할 수 있습니다.
+              다만, 아래의 경우에는 청약철회가 제한됩니다:
+              <ul className="list-disc pl-5 mt-1 space-y-0.5">
+                <li>이미 서비스 이용(변환)을 1회 이상 사용한 경우</li>
+                <li>
+                  크레딧을 일부라도 사용한 경우 (미사용분에 한해 환불 가능)
+                </li>
+                <li>
+                  「전자상거래 등에서의 소비자보호에 관한 법률」 제17조 제2항에
+                  해당하는 경우
+                </li>
+              </ul>
+            </li>
+            <li>
+              환불 금액은 다음과 같이 산정합니다:
+              <ul className="list-disc pl-5 mt-1 space-y-0.5">
+                <li>미사용 크레딧: 전액 환불</li>
+                <li>
+                  부분 사용: (총 결제금액 - 사용 크레딧 × 건당 정가) 잔액 환불
+                </li>
+                <li>
+                  월 구독: 결제일로부터 7일 이내 미사용 시 전액 환불, 사용
+                  이력이 있는 경우 잔여 기간 일할 계산 환불
+                </li>
+              </ul>
+            </li>
+            <li>
+              환불은 원래 결제 수단으로 처리되며, 카드 결제 취소의 경우
+              카드사 사정에 따라 3~7영업일이 소요될 수 있습니다.
+            </li>
+            <li>
+              환불 요청은 서비스 내 고객센터 또는 이메일(support@logos.builders)로
+              접수할 수 있습니다.
+            </li>
+            <li>
+              현재 서비스가 무료로 제공되는 기간에는 별도의 환불 대상이
+              없습니다.
+            </li>
+          </ol>
+        </div>
+
+        <div>
+          <h2 className="text-lg font-semibold mb-2">
+            제9조 (교환 정책)
+          </h2>
+          <ol className="list-decimal pl-5 space-y-1">
+            <li>
+              본 서비스는 디지털 콘텐츠(AI 자동 생성 결과물) 제공 서비스로,
+              물리적 상품이 아니므로 교환이 불가합니다.
+            </li>
+            <li>
+              서비스 오류로 인해 정상적인 결과물이 생성되지 않은 경우, 동일
+              건에 대해 재변환을 제공하며 크레딧은 차감되지 않습니다.
+            </li>
+            <li>
+              생성된 결과물의 품질에 대한 불만은 교환 사유에 해당하지 않으나,
+              고객센터를 통해 개선 요청을 접수할 수 있습니다.
+            </li>
+          </ol>
+        </div>
+
+        <div>
+          <h2 className="text-lg font-semibold mb-2">
+            제10조 (결제 취소 규정)
+          </h2>
+          <ol className="list-decimal pl-5 space-y-1">
+            <li>
+              결제 진행 중 취소: 결제창에서 취소 버튼을 통해 즉시 취소할 수
+              있으며, 금액이 청구되지 않습니다.
+            </li>
+            <li>
+              결제 완료 후 취소: 결제일로부터 7일 이내, 서비스 미사용 시 전액
+              취소가 가능합니다.
+            </li>
+            <li>
+              월 구독 해지: 다음 결제일 전까지 해지 요청 시 다음 회차부터
+              결제가 중단되며, 잔여 기간 동안은 서비스를 계속 이용할 수
+              있습니다.
+            </li>
+            <li>
+              취소/해지 요청은 서비스 내 설정 메뉴 또는
+              이메일(support@logos.builders)로 접수할 수 있습니다.
+            </li>
+          </ol>
+        </div>
+
+        <div>
+          <h2 className="text-lg font-semibold mb-2">
+            제11조 (이용자의 의무)
           </h2>
           <ol className="list-decimal pl-5 space-y-1">
             <li>
@@ -155,7 +256,7 @@ export default function TermsPage() {
 
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            제9조 (회사의 의무)
+            제12조 (회사의 의무)
           </h2>
           <ol className="list-decimal pl-5 space-y-1">
             <li>
@@ -174,7 +275,7 @@ export default function TermsPage() {
 
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            제10조 (지식재산권)
+            제13조 (지식재산권)
           </h2>
           <ol className="list-decimal pl-5 space-y-1">
             <li>
@@ -194,7 +295,7 @@ export default function TermsPage() {
 
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            제11조 (서비스의 변경 및 중단)
+            제14조 (서비스의 변경 및 중단)
           </h2>
           <ol className="list-decimal pl-5 space-y-1">
             <li>
@@ -213,7 +314,7 @@ export default function TermsPage() {
 
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            제12조 (이용 제한 및 계약 해지)
+            제15조 (이용 제한 및 계약 해지)
           </h2>
           <ol className="list-decimal pl-5 space-y-1">
             <li>
@@ -225,14 +326,14 @@ export default function TermsPage() {
               이용계약 해지를 요청할 수 있습니다.
             </li>
             <li>
-              계약 해지 시 미사용 크레딧의 환불은 제7조에 따릅니다.
+              계약 해지 시 미사용 크레딧의 환불은 제8조에 따릅니다.
             </li>
           </ol>
         </div>
 
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            제13조 (면책조항)
+            제16조 (면책조항)
           </h2>
           <ol className="list-decimal pl-5 space-y-1">
             <li>
@@ -256,7 +357,7 @@ export default function TermsPage() {
 
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            제14조 (손해배상)
+            제17조 (손해배상)
           </h2>
           <ol className="list-decimal pl-5 space-y-1">
             <li>
@@ -273,7 +374,7 @@ export default function TermsPage() {
 
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            제15조 (분쟁 해결)
+            제18조 (분쟁 해결)
           </h2>
           <ol className="list-decimal pl-5 space-y-1">
             <li>
