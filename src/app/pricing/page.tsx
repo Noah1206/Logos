@@ -88,6 +88,49 @@ export default function PricingPage() {
         </div>
       </section>
 
+      {/* 서비스 제공기간 · 교환 · 환불 · 취소 규정 */}
+      <section className="pb-16 px-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="border border-gray-200 rounded-2xl overflow-hidden">
+            <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+              <h3 className="text-sm font-bold text-gray-900">서비스 이용 안내</h3>
+            </div>
+            <div className="px-6 py-5 text-xs text-gray-500 leading-relaxed space-y-4">
+              <div>
+                <p className="font-semibold text-gray-700 mb-1">서비스 제공기간</p>
+                <ul className="list-disc pl-4 space-y-0.5">
+                  <li>AI 변환 결과는 요청 즉시 처리되며, 통상 1~3분 이내에 제공됩니다.</li>
+                  <li>월 구독 상품: 결제일로부터 30일 / 크레딧 상품: 구매일로부터 1년</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-700 mb-1">교환 정책</p>
+                <p>본 서비스는 디지털 콘텐츠 제공 서비스로, 물리적 상품이 아니므로 교환이 불가합니다. 서비스 오류 시 동일 건 재변환을 제공합니다.</p>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-700 mb-1">환불 정책</p>
+                <ul className="list-disc pl-4 space-y-0.5">
+                  <li>구매일로부터 7일 이내 청약철회 가능 (미사용 시 전액 환불)</li>
+                  <li>부분 사용 시: 총 결제금액 - (사용 크레딧 × 건당 정가) 잔액 환불</li>
+                  <li>환불은 원래 결제 수단으로 처리되며, 카드 취소 시 3~7영업일 소요</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-semibold text-gray-700 mb-1">결제 취소</p>
+                <ul className="list-disc pl-4 space-y-0.5">
+                  <li>결제 완료 후 7일 이내, 서비스 미사용 시 전액 취소 가능</li>
+                  <li>월 구독: 다음 결제일 전까지 해지 요청 시 차회부터 결제 중단</li>
+                  <li>취소/환불 요청: support@logos.builders</li>
+                </ul>
+              </div>
+              <p className="pt-2 border-t border-gray-100">
+                자세한 내용은 <a href="/terms" className="text-blue-500 underline hover:text-blue-600">이용약관</a> 제7조~제10조를 참고해주세요.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Login Modal */}
       {showLoginModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
