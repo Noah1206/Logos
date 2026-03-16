@@ -1,16 +1,3 @@
-// 유료화 시 복원 - 결제 웹훅 API
-// 현재 무료 전환으로 전체 주석 처리
-
-import { NextResponse } from "next/server";
-
-export async function POST() {
-  return NextResponse.json(
-    { success: false, error: "결제 시스템이 비활성화되어 있습니다." },
-    { status: 503 }
-  );
-}
-
-/* 유료화 시 복원
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -22,7 +9,7 @@ async function getAccessToken(): Promise<string> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      imp_key: process.env.PORTONE_API_KEY,
+      imp_key: process.env.NEXT_PUBLIC_PORTONE_STORE_ID,
       imp_secret: process.env.PORTONE_API_SECRET,
     }),
   });
@@ -109,4 +96,3 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ success: true });
 }
-*/

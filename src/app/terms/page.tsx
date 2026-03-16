@@ -392,7 +392,7 @@ export default function TermsPage() {
           <p>
             <strong>부칙</strong>
           </p>
-          <p>본 약관은 2024년 1월 18일부터 시행합니다.</p>
+          <p>본 약관은 2025년 1월 18일부터 시행합니다.</p>
           <p className="mt-4">
             <strong>사업자 정보</strong>
           </p>
