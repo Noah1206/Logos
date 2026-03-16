@@ -89,7 +89,7 @@ const StudyCardNode = memo(({ data }: NodeProps) => {
         borderRadius: 12,
         border: "1px solid #F0F0F0",
         padding: "16px 18px",
-        cursor: "grab",
+        cursor: "default",
         transition: "box-shadow 0.2s ease",
       }}
       className="hover:shadow-md"
@@ -287,6 +287,7 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
       type: "studyCard",
       data: n.data,
       position: n.position,
+      draggable: false,
     }));
 
     const styledEdges: Edge[] = graphData.edges.map((e) => ({
@@ -314,7 +315,7 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
   }, []);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pt-8 pb-32">
+    <div className="mx-auto px-4 sm:px-6 md:px-8 pt-8 pb-32">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -338,7 +339,7 @@ export default function KnowledgeGraphView({ onClose }: KnowledgeGraphViewProps)
 
       {/* Graph */}
       <div className="rounded-xl overflow-hidden border border-gray-100" style={{ background: "#FAFAFA" }}>
-        <div className="h-[640px]">
+        <div style={{ height: "calc(100vh - 160px)", minHeight: 500 }}>
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-400 rounded-full animate-spin" />
