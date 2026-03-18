@@ -53,15 +53,23 @@ async def _download_via_rapidapi(url: str, temp_dir: str, temp_id: str) -> Optio
     try:
         async with httpx.AsyncClient(timeout=60) as client:
             print("[RapidAPI] instagram-video-downloader13 시도 중...")
-            response = await client.post(
-                f"https://{RAPIDAPI_HOST}/index.php",
-                data={"url": url},
-                headers={
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "x-rapidapi-host": RAPIDAPI_HOST,
-                    "x-rapidapi-key": settings.RAPIDAPI_KEY,
-                },
-            )
+            response = None
+            for attempt in range(3):
+                response = await client.post(
+                    f"https://{RAPIDAPI_HOST}/index.php",
+                    data={"url": url},
+                    headers={
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "x-rapidapi-host": RAPIDAPI_HOST,
+                        "x-rapidapi-key": settings.RAPIDAPI_KEY,
+                    },
+                )
+                if response.status_code == 429:
+                    wait = 2 ** attempt
+                    print(f"[RapidAPI] 429 rate limit, {wait}초 후 재시도 ({attempt+1}/3)")
+                    await asyncio.sleep(wait)
+                    continue
+                break
 
             if response.status_code != 200:
                 print(f"[RapidAPI] API 응답 오류: {response.status_code}")
@@ -184,7 +192,13 @@ async def _download_instagram_via_playwright(url: str, temp_dir: str, temp_id: s
             )
             await stealth.apply_stealth_async(context)
 
-            # 쿠키 없이 먼저 시도 (공개 게시물은 쿠키 불필요, 쿠키가 오히려 리다이렉트 유발)
+            # 쿠키 사전 로드 (로그인 리다이렉트 방지)
+            if os.path.exists(COOKIES_PATH):
+                cookies = _parse_netscape_cookies(COOKIES_PATH)
+                if cookies:
+                    await context.add_cookies(cookies)
+                    print(f"[Playwright] 쿠키 사전 로드: {len(cookies)}개")
+
             page = await context.new_page()
             page.on("response", _on_response)
 
@@ -204,35 +218,11 @@ async def _download_instagram_via_playwright(url: str, temp_dir: str, temp_id: s
             current_url = page.url
             print(f"[Playwright] 현재 페이지 URL: {current_url}")
 
-            # 로그인 페이지로 리다이렉트된 경우 → 쿠키로 재시도
+            # 로그인 페이지로 리다이렉트된 경우 → 쿠키가 무효, 빠르게 포기
             if "/accounts/login" in current_url or "/challenge" in current_url:
-                print("[Playwright] 로그인 리다이렉트 감지 → 쿠키로 재시도")
-                video_parts.clear()
-                best_image["data"] = b""
-                best_image["size"] = 0
-                await page.close()
-
-                # 쿠키 로드
-                if os.path.exists(COOKIES_PATH):
-                    cookies = _parse_netscape_cookies(COOKIES_PATH)
-                    if cookies:
-                        await context.add_cookies(cookies)
-                        print(f"[Playwright] cookies.txt에서 {len(cookies)}개 쿠키 로드")
-
-                page = await context.new_page()
-                page.on("response", _on_response)
-                try:
-                    await page.goto(url, wait_until="networkidle", timeout=30000)
-                except Exception:
-                    try:
-                        await page.goto(url, wait_until="domcontentloaded", timeout=15000)
-                        await page.wait_for_timeout(5000)
-                    except Exception:
-                        await browser.close()
-                        return None
-
-                current_url = page.url
-                print(f"[Playwright] 쿠키 재시도 후 URL: {current_url}")
+                print("[Playwright] 로그인 리다이렉트 감지 (쿠키 사전 로드됨에도 실패 → 쿠키 만료/무효)")
+                await browser.close()
+                return None
 
             # 비디오 재생 트리거 (더 많은 세그먼트 로드 유도)
             try:
